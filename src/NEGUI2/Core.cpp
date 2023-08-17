@@ -31,6 +31,46 @@ namespace
         return false;
     }
 
+    VkSurfaceFormatKHR select_surface_format(VkPhysicalDevice physical_device, VkSurfaceKHR surface, const std::vector<VkFormat>& request_formats, VkColorSpaceKHR request_color_space)
+    {
+        // Per Spec Format and View Format are expected to be the same unless VK_IMAGE_CREATE_MUTABLE_BIT was set at image creation
+        // Assuming that the default behavior is without setting this bit, there is no need for separate Swapchain image and image view format
+        // Additionally several new color spaces were introduced with Vulkan Spec v1.0.40,
+        // hence we must make sure that a format with the mostly available color space, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR, is found and used.
+        uint32_t avail_count;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &avail_count, nullptr);
+        std::vector<VkSurfaceFormatKHR> avail_format;
+        avail_format.resize((int)avail_count);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &avail_count, avail_format.data());
+
+        // First check if only one format, VK_FORMAT_UNDEFINED, is available, which would imply that any format is available
+        if (avail_count == 1)
+        {
+            if (avail_format[0].format == VK_FORMAT_UNDEFINED)
+            {
+                VkSurfaceFormatKHR ret;
+                ret.format = request_formats[0];
+                ret.colorSpace = request_color_space;
+                return ret;
+            }
+            else
+            {
+                // No point in searching another format
+                return avail_format[0];
+            }
+        }
+        else
+        {
+            // Request several formats, the first found will be used
+            for (int request_i = 0; request_i < request_formats.size(); request_i++)
+                for (uint32_t avail_i = 0; avail_i < avail_count; avail_i++)
+                    if (avail_format[avail_i].format == request_formats[request_i] && avail_format[avail_i].colorSpace == request_color_space)
+                        return avail_format[avail_i];
+
+            // If none of the requested image formats could be found, use the first available
+            return avail_format[0];
+        }
+    }
 }
 
 namespace NEGUI2
@@ -226,6 +266,44 @@ namespace NEGUI2
                                  {
                 spdlog::info("Destroy Descriptor Pool");
                 vkDestroyDescriptorPool(device_data_.device, device_data_.descriptor_pool, nullptr); });
+        }
+
+        // Create Window Surface
+        {
+            auto window = window_.get_window();
+            VkResult err = glfwCreateWindowSurface(device_data_.instance, window, nullptr, &window_data_.surface);
+            check_vk_result(err);
+            deletion_stack_.push([&](){
+                spdlog::info("Destroy Surface");
+                vkDestroySurfaceKHR(device_data_.instance, window_data_.surface, nullptr);});
+        }
+
+        /* Window Size */
+        {
+            window_.get_extent(window_data_.width, window_data_.height);
+        }
+
+        /* Check for WSI support */
+        {
+            VkBool32 res;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device_data_.physical_device, device_data_.graphics_queue_index, window_data_.surface, &res);
+            if (res != VK_TRUE)
+            {
+                spdlog::error("WSI not supported");
+                exit(-1);
+            }
+        }
+
+        /* Select Surface Format */
+        {// TODO Optimize Surface Format
+            const std::vector<VkFormat> requestSurfaceImageFormat = {VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM};
+            const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+            window_data_.surface_format = ::select_surface_format(device_data_.physical_device, window_data_.surface, requestSurfaceImageFormat,  requestSurfaceColorSpace);
+        }
+
+        /* Select Present Mode */
+        { // TODO Optimize Present Mode
+            window_data_.present_mode = VK_PRESENT_MODE_FIFO_KHR;
         }
     }
 
