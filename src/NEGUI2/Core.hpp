@@ -63,6 +63,8 @@ namespace NEGUI2
         std::stack<std::function<void(void)>> deletion_stack_;
         Window window_;
 
+        void create_or_resize_window_();
+
     public:
         Core();
         void init();

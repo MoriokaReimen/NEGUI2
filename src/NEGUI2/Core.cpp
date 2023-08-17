@@ -31,7 +31,7 @@ namespace
         return false;
     }
 
-    VkSurfaceFormatKHR select_surface_format(VkPhysicalDevice physical_device, VkSurfaceKHR surface, const std::vector<VkFormat>& request_formats, VkColorSpaceKHR request_color_space)
+    VkSurfaceFormatKHR select_surface_format(VkPhysicalDevice physical_device, VkSurfaceKHR surface, const std::vector<VkFormat> &request_formats, VkColorSpaceKHR request_color_space)
     {
         // Per Spec Format and View Format are expected to be the same unless VK_IMAGE_CREATE_MUTABLE_BIT was set at image creation
         // Assuming that the default behavior is without setting this bit, there is no need for separate Swapchain image and image view format
@@ -75,7 +75,172 @@ namespace
 
 namespace NEGUI2
 {
-    Core::Core()
+    void Core::create_or_resize_window_()
+    {
+        VkResult err;
+        VkSwapchainKHR old_swapchain = window_data_.swap_chain;
+        window_data_.swap_chain = VK_NULL_HANDLE;
+
+        /* 待機 */
+        err = vkDeviceWaitIdle(device_data_.device);
+        check_vk_result(err);
+
+        // We don't use ImGui_ImplVulkanH_DestroyWindow() because we want to preserve the old swapchain to create the new one.
+        // Destroy old Framebuffer
+        for (uint32_t i = 0; i < window_data_.image_count; i++)
+        {
+            vkDestroyCommandPool(device_data_.device, window_data_.frames[i].CommandPool, nullptr);
+            vkDestroyFence(device_data_.device, window_data_.frames[i].Fence, nullptr);
+            vkDestroyFramebuffer(device_data_.device, window_data_.frames[i].Framebuffer, nullptr);
+            vkDestroyImageView(device_data_.device, window_data_.frames[i].BackbufferView, nullptr);
+            vkDestroyImage(device_data_.device, window_data_.frames[i].Backbuffer, nullptr);
+
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].ImageAcquiredSemaphore, nullptr);
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].RenderCompleteSemaphore, nullptr);
+        }
+        window_data_.image_count = 0;
+
+        if (window_data_.render_pass)
+            vkDestroyRenderPass(device_data_.device, window_data_.render_pass, nullptr);
+        if (window_data_.pipeline)
+            vkDestroyPipeline(device_data_.device, window_data_.pipeline, nullptr);
+
+        // Create Swapchain
+        {
+            VkSwapchainCreateInfoKHR info = {};
+            info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+            info.surface = window_data_.surface;
+            info.minImageCount = 2;
+            info.imageFormat = window_data_.surface_format.format;
+            info.imageColorSpace = window_data_.surface_format.colorSpace;
+            info.imageArrayLayers = 1;
+            info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE; // Assume that graphics family == present family
+            info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+            info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+            info.presentMode = window_data_.present_mode;
+            info.clipped = VK_TRUE;
+            info.oldSwapchain = old_swapchain;
+            VkSurfaceCapabilitiesKHR cap;
+            err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device_data_.physical_device, window_data_.surface, &cap);
+            check_vk_result(err);
+            if (info.minImageCount < cap.minImageCount)
+                info.minImageCount = cap.minImageCount;
+            else if (cap.maxImageCount != 0 && info.minImageCount > cap.maxImageCount)
+                info.minImageCount = cap.maxImageCount;
+
+            if (cap.currentExtent.width == 0xffffffff)
+            {
+                int width, height;
+                window_.get_extent(width, height);
+                info.imageExtent.width = window_data_.width = width;
+                info.imageExtent.height = window_data_.height = height;
+            }
+            else
+            {
+                info.imageExtent.width = window_data_.width = cap.currentExtent.width;
+                info.imageExtent.height = window_data_.height = cap.currentExtent.height;
+            }
+            err = vkCreateSwapchainKHR(device_data_.device, &info, nullptr, &window_data_.swap_chain);
+            check_vk_result(err);
+            err = vkGetSwapchainImagesKHR(device_data_.device, window_data_.swap_chain, &window_data_.image_count, nullptr);
+            check_vk_result(err);
+            std::vector<VkImage> backbuffers;
+            backbuffers.resize(window_data_.image_count);
+            err = vkGetSwapchainImagesKHR(device_data_.device, window_data_.swap_chain, &window_data_.image_count, backbuffers.data());
+            check_vk_result(err);
+
+            assert(window_data_.frames.size() == 0);
+            window_data_.frames.resize(window_data_.image_count);
+            window_data_.sync_objects.resize(window_data_.image_count);
+            std::memset(window_data_.frames.data(), 0, sizeof(window_data_.frames[0]) * window_data_.image_count);
+            std::memset(window_data_.sync_objects.data(), 0, sizeof(window_data_.sync_objects[0]) * window_data_.image_count);
+            for (uint32_t i = 0; i < window_data_.image_count; i++)
+                window_data_.frames[i].Backbuffer = backbuffers[i];
+        }
+        if (old_swapchain)
+            vkDestroySwapchainKHR(device_data_.device, old_swapchain, nullptr);
+
+        // Create the Render Pass
+        if (window_data_.use_dynamic_rendering == false)
+        {
+            VkAttachmentDescription attachment = {};
+            attachment.format = window_data_.surface_format.format;
+            attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            attachment.loadOp = window_data_.clear_enable ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            VkAttachmentReference color_attachment = {};
+            color_attachment.attachment = 0;
+            color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            VkSubpassDescription subpass = {};
+            subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+            subpass.colorAttachmentCount = 1;
+            subpass.pColorAttachments = &color_attachment;
+            VkSubpassDependency dependency = {};
+            dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+            dependency.dstSubpass = 0;
+            dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dependency.srcAccessMask = 0;
+            dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            VkRenderPassCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+            info.attachmentCount = 1;
+            info.pAttachments = &attachment;
+            info.subpassCount = 1;
+            info.pSubpasses = &subpass;
+            info.dependencyCount = 1;
+            info.pDependencies = &dependency;
+            err = vkCreateRenderPass(device_data_.device, &info, nullptr, &window_data_.render_pass);
+            check_vk_result(err);
+        }
+
+        // Create The Image Views
+        {
+            VkImageViewCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            info.format = window_data_.surface_format.format;
+            info.components.r = VK_COMPONENT_SWIZZLE_R;
+            info.components.g = VK_COMPONENT_SWIZZLE_G;
+            info.components.b = VK_COMPONENT_SWIZZLE_B;
+            info.components.a = VK_COMPONENT_SWIZZLE_A;
+            VkImageSubresourceRange image_range = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+            info.subresourceRange = image_range;
+            for (uint32_t i = 0; i < window_data_.image_count; i++)
+            {
+                info.image = window_data_.frames[i].Backbuffer;
+                err = vkCreateImageView(device_data_.device, &info, nullptr, &window_data_.frames[i].BackbufferView);
+                check_vk_result(err);
+            }
+        }
+
+        // Create Framebuffer
+        if (window_data_.use_dynamic_rendering == false)
+        {
+            VkImageView attachment[1];
+            VkFramebufferCreateInfo info = {};
+            info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            info.renderPass = window_data_.render_pass;
+            info.attachmentCount = 1;
+            info.pAttachments = attachment;
+            info.width = window_data_.width;
+            info.height = window_data_.height;
+            info.layers = 1;
+            for (uint32_t i = 0; i < window_data_.image_count; i++)
+            {
+                attachment[0] = window_data_.frames[i].BackbufferView;
+                err = vkCreateFramebuffer(device_data_.device, &info, nullptr, &window_data_.frames[i].Framebuffer);
+                check_vk_result(err);
+            }
+        }
+    }
+
+    Core::Core() : window_data_{0}
     {
     }
 
@@ -273,9 +438,10 @@ namespace NEGUI2
             auto window = window_.get_window();
             VkResult err = glfwCreateWindowSurface(device_data_.instance, window, nullptr, &window_data_.surface);
             check_vk_result(err);
-            deletion_stack_.push([&](){
+            deletion_stack_.push([&]()
+                                 {
                 spdlog::info("Destroy Surface");
-                vkDestroySurfaceKHR(device_data_.instance, window_data_.surface, nullptr);});
+                vkDestroySurfaceKHR(device_data_.instance, window_data_.surface, nullptr); });
         }
 
         /* Window Size */
@@ -295,16 +461,18 @@ namespace NEGUI2
         }
 
         /* Select Surface Format */
-        {// TODO Optimize Surface Format
+        { // TODO Optimize Surface Format
             const std::vector<VkFormat> requestSurfaceImageFormat = {VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM};
             const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-            window_data_.surface_format = ::select_surface_format(device_data_.physical_device, window_data_.surface, requestSurfaceImageFormat,  requestSurfaceColorSpace);
+            window_data_.surface_format = ::select_surface_format(device_data_.physical_device, window_data_.surface, requestSurfaceImageFormat, requestSurfaceColorSpace);
         }
 
         /* Select Present Mode */
         { // TODO Optimize Present Mode
             window_data_.present_mode = VK_PRESENT_MODE_FIFO_KHR;
         }
+
+        create_or_resize_window_();
     }
 
     void Core::update()
@@ -319,6 +487,26 @@ namespace NEGUI2
 
     void Core::destroy()
     {
+        // We don't use ImGui_ImplVulkanH_DestroyWindow() because we want to preserve the old swapchain to create the new one.
+        // Destroy old Framebuffer
+        for (uint32_t i = 0; i < window_data_.image_count; i++)
+        {
+            vkDestroyCommandPool(device_data_.device, window_data_.frames[i].CommandPool, nullptr);
+            vkDestroyFence(device_data_.device, window_data_.frames[i].Fence, nullptr);
+            vkDestroyFramebuffer(device_data_.device, window_data_.frames[i].Framebuffer, nullptr);
+            vkDestroyImageView(device_data_.device, window_data_.frames[i].BackbufferView, nullptr);
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].ImageAcquiredSemaphore, nullptr);
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].RenderCompleteSemaphore, nullptr);
+        }
+        window_data_.image_count = 0;
+
+        if (window_data_.render_pass)
+            vkDestroyRenderPass(device_data_.device, window_data_.render_pass, nullptr);
+        if (window_data_.pipeline)
+            vkDestroyPipeline(device_data_.device, window_data_.pipeline, nullptr);
+
+        vkDestroySwapchainKHR(device_data_.device, window_data_.swap_chain, nullptr);
+
         while (!deletion_stack_.empty())
         {
             deletion_stack_.top()();
