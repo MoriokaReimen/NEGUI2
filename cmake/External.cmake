@@ -58,18 +58,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glm)
 
 ##################################################
-# glad
-##################################################
-FetchContent_Declare(
-  glad
-  GIT_REPOSITORY https://github.com/Dav1dde/glad.git
-  GIT_TAG        v2.0.4
-  SOURCE_SUBDIR  cmake
-)
-FetchContent_MakeAvailable(glad)
-glad_add_library(glad_vulkan_13 REPRODUCIBLE LOADER API vulkan=1.3)
-
-##################################################
 # glslang
 ##################################################
 FetchContent_Declare(

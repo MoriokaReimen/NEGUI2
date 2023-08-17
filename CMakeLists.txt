@@ -14,11 +14,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/RuntimeResource.cmake)
 ##################################################
 # Configure NEGUI2 Library
 ##################################################
-file(GLOB NEGUI2_SRC ${CMAKE_CURRENT_LIST_DIR}/src/NEGUI2/*.cpp)
+file(GLOB_RECURSE NEGUI2_SRC ${CMAKE_CURRENT_LIST_DIR}/src/NEGUI2/*.cpp)
 add_library(NEGUI2 ${NEGUI2_SRC})
 target_include_directories(NEGUI2 PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src)
-target_link_libraries(NEGUI2 PUBLIC glfw spdlog::spdlog Vulkan::Headers Vulkan::Vulkan glm::glm imgui::imgui
-                                    glslang glslang-default-resource-limits SPIRV VulkanMemoryAllocator glad_vulkan_13)
+target_link_libraries(NEGUI2 PUBLIC glfw spdlog::spdlog Vulkan::Headers  glm::glm imgui::imgui
+                                    glslang glslang-default-resource-limits SPIRV VulkanMemoryAllocator glad_vulkan_13 glfw Vulkan::Headers)
 target_glsl_shaders(NEGUI2 PUBLIC ${CMAKE_CURRENT_LIST_DIR}/shader/base.frag ${CMAKE_CURRENT_LIST_DIR}/shader/base.vert)
 
 ##################################################
@@ -26,7 +26,7 @@ target_glsl_shaders(NEGUI2 PUBLIC ${CMAKE_CURRENT_LIST_DIR}/shader/base.frag ${C
 ##################################################
 file(GLOB SAMPLE_SRC ${CMAKE_CURRENT_LIST_DIR}/Sample/*.cpp)
 add_executable(Sample ${SAMPLE_SRC})
-target_link_libraries(Sample PRIVATE NEGUI2)
+target_link_libraries(Sample PRIVATE Vulkan::Vulkan Vulkan::Headers imgui::imgui)
 
 ##################################################
 # Configure Test Executable
