@@ -634,11 +634,9 @@ namespace NEGUI2
         /* 背景色設定 */
         {
             window_data_.clear_enable = true;
-            VkClearValue clear_value;
-            clear_value.color.float32[0] = 0.0;
-            clear_value.color.float32[1] = 0.0;
-            clear_value.color.float32[2] = 0.0;
-            clear_value.color.float32[3] = 1.0;
+            VkClearValue clear_value{};
+            VkClearColorValue color = {166.0f / 256.0f, 205.0f / 256.0f, 182.0f / 256.0f, 0.0f};
+            clear_value.color = color;
             window_data_.clear_value = clear_value;
         }
 
@@ -706,22 +704,7 @@ namespace NEGUI2
             info.pClearValues = &window_data_.clear_value;
             vkCmdBeginRenderPass(window_data_.frames[window_data_.frame_index].command_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
         }
-
-        /* 背景をクリア */
-        {
-            VkImageSubresourceRange imageRange = {};
-            imageRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageRange.levelCount = 1;
-            imageRange.layerCount = 1;
-            VkClearColorValue clearColor = {166.0f / 256.0f, 205.0f / 256.0f, 182.0f / 256.0f, 0.0f};
-            VkClearValue clearValue = {};
-            clearValue.color = clearColor;
-
-            vkCmdClearColorImage(window_data_.frames[window_data_.frame_index].command_buffer,
-                window_data_.frames[window_data_.frame_index].back_buffer, VK_IMAGE_LAYOUT_GENERAL,
-                &clearColor, 1, &imageRange);
-        }
-        
+      
         /* UIを描画 */
         {
             ImGui_ImplVulkan_NewFrame();
