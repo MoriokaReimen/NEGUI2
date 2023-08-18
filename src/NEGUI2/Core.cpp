@@ -6,6 +6,9 @@
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
 namespace
 {
 #ifndef NDEBUG
@@ -83,8 +86,10 @@ namespace NEGUI2
         window_data_.swap_chain = VK_NULL_HANDLE;
 
         /* 待機 */
-        err = vkDeviceWaitIdle(device_data_.device);
-        check_vk_result(err);
+        {
+            err = vkDeviceWaitIdle(device_data_.device);
+            check_vk_result(err);
+        }
 
         // We don't use ImGui_ImplVulkanH_DestroyWindow() because we want to preserve the old swapchain to create the new one.
         // Destroy old Framebuffer
@@ -94,8 +99,6 @@ namespace NEGUI2
             vkDestroyFence(device_data_.device, window_data_.frames[i].fence, nullptr);
             vkDestroyFramebuffer(device_data_.device, window_data_.frames[i].frame_buffer, nullptr);
             vkDestroyImageView(device_data_.device, window_data_.frames[i].back_buffer_view, nullptr);
-            vkDestroyImage(device_data_.device, window_data_.frames[i].back_buffer, nullptr);
-
             vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].image_acquired_semaphore, nullptr);
             vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].image_acquire_semaphore, nullptr);
         }
@@ -151,9 +154,9 @@ namespace NEGUI2
             err = vkGetSwapchainImagesKHR(device_data_.device, window_data_.swap_chain, &window_data_.image_count, backbuffers.data());
             check_vk_result(err);
 
-            assert(window_data_.frames.size() == 0);
             window_data_.frames.resize(window_data_.image_count);
             window_data_.sync_objects.resize(window_data_.image_count);
+
             std::memset(window_data_.frames.data(), 0, sizeof(window_data_.frames[0]) * window_data_.image_count);
             std::memset(window_data_.sync_objects.data(), 0, sizeof(window_data_.sync_objects[0]) * window_data_.image_count);
             for (uint32_t i = 0; i < window_data_.image_count; i++)
@@ -290,6 +293,85 @@ namespace NEGUI2
             check_vk_result(err);
             err = vkCreateSemaphore(device_data_.device, &create_info, nullptr, &window_data_.sync_objects[i].image_acquire_semaphore);
             check_vk_result(err);
+        }
+    }
+
+    void Core::setup_imgui_()
+    {
+        // Setup Dear ImGui context
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO &io = ImGui::GetIO();
+        (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
+        // ImGui::StyleColorsLight();
+
+        // Setup Platform/Renderer backends
+        ImGui_ImplGlfw_InitForVulkan(window_.get_window(), true);
+        ImGui_ImplVulkan_InitInfo init_info = {};
+        init_info.Instance = device_data_.instance;
+        init_info.PhysicalDevice = device_data_.physical_device;
+        init_info.Device = device_data_.device;
+        init_info.QueueFamily = device_data_.graphics_queue_index;
+        init_info.Queue = device_data_.graphics_queue;
+        init_info.PipelineCache = VK_NULL_HANDLE;
+        init_info.DescriptorPool = device_data_.descriptor_pool;
+        init_info.Subpass = 0;
+        init_info.MinImageCount = 2;
+        init_info.ImageCount = window_data_.image_count;
+        init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        init_info.Allocator = nullptr;
+        init_info.CheckVkResultFn = check_vk_result;
+        ImGui_ImplVulkan_Init(&init_info, window_data_.render_pass);
+
+        // Load Fonts
+        // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
+        // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
+        // - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+        // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+        // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
+        // - Read 'docs/FONTS.md' for more instructions and details.
+        // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
+        // io.Fonts->AddFontDefault();
+        // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
+        // io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
+        // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
+        // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
+        // ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
+        // IM_ASSERT(font != nullptr);
+
+        // Upload Fonts
+        {
+            // Use any command queue
+            VkCommandPool command_pool = window_data_.frames[window_data_.frame_index].command_pool;
+            VkCommandBuffer command_buffer = window_data_.frames[window_data_.frame_index].command_buffer;
+
+            auto reset_err = vkResetCommandPool(device_data_.device, command_pool, 0);
+            check_vk_result(reset_err);
+            VkCommandBufferBeginInfo begin_info = {};
+            begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            auto begin_err = vkBeginCommandBuffer(command_buffer, &begin_info);
+            check_vk_result(begin_err);
+
+            ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+
+            VkSubmitInfo end_info = {};
+            end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            end_info.commandBufferCount = 1;
+            end_info.pCommandBuffers = &command_buffer;
+            auto end_err = vkEndCommandBuffer(command_buffer);
+            check_vk_result(end_err);
+            auto submit_err = vkQueueSubmit(device_data_.graphics_queue, 1, &end_info, VK_NULL_HANDLE);
+            check_vk_result(submit_err);
+
+            auto wait_err = vkDeviceWaitIdle(device_data_.device);
+            check_vk_result(wait_err);
+            ImGui_ImplVulkan_DestroyFontUploadObjects();
         }
     }
 
@@ -546,8 +628,22 @@ namespace NEGUI2
             window_data_.present_mode = VK_PRESENT_MODE_FIFO_KHR;
         }
 
+        /* 背景色設定 */
+        {
+            window_data_.clear_enable = true;
+            VkClearValue clear_value;
+            clear_value.color.float32[0] = 0.0;
+            clear_value.color.float32[1] = 0.0;
+            clear_value.color.float32[2] = 0.0;
+            clear_value.color.float32[3] = 1.0;
+            window_data_.clear_value = clear_value;
+        }
+
         /* フレームデータ生成 */
         create_or_resize_window_();
+
+        /* imgui初期化 */
+        setup_imgui_();
     }
 
     void Core::update()
@@ -590,10 +686,6 @@ namespace NEGUI2
 
         /* コマンド開始 */
         {
-            // TODO 多分不要
-            auto reset_err = vkResetCommandPool(device_data_.device, window_data_.frames[window_data_.frame_index].command_pool, 0);
-            check_vk_result(reset_err);
-
             VkCommandBufferBeginInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -612,6 +704,35 @@ namespace NEGUI2
             info.clearValueCount = 1;
             info.pClearValues = &window_data_.clear_value;
             vkCmdBeginRenderPass(window_data_.frames[window_data_.frame_index].command_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+        }
+
+        /* 背景をクリア */
+        {
+            VkImageSubresourceRange imageRange = {};
+            imageRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageRange.levelCount = 1;
+            imageRange.layerCount = 1;
+            VkClearColorValue clearColor = {166.0f / 256.0f, 205.0f / 256.0f, 182.0f / 256.0f, 0.0f};
+            VkClearValue clearValue = {};
+            clearValue.color = clearColor;
+
+            vkCmdClearColorImage(window_data_.frames[window_data_.frame_index].command_buffer,
+                window_data_.frames[window_data_.frame_index].back_buffer, VK_IMAGE_LAYOUT_GENERAL,
+                &clearColor, 1, &imageRange);
+        }
+        
+        /* UIを描画 */
+        {
+            ImGui_ImplVulkan_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            static bool show_demo_window = true;
+            ImGui::ShowDemoWindow(&show_demo_window);
+            
+            ImGui::Render();
+            ImDrawData* draw_data = ImGui::GetDrawData();
+            ImGui_ImplVulkan_RenderDrawData(draw_data, window_data_.frames[window_data_.frame_index].command_buffer);
         }
 
         /* フレーム終了 */
@@ -673,6 +794,13 @@ namespace NEGUI2
         {
             auto err = vkDeviceWaitIdle(device_data_.device);
             check_vk_result(err);
+        }
+
+        /* imguiを解放 */
+        {
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
         }
 
         // We don't use ImGui_ImplVulkanH_DestroyWindow() because we want to preserve the old swapchain to create the new one.

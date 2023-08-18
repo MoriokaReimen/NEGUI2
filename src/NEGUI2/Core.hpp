@@ -65,6 +65,7 @@ namespace NEGUI2
         Window window_;
 
         void create_or_resize_window_();
+        void setup_imgui_();
 
     public:
         Core();
