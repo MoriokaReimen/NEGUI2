@@ -4,12 +4,12 @@
 
 namespace NEGUI2
 {
-    class DemoUI : public IUserInterface
+    class UiDemo : public IUserInterface
     {
 
     public:
-        DemoUI();
-        virtual ~DemoUI() override;
+        UiDemo();
+        virtual ~UiDemo() override;
         virtual void update() override;
     };
 

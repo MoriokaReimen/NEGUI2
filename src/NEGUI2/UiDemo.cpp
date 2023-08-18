@@ -1,19 +1,19 @@
-#include "NEGUI2/DemoUI.hpp"
+#include "NEGUI2/UiDemo.hpp"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
 namespace NEGUI2
 {
-    DemoUI::DemoUI()
+    UiDemo::UiDemo()
         : IUserInterface::IUserInterface()
     {
     }
 
-    DemoUI::~DemoUI()
+    UiDemo::~UiDemo()
     {
     }
 
-    void DemoUI::update()
+    void UiDemo::update()
     {
         if (is_active_)
         {
