@@ -22,18 +22,18 @@ namespace NEGUI2
 
     struct FrameData
     {
-        VkCommandPool CommandPool;
-        VkCommandBuffer CommandBuffer;
-        VkFence Fence;
-        VkImage Backbuffer;
-        VkImageView BackbufferView;
-        VkFramebuffer Framebuffer;
+        VkCommandPool command_pool;
+        VkCommandBuffer command_buffer;
+        VkFence fence;
+        VkImage back_buffer;
+        VkImageView back_buffer_view;
+        VkFramebuffer frame_buffer;
     };
 
     struct SyncObject
     {
-        VkSemaphore ImageAcquiredSemaphore;
-        VkSemaphore RenderCompleteSemaphore;
+        VkSemaphore image_acquired_semaphore;
+        VkSemaphore image_acquire_semaphore;
     };
 
     struct WindowData

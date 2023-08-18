@@ -90,14 +90,14 @@ namespace NEGUI2
         // Destroy old Framebuffer
         for (uint32_t i = 0; i < window_data_.image_count; i++)
         {
-            vkDestroyCommandPool(device_data_.device, window_data_.frames[i].CommandPool, nullptr);
-            vkDestroyFence(device_data_.device, window_data_.frames[i].Fence, nullptr);
-            vkDestroyFramebuffer(device_data_.device, window_data_.frames[i].Framebuffer, nullptr);
-            vkDestroyImageView(device_data_.device, window_data_.frames[i].BackbufferView, nullptr);
-            vkDestroyImage(device_data_.device, window_data_.frames[i].Backbuffer, nullptr);
+            vkDestroyCommandPool(device_data_.device, window_data_.frames[i].command_pool, nullptr);
+            vkDestroyFence(device_data_.device, window_data_.frames[i].fence, nullptr);
+            vkDestroyFramebuffer(device_data_.device, window_data_.frames[i].frame_buffer, nullptr);
+            vkDestroyImageView(device_data_.device, window_data_.frames[i].back_buffer_view, nullptr);
+            vkDestroyImage(device_data_.device, window_data_.frames[i].back_buffer, nullptr);
 
-            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].ImageAcquiredSemaphore, nullptr);
-            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].RenderCompleteSemaphore, nullptr);
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].image_acquired_semaphore, nullptr);
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].image_acquire_semaphore, nullptr);
         }
         window_data_.image_count = 0;
 
@@ -157,7 +157,7 @@ namespace NEGUI2
             std::memset(window_data_.frames.data(), 0, sizeof(window_data_.frames[0]) * window_data_.image_count);
             std::memset(window_data_.sync_objects.data(), 0, sizeof(window_data_.sync_objects[0]) * window_data_.image_count);
             for (uint32_t i = 0; i < window_data_.image_count; i++)
-                window_data_.frames[i].Backbuffer = backbuffers[i];
+                window_data_.frames[i].back_buffer = backbuffers[i];
         }
         if (old_swapchain)
             vkDestroySwapchainKHR(device_data_.device, old_swapchain, nullptr);
@@ -214,8 +214,8 @@ namespace NEGUI2
             info.subresourceRange = image_range;
             for (uint32_t i = 0; i < window_data_.image_count; i++)
             {
-                info.image = window_data_.frames[i].Backbuffer;
-                err = vkCreateImageView(device_data_.device, &info, nullptr, &window_data_.frames[i].BackbufferView);
+                info.image = window_data_.frames[i].back_buffer;
+                err = vkCreateImageView(device_data_.device, &info, nullptr, &window_data_.frames[i].back_buffer_view);
                 check_vk_result(err);
             }
         }
@@ -234,8 +234,8 @@ namespace NEGUI2
             info.layers = 1;
             for (uint32_t i = 0; i < window_data_.image_count; i++)
             {
-                attachment[0] = window_data_.frames[i].BackbufferView;
-                err = vkCreateFramebuffer(device_data_.device, &info, nullptr, &window_data_.frames[i].Framebuffer);
+                attachment[0] = window_data_.frames[i].back_buffer_view;
+                err = vkCreateFramebuffer(device_data_.device, &info, nullptr, &window_data_.frames[i].frame_buffer);
                 check_vk_result(err);
             }
 
@@ -252,7 +252,7 @@ namespace NEGUI2
             create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
             create_info.pNext = nullptr;
 
-            auto err = vkCreateCommandPool(device_data_.device, &create_info, nullptr, &window_data_.frames[i].CommandPool);
+            auto err = vkCreateCommandPool(device_data_.device, &create_info, nullptr, &window_data_.frames[i].command_pool);
             check_vk_result(err);
         }
 
@@ -261,11 +261,11 @@ namespace NEGUI2
         {
             VkCommandBufferAllocateInfo alloc_info{};
             alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-            alloc_info.commandPool = window_data_.frames[i].CommandPool;
+            alloc_info.commandPool = window_data_.frames[i].command_pool;
             alloc_info.commandBufferCount = 1;
             alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
             alloc_info.pNext = nullptr;
-            auto err = vkAllocateCommandBuffers(device_data_.device, &alloc_info, &window_data_.frames[i].CommandBuffer);
+            auto err = vkAllocateCommandBuffers(device_data_.device, &alloc_info, &window_data_.frames[i].command_buffer);
             check_vk_result(err);
         }
 
@@ -276,7 +276,7 @@ namespace NEGUI2
             create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
             create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
             create_info.pNext = nullptr;
-            auto err = vkCreateFence(device_data_.device, &create_info, nullptr, &window_data_.frames[i].Fence);
+            auto err = vkCreateFence(device_data_.device, &create_info, nullptr, &window_data_.frames[i].fence);
             check_vk_result(err);
         }
 
@@ -286,9 +286,9 @@ namespace NEGUI2
             VkSemaphoreCreateInfo create_info{};
             create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
             create_info.pNext = nullptr;
-            auto err = vkCreateSemaphore(device_data_.device, &create_info, nullptr, &window_data_.sync_objects[i].ImageAcquiredSemaphore);
+            auto err = vkCreateSemaphore(device_data_.device, &create_info, nullptr, &window_data_.sync_objects[i].image_acquired_semaphore);
             check_vk_result(err);
-            err = vkCreateSemaphore(device_data_.device, &create_info, nullptr, &window_data_.sync_objects[i].RenderCompleteSemaphore);
+            err = vkCreateSemaphore(device_data_.device, &create_info, nullptr, &window_data_.sync_objects[i].image_acquire_semaphore);
             check_vk_result(err);
         }
     }
@@ -569,7 +569,7 @@ namespace NEGUI2
 
         /* イメージ取得 */
         {
-            VkSemaphore image_acquired_semaphore = window_data_.sync_objects[window_data_.semaphore_index].ImageAcquiredSemaphore;
+            VkSemaphore image_acquired_semaphore = window_data_.sync_objects[window_data_.semaphore_index].image_acquired_semaphore;
             auto image_err = vkAcquireNextImageKHR(device_data_.device, window_data_.swap_chain, UINT64_MAX, image_acquired_semaphore, nullptr, &window_data_.frame_index);
             if (image_err == VK_ERROR_OUT_OF_DATE_KHR || image_err == VK_SUBOPTIMAL_KHR)
             {
@@ -581,23 +581,23 @@ namespace NEGUI2
 
         /* 完了まで待機 */
         {
-            auto wait_err = vkWaitForFences(device_data_.device, 1, &window_data_.frames[window_data_.frame_index].Fence, VK_TRUE, UINT64_MAX); // wait indefinitely instead of periodically checking
+            auto wait_err = vkWaitForFences(device_data_.device, 1, &window_data_.frames[window_data_.frame_index].fence, VK_TRUE, UINT64_MAX); // wait indefinitely instead of periodically checking
             check_vk_result(wait_err);
 
-            auto reset_err = vkResetFences(device_data_.device, 1, &window_data_.frames[window_data_.frame_index].Fence);
+            auto reset_err = vkResetFences(device_data_.device, 1, &window_data_.frames[window_data_.frame_index].fence);
             check_vk_result(reset_err);
         }
 
         /* コマンド開始 */
         {
             // TODO 多分不要
-            auto reset_err = vkResetCommandPool(device_data_.device, window_data_.frames[window_data_.frame_index].CommandPool, 0);
+            auto reset_err = vkResetCommandPool(device_data_.device, window_data_.frames[window_data_.frame_index].command_pool, 0);
             check_vk_result(reset_err);
 
             VkCommandBufferBeginInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
             info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            auto begin_err = vkBeginCommandBuffer(window_data_.frames[window_data_.frame_index].CommandBuffer, &info);
+            auto begin_err = vkBeginCommandBuffer(window_data_.frames[window_data_.frame_index].command_buffer, &info);
             check_vk_result(begin_err);
         }
 
@@ -606,26 +606,26 @@ namespace NEGUI2
             VkRenderPassBeginInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             info.renderPass = window_data_.render_pass;
-            info.framebuffer = window_data_.frames[window_data_.frame_index].Framebuffer;
+            info.framebuffer = window_data_.frames[window_data_.frame_index].frame_buffer;
             info.renderArea.extent.width = window_data_.width;
             info.renderArea.extent.height = window_data_.height;
             info.clearValueCount = 1;
             info.pClearValues = &window_data_.clear_value;
-            vkCmdBeginRenderPass(window_data_.frames[window_data_.frame_index].CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderPass(window_data_.frames[window_data_.frame_index].command_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
         }
 
         /* フレーム終了 */
         {
-            vkCmdEndRenderPass(window_data_.frames[window_data_.frame_index].CommandBuffer);
-            auto err = vkEndCommandBuffer(window_data_.frames[window_data_.frame_index].CommandBuffer);
+            vkCmdEndRenderPass(window_data_.frames[window_data_.frame_index].command_buffer);
+            auto err = vkEndCommandBuffer(window_data_.frames[window_data_.frame_index].command_buffer);
             check_vk_result(err);
         }
 
         /* キューにアップロード */
         {
             VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            VkSemaphore image_acquired_semaphore =  window_data_.sync_objects[window_data_.semaphore_index].ImageAcquiredSemaphore;
-            VkSemaphore render_complete_semaphore = window_data_.sync_objects[window_data_.semaphore_index].ImageAcquiredSemaphore;
+            VkSemaphore image_acquired_semaphore =  window_data_.sync_objects[window_data_.semaphore_index].image_acquired_semaphore;
+            VkSemaphore render_complete_semaphore = window_data_.sync_objects[window_data_.semaphore_index].image_acquired_semaphore;
 
             VkSubmitInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -633,16 +633,16 @@ namespace NEGUI2
             info.pWaitSemaphores = &image_acquired_semaphore;
             info.pWaitDstStageMask = &wait_stage;
             info.commandBufferCount = 1;
-            info.pCommandBuffers = &window_data_.frames[window_data_.frame_index].CommandBuffer;
+            info.pCommandBuffers = &window_data_.frames[window_data_.frame_index].command_buffer;
             info.signalSemaphoreCount = 1;
             info.pSignalSemaphores = &render_complete_semaphore;
-            auto submit_err = vkQueueSubmit(device_data_.graphics_queue, 1, &info, window_data_.frames[window_data_.frame_index].Fence);
+            auto submit_err = vkQueueSubmit(device_data_.graphics_queue, 1, &info, window_data_.frames[window_data_.frame_index].fence);
             check_vk_result(submit_err);
         }
 
         /* プレゼント指示 */
         {
-            VkSemaphore render_complete_semaphore = window_data_.sync_objects[window_data_.semaphore_index].ImageAcquiredSemaphore;
+            VkSemaphore render_complete_semaphore = window_data_.sync_objects[window_data_.semaphore_index].image_acquired_semaphore;
 
             VkPresentInfoKHR info = {};
             info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -679,12 +679,12 @@ namespace NEGUI2
         // Destroy old Framebuffer
         for (uint32_t i = 0; i < window_data_.image_count; i++)
         {
-            vkDestroyCommandPool(device_data_.device, window_data_.frames[i].CommandPool, nullptr);
-            vkDestroyFence(device_data_.device, window_data_.frames[i].Fence, nullptr);
-            vkDestroyFramebuffer(device_data_.device, window_data_.frames[i].Framebuffer, nullptr);
-            vkDestroyImageView(device_data_.device, window_data_.frames[i].BackbufferView, nullptr);
-            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].ImageAcquiredSemaphore, nullptr);
-            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].RenderCompleteSemaphore, nullptr);
+            vkDestroyCommandPool(device_data_.device, window_data_.frames[i].command_pool, nullptr);
+            vkDestroyFence(device_data_.device, window_data_.frames[i].fence, nullptr);
+            vkDestroyFramebuffer(device_data_.device, window_data_.frames[i].frame_buffer, nullptr);
+            vkDestroyImageView(device_data_.device, window_data_.frames[i].back_buffer_view, nullptr);
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].image_acquired_semaphore, nullptr);
+            vkDestroySemaphore(device_data_.device, window_data_.sync_objects[i].image_acquire_semaphore, nullptr);
         }
         window_data_.image_count = 0;
 
