@@ -1,6 +1,6 @@
 #ifndef _PLOT_DEMO_HPP
 #define _PLOT_DEMO_HPP
-#include "NEGUI2/IUserInterface.hpp"
+#include "NEGUI2/Ui/IUserInterface.hpp"
 
 namespace NEGUI2
 {

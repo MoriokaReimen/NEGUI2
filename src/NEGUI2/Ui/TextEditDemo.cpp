@@ -1,4 +1,4 @@
-#include "NEGUI2/TextEditDemo.hpp"
+#include "NEGUI2/Ui/TextEditDemo.hpp"
 #include <fstream>
 
 namespace NEGUI2

@@ -1,7 +1,7 @@
-#include "NEGUI2/Core.hpp"
-#include "NEGUI2/UiDemo.hpp"
-#include "NEGUI2/PlotDemo.hpp"
-#include "NEGUI2/TextEditDemo.hpp"
+#include "NEGUI2/Core/Core.hpp"
+#include "NEGUI2/Ui/UiDemo.hpp"
+#include "NEGUI2/Ui/PlotDemo.hpp"
+#include "NEGUI2/Ui/TextEditDemo.hpp"
 #include <cstdlib>
 #include <memory>
 

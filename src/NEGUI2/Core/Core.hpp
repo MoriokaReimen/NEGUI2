@@ -6,7 +6,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vulkan/vulkan.h>
-#include "NEGUI2/Window.hpp"
+#include "NEGUI2/Core/Window.hpp"
 
 namespace NEGUI2
 {

@@ -1,8 +1,8 @@
-#include "NEGUI2/Core.hpp"
-#include "NEGUI2/Utility.hpp"
+#include "NEGUI2/Core/Core.hpp"
+#include "NEGUI2/Core/Utility.hpp"
 #include <set>
 #include <cassert>
-#include "NEGUI2/IUserInterface.hpp"
+#include "NEGUI2/Ui/IUserInterface.hpp"
 #include <spdlog/spdlog.h>
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN

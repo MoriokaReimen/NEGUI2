@@ -1,4 +1,4 @@
-#include "NEGUI2/PlotDemo.hpp"
+#include "NEGUI2/Ui/PlotDemo.hpp"
 #include <implot.h>
 
 namespace NEGUI2

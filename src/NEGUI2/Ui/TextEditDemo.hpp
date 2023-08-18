@@ -1,6 +1,6 @@
 #ifndef _TEXT_EDIT_DEMO_HPP
 #define _TEXT_EDIT_DEMO_HPP
-#include "NEGUI2/IUserInterface.hpp"
+#include "NEGUI2/Ui/IUserInterface.hpp"
 #include <TextEditor.h>
 #include <string>
 

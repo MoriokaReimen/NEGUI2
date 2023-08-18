@@ -1,4 +1,4 @@
-#include "NEGUI2/Utility.hpp"
+#include "NEGUI2/Core/Utility.hpp"
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 namespace NEGUI2
