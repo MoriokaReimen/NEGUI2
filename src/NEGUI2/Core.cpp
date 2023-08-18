@@ -2,6 +2,7 @@
 #include "NEGUI2/Utility.hpp"
 #include <set>
 #include <cassert>
+#include "NEGUI2/IUserInterface.hpp"
 #include <spdlog/spdlog.h>
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
@@ -658,8 +659,6 @@ namespace NEGUI2
             if (width > 0 && height > 0)
             {
                 create_or_resize_window_();
-                // window_data_.image_countを設定する
-                // ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
             }
         }
 
@@ -727,8 +726,10 @@ namespace NEGUI2
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            static bool show_demo_window = true;
-            ImGui::ShowDemoWindow(&show_demo_window);
+            for(auto& ui : user_interfaces_)
+            {
+                ui.second->update();
+            }
             
             ImGui::Render();
             ImDrawData* draw_data = ImGui::GetDrawData();
@@ -828,5 +829,29 @@ namespace NEGUI2
             deletion_stack_.top()();
             deletion_stack_.pop();
         }
+    }
+
+    bool Core::add_userinterface(const std::string &key, std::shared_ptr<IUserInterface> ui)
+    {
+        bool ret = false;
+        if(user_interfaces_.count(key) == 0)
+        {
+            user_interfaces_.insert({key, ui});
+            ret = true;
+        }
+
+        return ret;
+    }
+
+    bool Core::remove_userinteface(const std::string &key)
+    {
+        bool ret = false;
+        if(user_interfaces_.count(key) != 0)
+        {
+            user_interfaces_.erase(key);
+            ret = true;
+        }
+
+        return ret;
     }
 }

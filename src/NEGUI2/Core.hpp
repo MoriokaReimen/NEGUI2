@@ -3,10 +3,17 @@
 #include <cstdint>
 #include <functional>
 #include <stack>
+#include <memory>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 #include "NEGUI2/Window.hpp"
+
 namespace NEGUI2
 {
+    /* 前方宣言 */
+    class IUserInterface;
+    
+    /* 型宣言 */
     struct DeviceData
     {
         VkInstance instance;
@@ -63,16 +70,19 @@ namespace NEGUI2
         WindowData window_data_;
         std::stack<std::function<void(void)>> deletion_stack_;
         Window window_;
+        std::unordered_map<std::string, std::shared_ptr<IUserInterface>> user_interfaces_;
 
         void create_or_resize_window_();
         void setup_imgui_();
-
     public:
         Core();
         void init();
         void update();
         bool should_colse() const;
         void destroy();
+
+        bool add_userinterface(const std::string& key, std::shared_ptr<IUserInterface> ui);
+        bool remove_userinteface(const std::string& key);
     };
 }
 #endif
