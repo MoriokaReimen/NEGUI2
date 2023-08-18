@@ -77,6 +77,31 @@ namespace
             return avail_format[0];
         }
     }
+
+    VkPresentModeKHR select_present_mode(const VkPhysicalDevice &physical_device, const VkSurfaceKHR &surface)
+    {
+        std::array<VkPresentModeKHR, 3> request_modes{VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_FIFO_KHR};
+
+        // Request a certain mode and confirm that it is available. If not use VK_PRESENT_MODE_FIFO_KHR which is mandatory
+        uint32_t avail_count = 0;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &avail_count, nullptr);
+        std::vector<VkPresentModeKHR> avail_modes;
+        avail_modes.resize((int)avail_count);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &avail_count, avail_modes.data());
+
+        for (int request_i = 0; request_i < request_modes.size(); request_i++)
+        {
+            for (uint32_t avail_i = 0; avail_i < avail_count; avail_i++)
+            {
+                if (request_modes[request_i] == avail_modes[avail_i])
+                {
+                    return request_modes[request_i];
+                }
+            }
+        }
+
+        return VK_PRESENT_MODE_FIFO_KHR; // Always available
+    }
 }
 
 namespace NEGUI2
@@ -627,8 +652,8 @@ namespace NEGUI2
         }
 
         /* Select Present Mode */
-        { // TODO Optimize Present Mode
-            window_data_.present_mode = VK_PRESENT_MODE_FIFO_KHR;
+        {
+            window_data_.present_mode = ::select_present_mode(device_data_.physical_device, window_data_.surface);
         }
 
         /* 背景色設定 */
@@ -650,7 +675,7 @@ namespace NEGUI2
     void Core::update()
     {
         glfwPollEvents();
-        
+
         /* SwapChainを再構築 */
         if (window_data_.swap_chain_rebuild)
         {
@@ -704,20 +729,20 @@ namespace NEGUI2
             info.pClearValues = &window_data_.clear_value;
             vkCmdBeginRenderPass(window_data_.frames[window_data_.frame_index].command_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
         }
-      
+
         /* UIを描画 */
         {
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            for(auto& ui : user_interfaces_)
+            for (auto &ui : user_interfaces_)
             {
                 ui.second->update();
             }
-            
+
             ImGui::Render();
-            ImDrawData* draw_data = ImGui::GetDrawData();
+            ImDrawData *draw_data = ImGui::GetDrawData();
             ImGui_ImplVulkan_RenderDrawData(draw_data, window_data_.frames[window_data_.frame_index].command_buffer);
         }
 
@@ -731,7 +756,7 @@ namespace NEGUI2
         /* キューにアップロード */
         {
             VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            VkSemaphore image_acquired_semaphore =  window_data_.sync_objects[window_data_.semaphore_index].image_acquired_semaphore;
+            VkSemaphore image_acquired_semaphore = window_data_.sync_objects[window_data_.semaphore_index].image_acquired_semaphore;
             VkSemaphore render_complete_semaphore = window_data_.sync_objects[window_data_.semaphore_index].image_acquired_semaphore;
 
             VkSubmitInfo info = {};
@@ -820,7 +845,7 @@ namespace NEGUI2
     bool Core::add_userinterface(const std::string &key, std::shared_ptr<IUserInterface> ui)
     {
         bool ret = false;
-        if(user_interfaces_.count(key) == 0)
+        if (user_interfaces_.count(key) == 0)
         {
             user_interfaces_.insert({key, ui});
             ret = true;
@@ -832,7 +857,7 @@ namespace NEGUI2
     bool Core::remove_userinteface(const std::string &key)
     {
         bool ret = false;
-        if(user_interfaces_.count(key) != 0)
+        if (user_interfaces_.count(key) != 0)
         {
             user_interfaces_.erase(key);
             ret = true;
