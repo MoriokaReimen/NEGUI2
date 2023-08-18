@@ -1,5 +1,6 @@
 #include "NEGUI2/Core.hpp"
 #include "NEGUI2/DemoUI.hpp"
+#include "NEGUI2/PlotDemo.hpp"
 #include <cstdlib>
 #include <memory>
 
@@ -10,7 +11,11 @@ int main(int argc, char** argv)
 
     {
         auto demo_ui = std::make_shared<NEGUI2::DemoUI>();
-        core.add_userinterface("demo", demo_ui);
+        core.add_userinterface("ui demo", demo_ui);
+    }
+    {
+        auto plot_demo = std::make_shared<NEGUI2::PlotDemo>();
+        core.add_userinterface("plot demo", plot_demo);
     }
 
     while(!core.should_colse())

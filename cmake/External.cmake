@@ -109,3 +109,27 @@ if (NOT imgui_POPULATED)
     ${imgui_SOURCE_DIR}/backends
   )
 endif ()
+
+##################################################
+# implot
+##################################################
+FetchContent_Declare(
+  implot
+  GIT_REPOSITORY https://github.com/epezent/implot.git
+  GIT_TAG v0.15
+  )
+  FetchContent_GetProperties(implot)
+if (NOT implot_POPULATED)
+  FetchContent_Populate(implot)
+  add_library(implot STATIC
+  ${implot_SOURCE_DIR}/implot.cpp
+  ${implot_SOURCE_DIR}/implot_demo.cpp
+  ${implot_SOURCE_DIR}/implot_items.cpp
+  )
+  target_link_libraries(implot PUBLIC imgui::imgui)
+  add_library(imgui::implot ALIAS implot)
+  target_include_directories(implot
+  PUBLIC
+    ${implot_SOURCE_DIR}
+  )
+endif ()
