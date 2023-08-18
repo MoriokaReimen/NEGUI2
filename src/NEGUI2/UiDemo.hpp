@@ -1,5 +1,5 @@
-#ifndef _DEMO_UI_HPP
-#define _DEMO_UI_HPP
+#ifndef _UI_DEMO_HPP
+#define _UI_DEMO_HPP
 #include "NEGUI2/IUserInterface.hpp"
 
 namespace NEGUI2

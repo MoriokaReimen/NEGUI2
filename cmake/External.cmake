@@ -133,3 +133,51 @@ if (NOT implot_POPULATED)
     ${implot_SOURCE_DIR}
   )
 endif ()
+
+##################################################
+# imguizmo
+##################################################
+FetchContent_Declare(
+  imguizmo
+  GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo.git
+  GIT_TAG master
+  )
+  FetchContent_GetProperties(imguizmo)
+if (NOT imguizmo_POPULATED)
+  FetchContent_Populate(imguizmo)
+  add_library(imguizmo STATIC
+    ${imguizmo_SOURCE_DIR}/GraphEditor.cpp
+    ${imguizmo_SOURCE_DIR}/ImCurveEdit.cpp
+    ${imguizmo_SOURCE_DIR}/ImGradient.cpp
+    ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
+    ${imguizmo_SOURCE_DIR}/ImSequencer.cpp
+  )
+  target_link_libraries(imguizmo PUBLIC imgui::imgui)
+  add_library(imgui::imguizmo ALIAS imguizmo)
+  target_include_directories(imguizmo
+  PUBLIC
+    ${imguizmo_SOURCE_DIR}
+  )
+endif ()
+
+##################################################
+# colortextedit
+##################################################
+FetchContent_Declare(
+  colortextedit
+  GIT_REPOSITORY https://github.com/BalazsJako/ImGuiColorTextEdit.git
+  GIT_TAG master
+  )
+  FetchContent_GetProperties(colortextedit)
+if (NOT colortextedit_POPULATED)
+  FetchContent_Populate(colortextedit)
+  add_library(colortextedit STATIC
+    ${colortextedit_SOURCE_DIR}/TextEditor.cpp
+  )
+  target_link_libraries(colortextedit PUBLIC imgui::imgui)
+  add_library(imgui::colortextedit ALIAS colortextedit)
+  target_include_directories(colortextedit
+  PUBLIC
+    ${colortextedit_SOURCE_DIR}
+  )
+endif ()
