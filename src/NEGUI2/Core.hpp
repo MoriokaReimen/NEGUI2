@@ -49,6 +49,7 @@ namespace NEGUI2
         bool use_dynamic_rendering;
         bool clear_enable;
         VkClearValue clear_value;
+        bool swap_chain_rebuild;
         uint32_t frame_index;     // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
         uint32_t image_count;     // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
         uint32_t semaphore_index; // Current set of swapchain wait semaphores we're using (needs to be distinct from per frame data)
