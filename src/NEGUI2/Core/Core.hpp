@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 #include "NEGUI2/Core/Window.hpp"
+#include "NEGUI2/Core/Shader.hpp"
 
 #include "vk_mem_alloc.h"
 
@@ -40,6 +41,7 @@ namespace NEGUI2
         VkDebugReportCallbackEXT debug_report;
         VkDescriptorPool descriptor_pool;
         VmaAllocator allocator;
+        Shader shader;
     };
 
     struct FrameData

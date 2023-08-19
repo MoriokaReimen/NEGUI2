@@ -635,6 +635,16 @@ namespace NEGUI2
                 vmaDestroyAllocator(device_data_.allocator); });
         }
 
+        /* NEGUI Shader Module */
+        {
+            device_data_.shader = Shader(device_data_.device);
+            device_data_.shader.add_spv_from_file("base", "./shader/base.frag.spv");
+            deletion_stack_.push([&]()
+                                 {
+                spdlog::info("Destroy Shader");
+                device_data_.shader.destroy(); });
+        }
+
         // Create Window Surface
         {
             auto window = window_.get_window();
