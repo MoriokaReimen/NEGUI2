@@ -8,12 +8,26 @@
 #include <vulkan/vulkan.h>
 #include "NEGUI2/Core/Window.hpp"
 
+#include "vk_mem_alloc.h"
+
 namespace NEGUI2
 {
     /* 前方宣言 */
     class IUserInterface;
     
     /* 型宣言 */
+    struct Memory
+    {
+        VkBuffer buffer;
+        VmaAllocation allocation;
+    };
+
+    struct MappedMemory
+    {
+        void *data;
+        VmaAllocation allocation;
+    };
+
     struct DeviceData
     {
         VkInstance instance;
@@ -25,6 +39,7 @@ namespace NEGUI2
         VkQueue present_queue;
         VkDebugReportCallbackEXT debug_report;
         VkDescriptorPool descriptor_pool;
+        VmaAllocator allocator;
     };
 
     struct FrameData

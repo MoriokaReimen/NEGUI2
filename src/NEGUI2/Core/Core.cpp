@@ -11,6 +11,10 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #include <implot.h>
+
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
+
 namespace
 {
 #ifndef NDEBUG
@@ -615,6 +619,20 @@ namespace NEGUI2
                                  {
                 spdlog::info("Destroy Descriptor Pool");
                 vkDestroyDescriptorPool(device_data_.device, device_data_.descriptor_pool, nullptr); });
+        }
+
+        /* Vulkan Memory Allocator */
+        {
+            VmaAllocatorCreateInfo allocatorCreateInfo = {};
+            allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+            allocatorCreateInfo.instance = device_data_.instance;
+            allocatorCreateInfo.physicalDevice = device_data_.physical_device;
+            allocatorCreateInfo.device = device_data_.device;
+            vmaCreateAllocator(&allocatorCreateInfo, &device_data_.allocator);
+            deletion_stack_.push([&]()
+                                 {
+                spdlog::info("Destroy VMA");
+                vmaDestroyAllocator(device_data_.allocator); });
         }
 
         // Create Window Surface
