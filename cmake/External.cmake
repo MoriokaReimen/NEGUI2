@@ -47,15 +47,18 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glfw)
 
 ##################################################
-# glm
+# Eigen
 ##################################################
 FetchContent_Declare(
-  glm
-  GIT_REPOSITORY https://github.com/g-truc/glm.git
-  GIT_TAG        0.9.9.8
-
-)
-FetchContent_MakeAvailable(glm)
+  Eigen
+  GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+  GIT_TAG 3.4.1
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE)
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(EIGEN_BUILD_DOC OFF)
+set(EIGEN_BUILD_PKGCONFIG OFF)
+FetchContent_MakeAvailable(Eigen)
 
 ##################################################
 # glslang

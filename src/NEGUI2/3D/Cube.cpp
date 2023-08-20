@@ -1,15 +1,13 @@
 #include "NEGUI2/3D/Cube.hpp"
 #include <cstddef>
 #include "NEGUI2/Core/Core.hpp"
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <NEGUI2/Core/Utility.hpp>
+#include <Eigen/Eigen>
 
 struct Vertex
 {
-    glm::vec2 pos;
-    glm::vec3 color;
+    Eigen::Vector2f pos;
+    Eigen::Vector3f color;
 
     static VkVertexInputBindingDescription getBindingDescription()
     {
