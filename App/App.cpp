@@ -2,6 +2,7 @@
 #include "NEGUI2/Ui/UiDemo.hpp"
 #include "NEGUI2/Ui/PlotDemo.hpp"
 #include "NEGUI2/Ui/TextEditDemo.hpp"
+#include "NEGUI2/3D/Cube.hpp"
 #include <cstdlib>
 #include <memory>
 
@@ -22,6 +23,11 @@ int main(int argc, char** argv)
     {
         auto edit_demo = std::make_shared<NEGUI2::TextEditDemo>();
         core.add_userinterface("edit demo", edit_demo);
+    }
+
+    {
+        auto cube = std::make_shared<NEGUI2::Cube>();
+        core.add_3d_object("cube", cube);
     }
 
     while(!core.should_colse())

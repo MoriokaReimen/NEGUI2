@@ -3,6 +3,7 @@
 #include <set>
 #include <cassert>
 #include "NEGUI2/Ui/IUserInterface.hpp"
+#include "NEGUI2/3D/I3DObject.hpp"
 #include <spdlog/spdlog.h>
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
@@ -623,11 +624,39 @@ namespace NEGUI2
 
         /* Vulkan Memory Allocator */
         {
+            VmaVulkanFunctions fn;
+            fn.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+            fn.vkGetDeviceProcAddr = & vkGetDeviceProcAddr;
+            fn.vkAllocateMemory = (PFN_vkAllocateMemory)vkAllocateMemory;
+            fn.vkBindBufferMemory = (PFN_vkBindBufferMemory)vkBindBufferMemory;
+            fn.vkBindImageMemory = (PFN_vkBindImageMemory)vkBindImageMemory;
+            fn.vkCmdCopyBuffer = (PFN_vkCmdCopyBuffer)vkCmdCopyBuffer;
+            fn.vkCreateBuffer = (PFN_vkCreateBuffer)vkCreateBuffer;
+            fn.vkCreateImage = (PFN_vkCreateImage)vkCreateImage;
+            fn.vkDestroyBuffer = (PFN_vkDestroyBuffer)vkDestroyBuffer;
+            fn.vkDestroyImage = (PFN_vkDestroyImage)vkDestroyImage;
+            fn.vkFlushMappedMemoryRanges = (PFN_vkFlushMappedMemoryRanges)vkFlushMappedMemoryRanges;
+            fn.vkFreeMemory = (PFN_vkFreeMemory)vkFreeMemory;
+            fn.vkGetBufferMemoryRequirements = (PFN_vkGetBufferMemoryRequirements)vkGetBufferMemoryRequirements;
+            fn.vkGetImageMemoryRequirements = (PFN_vkGetImageMemoryRequirements)vkGetImageMemoryRequirements;
+            fn.vkGetPhysicalDeviceMemoryProperties = (PFN_vkGetPhysicalDeviceMemoryProperties)vkGetPhysicalDeviceMemoryProperties;
+            fn.vkGetPhysicalDeviceProperties = (PFN_vkGetPhysicalDeviceProperties)vkGetPhysicalDeviceProperties;
+            fn.vkInvalidateMappedMemoryRanges = (PFN_vkInvalidateMappedMemoryRanges)vkInvalidateMappedMemoryRanges;
+            fn.vkMapMemory = (PFN_vkMapMemory)vkMapMemory;
+            fn.vkUnmapMemory = (PFN_vkUnmapMemory)vkUnmapMemory;
+            fn.vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetBufferMemoryRequirements2KHR");
+            fn.vkGetImageMemoryRequirements2KHR = (PFN_vkGetImageMemoryRequirements2KHR) vkGetInstanceProcAddr(device_data_.instance, "vkGetImageMemoryRequirements2KHR");
+            fn.vkBindBufferMemory2KHR = (PFN_vkBindBufferMemory2KHR) vkGetInstanceProcAddr(device_data_.instance, "vkBindBufferMemory2KHR");
+            fn.vkBindImageMemory2KHR = (PFN_vkBindImageMemory2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkBindImageMemory2KHR");
+            fn.vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetBufferMemoryRequirements2KHR");
+
+
             VmaAllocatorCreateInfo allocatorCreateInfo = {};
-            allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+            allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_0;
             allocatorCreateInfo.instance = device_data_.instance;
             allocatorCreateInfo.physicalDevice = device_data_.physical_device;
             allocatorCreateInfo.device = device_data_.device;
+            allocatorCreateInfo.pVulkanFunctions = &fn;
             vmaCreateAllocator(&allocatorCreateInfo, &device_data_.allocator);
             deletion_stack_.push([&]()
                                  {
@@ -635,10 +664,40 @@ namespace NEGUI2
                 vmaDestroyAllocator(device_data_.allocator); });
         }
 
+        /* コマンドプール生成 */
+        {
+            VkCommandPoolCreateInfo create_info = {};
+            create_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            create_info.queueFamilyIndex = device_data_.graphics_queue_index;
+            create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+            create_info.pNext = nullptr;
+
+            auto err = vkCreateCommandPool(device_data_.device, &create_info, nullptr, &device_data_.command_pool);
+            check_vk_result(err);
+            deletion_stack_.push([&]()
+                                 {
+                spdlog::info("Destroy Utility Command Pool");
+                vkDestroyCommandPool(device_data_.device, device_data_.command_pool, nullptr);
+                });
+        }
+
+        /* コマンドバッファ生成 */
+        {
+            VkCommandBufferAllocateInfo alloc_info{};
+            alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            alloc_info.commandPool = device_data_.command_pool;
+            alloc_info.commandBufferCount = 1;
+            alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            alloc_info.pNext = nullptr;
+            auto err = vkAllocateCommandBuffers(device_data_.device, &alloc_info, &device_data_.command_buffer);
+            check_vk_result(err);
+        }
+
         /* NEGUI Shader Module */
         {
             device_data_.shader = Shader(device_data_.device);
-            device_data_.shader.add_spv_from_file("base", "./shader/base.frag.spv");
+            device_data_.shader.add_spv_from_file("base.frag", "./shader/base.frag.spv");
+            device_data_.shader.add_spv_from_file("base.vert", "./shader/base.vert.spv");
             deletion_stack_.push([&]()
                                  {
                 spdlog::info("Destroy Shader");
@@ -712,6 +771,11 @@ namespace NEGUI2
             if (width > 0 && height > 0)
             {
                 create_or_resize_window_();
+
+                for(auto& object : objects_)
+                {
+                    object.second->create_pipeline(device_data_, window_data_);
+                }
             }
         }
 
@@ -758,6 +822,12 @@ namespace NEGUI2
             vkCmdBeginRenderPass(window_data_.frames[window_data_.frame_index].command_buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
         }
 
+        /* オブジェクト描画 */
+        for (auto &object : objects_)
+        {
+            object.second->update(window_data_.frames[window_data_.frame_index].command_buffer);
+        }
+
         /* UIを描画 */
         {
             ImGui_ImplVulkan_NewFrame();
@@ -773,6 +843,7 @@ namespace NEGUI2
             ImDrawData *draw_data = ImGui::GetDrawData();
             ImGui_ImplVulkan_RenderDrawData(draw_data, window_data_.frames[window_data_.frame_index].command_buffer);
         }
+
 
         /* フレーム終了 */
         {
@@ -835,6 +906,12 @@ namespace NEGUI2
             check_vk_result(err);
         }
 
+        /* Object解放 */
+        for(auto& object : objects_)
+        {
+            object.second->destroy();
+        }
+
         /* imguiを解放 */
         {
             ImGui_ImplVulkan_Shutdown();
@@ -888,6 +965,33 @@ namespace NEGUI2
         if (user_interfaces_.count(key) != 0)
         {
             user_interfaces_.erase(key);
+            ret = true;
+        }
+
+        return ret;
+    }
+
+    bool Core::add_3d_object(const std::string& key, std::shared_ptr<I3DObject> object)
+    {
+        bool ret = false;
+        if (objects_.count(key) == 0)
+        {
+            object->init(device_data_);
+            object->create_pipeline(device_data_, window_data_);
+            objects_.insert({key, object});
+            ret = true;
+        }
+
+        return ret;
+    }
+
+    bool Core::remove_3d_object(const std::string& key)
+    {
+        bool ret = false;
+        if (objects_.count(key) != 0)
+        {
+            objects_[key]->destroy();
+            objects_.erase(key);
             ret = true;
         }
 

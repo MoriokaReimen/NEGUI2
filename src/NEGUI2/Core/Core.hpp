@@ -15,6 +15,7 @@ namespace NEGUI2
 {
     /* 前方宣言 */
     class IUserInterface;
+    class I3DObject;
     
     /* 型宣言 */
     struct Memory
@@ -40,8 +41,11 @@ namespace NEGUI2
         VkQueue present_queue;
         VkDebugReportCallbackEXT debug_report;
         VkDescriptorPool descriptor_pool;
+        VmaVulkanFunctions vulkanFunctions;
         VmaAllocator allocator;
         Shader shader;
+        VkCommandPool command_pool;
+        VkCommandBuffer command_buffer;
     };
 
     struct FrameData
@@ -88,6 +92,7 @@ namespace NEGUI2
         std::stack<std::function<void(void)>> deletion_stack_;
         Window window_;
         std::unordered_map<std::string, std::shared_ptr<IUserInterface>> user_interfaces_;
+        std::unordered_map<std::string, std::shared_ptr<I3DObject>> objects_;
 
         void create_or_resize_window_();
         void setup_imgui_();
@@ -100,6 +105,9 @@ namespace NEGUI2
 
         bool add_userinterface(const std::string& key, std::shared_ptr<IUserInterface> ui);
         bool remove_userinteface(const std::string& key);
+
+        bool add_3d_object(const std::string& key, std::shared_ptr<I3DObject> object);
+        bool remove_3d_object(const std::string& key);
     };
 }
 #endif
