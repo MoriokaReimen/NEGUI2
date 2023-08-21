@@ -8,8 +8,8 @@
 #include <vulkan/vulkan.h>
 #include "NEGUI2/Core/Window.hpp"
 #include "NEGUI2/Core/Shader.hpp"
-
-#include "vk_mem_alloc.h"
+#include "NEGUI2/3D/Camera.hpp"
+#include <vk_mem_alloc.h>
 
 namespace NEGUI2
 {
@@ -91,6 +91,7 @@ namespace NEGUI2
         WindowData window_data_;
         std::stack<std::function<void(void)>> deletion_stack_;
         Window window_;
+        Camera camera_;
         std::unordered_map<std::string, std::shared_ptr<IUserInterface>> user_interfaces_;
         std::unordered_map<std::string, std::shared_ptr<I3DObject>> objects_;
 

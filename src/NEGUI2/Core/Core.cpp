@@ -757,6 +757,15 @@ namespace NEGUI2
 
         /* imgui初期化 */
         setup_imgui_();
+
+        /* カメラ初期化 */
+        {
+        camera_.init(device_data_);
+                    deletion_stack_.push([&]()
+                                 {
+                spdlog::info("Destroy Camera");
+                camera_.destroy();});
+        }
     }
 
     void Core::update()
@@ -798,6 +807,11 @@ namespace NEGUI2
 
             auto reset_err = vkResetFences(device_data_.device, 1, &window_data_.frames[window_data_.frame_index].fence);
             check_vk_result(reset_err);
+        }
+
+        /* Uniformバッファ更新 */
+        {
+            camera_.upload(window_data_);
         }
 
         /* コマンド開始 */
