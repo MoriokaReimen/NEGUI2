@@ -22,6 +22,15 @@ namespace NEGUI2
     {
         VkBuffer buffer;
         VmaAllocation allocation;
+        VmaAllocationInfo alloc_info;
+
+        enum class TYPE : uint32_t
+        {
+            VERTEX = 1,
+            INDEX = 2,
+            UNIFORM = 3
+        };
+        TYPE type;
     };
 
     struct MappedMemory
@@ -94,6 +103,7 @@ namespace NEGUI2
         Camera camera_;
         std::unordered_map<std::string, std::shared_ptr<IUserInterface>> user_interfaces_;
         std::unordered_map<std::string, std::shared_ptr<I3DObject>> objects_;
+        std::unordered_map<std::string, Memory> memories_;
 
         void create_or_resize_window_();
         void setup_imgui_();
@@ -109,6 +119,11 @@ namespace NEGUI2
         bool remove_userinteface(const std::string& key);
         bool add_3d_object(const std::string& key, std::shared_ptr<I3DObject> object);
         bool remove_3d_object(const std::string& key);
+        
+        Memory& get_memory(const std::string& key);
+        bool add_memory(const std::string& key, const size_t& size, const Memory::TYPE& type);
+        bool remove_memory(const std::string& key);
+        bool upload_memory(const std::string& key, const void* data, const size_t size);
     };
 }
 #endif

@@ -412,7 +412,7 @@ namespace NEGUI2
     {
     }
 
-    Core& Core::get_instance()
+    Core &Core::get_instance()
     {
         static Core instance;
 
@@ -633,7 +633,7 @@ namespace NEGUI2
         {
             VmaVulkanFunctions fn;
             fn.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
-            fn.vkGetDeviceProcAddr = & vkGetDeviceProcAddr;
+            fn.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
             fn.vkAllocateMemory = (PFN_vkAllocateMemory)vkAllocateMemory;
             fn.vkBindBufferMemory = (PFN_vkBindBufferMemory)vkBindBufferMemory;
             fn.vkBindImageMemory = (PFN_vkBindImageMemory)vkBindImageMemory;
@@ -652,11 +652,10 @@ namespace NEGUI2
             fn.vkMapMemory = (PFN_vkMapMemory)vkMapMemory;
             fn.vkUnmapMemory = (PFN_vkUnmapMemory)vkUnmapMemory;
             fn.vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetBufferMemoryRequirements2KHR");
-            fn.vkGetImageMemoryRequirements2KHR = (PFN_vkGetImageMemoryRequirements2KHR) vkGetInstanceProcAddr(device_data_.instance, "vkGetImageMemoryRequirements2KHR");
-            fn.vkBindBufferMemory2KHR = (PFN_vkBindBufferMemory2KHR) vkGetInstanceProcAddr(device_data_.instance, "vkBindBufferMemory2KHR");
+            fn.vkGetImageMemoryRequirements2KHR = (PFN_vkGetImageMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetImageMemoryRequirements2KHR");
+            fn.vkBindBufferMemory2KHR = (PFN_vkBindBufferMemory2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkBindBufferMemory2KHR");
             fn.vkBindImageMemory2KHR = (PFN_vkBindImageMemory2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkBindImageMemory2KHR");
             fn.vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetBufferMemoryRequirements2KHR");
-
 
             VmaAllocatorCreateInfo allocatorCreateInfo = {};
             allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_0;
@@ -684,8 +683,7 @@ namespace NEGUI2
             deletion_stack_.push([&]()
                                  {
                 spdlog::info("Destroy Utility Command Pool");
-                vkDestroyCommandPool(device_data_.device, device_data_.command_pool, nullptr);
-                });
+                vkDestroyCommandPool(device_data_.device, device_data_.command_pool, nullptr); });
         }
 
         /* コマンドバッファ生成 */
@@ -767,11 +765,11 @@ namespace NEGUI2
 
         /* カメラ初期化 */
         {
-        camera_.init(device_data_);
-                    deletion_stack_.push([&]()
+            camera_.init(device_data_);
+            deletion_stack_.push([&]()
                                  {
                 spdlog::info("Destroy Camera");
-                camera_.destroy();});
+                camera_.destroy(); });
         }
     }
 
@@ -788,7 +786,7 @@ namespace NEGUI2
             {
                 create_or_resize_window_();
 
-                for(auto& object : objects_)
+                for (auto &object : objects_)
                 {
                     object.second->create_pipeline(device_data_, window_data_);
                 }
@@ -865,7 +863,6 @@ namespace NEGUI2
             ImGui_ImplVulkan_RenderDrawData(draw_data, window_data_.frames[window_data_.frame_index].command_buffer);
         }
 
-
         /* フレーム終了 */
         {
             vkCmdEndRenderPass(window_data_.frames[window_data_.frame_index].command_buffer);
@@ -928,7 +925,7 @@ namespace NEGUI2
         }
 
         /* Object解放 */
-        for(auto& object : objects_)
+        for (auto &object : objects_)
         {
             object.second->destroy();
         }
@@ -961,6 +958,11 @@ namespace NEGUI2
 
         vkDestroySwapchainKHR(device_data_.device, window_data_.swap_chain, nullptr);
 
+        for(auto& memory : memories_)
+        {
+            vmaDestroyBuffer(device_data_.allocator, memory.second.buffer, memory.second.allocation);   
+        }
+
         while (!deletion_stack_.empty())
         {
             deletion_stack_.top()();
@@ -992,7 +994,7 @@ namespace NEGUI2
         return ret;
     }
 
-    bool Core::add_3d_object(const std::string& key, std::shared_ptr<I3DObject> object)
+    bool Core::add_3d_object(const std::string &key, std::shared_ptr<I3DObject> object)
     {
         bool ret = false;
         if (objects_.count(key) == 0)
@@ -1006,7 +1008,7 @@ namespace NEGUI2
         return ret;
     }
 
-    bool Core::remove_3d_object(const std::string& key)
+    bool Core::remove_3d_object(const std::string &key)
     {
         bool ret = false;
         if (objects_.count(key) != 0)
@@ -1017,5 +1019,137 @@ namespace NEGUI2
         }
 
         return ret;
+    }
+
+    Memory &Core::get_memory(const std::string &key)
+    {
+        return memories_.at(key);
+    }
+
+    bool Core::add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type)
+    {
+        if (memories_.count(key) != 0)
+            return false;
+        Memory memory;
+        VkBufferCreateInfo bufferInfo{};
+        VmaAllocationCreateInfo allocInfo{};
+
+        switch (type)
+        {
+        case Memory::TYPE::VERTEX:
+        {
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size = size;
+            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        }
+        break;
+        case Memory::TYPE::INDEX:
+        {
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size = size;
+            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        }
+        break;
+        case Memory::TYPE::UNIFORM:
+        {
+
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size = size;
+            bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                              VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        }
+        break;
+        default:
+            return false;
+            break;
+        }
+        auto result = vmaCreateBuffer(device_data_.allocator, &bufferInfo, &allocInfo, &memory.buffer, &memory.allocation, &memory.alloc_info);
+        check_vk_result(result);
+        memories_.insert({key, memory});
+
+        return true;
+    }
+
+    bool Core::remove_memory(const std::string &key)
+    {
+        bool ret = false;
+        if (memories_.count(key) != 0)
+        {
+            auto& memory = memories_.at(key); 
+            vmaDestroyBuffer(device_data_.allocator, stage_buffer, stage_allocation);
+            ret = true;
+        }
+        return ret;
+    }
+
+    bool Core::upload_memory(const std::string &key, const void *data, const size_t size)
+    {
+        if (memories_.count(key) == 0 || size == 0)
+        {
+            return false;
+        }
+
+        /* ステージングバッファ生成 */
+        VkBuffer stage_buffer;
+        VmaAllocation stage_allocation;
+        VmaAllocationInfo alloc_info;
+        {
+            VkBufferCreateInfo bufferInfo{};
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size = size;
+            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+            VmaAllocationCreateInfo allocInfo{};
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                              VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            VkBuffer buffer;
+            VmaAllocation allocation;
+            vmaCreateBuffer(device_data_.allocator, &bufferInfo, &allocInfo, &stage_buffer, &stage_allocation, &alloc_info);
+        }
+
+        /* データコピー */
+        {
+            std::memcpy(alloc_info.pMappedData, data, size);
+            vmaFlushAllocation(device_data_.allocator, stage_allocation, 0, VK_WHOLE_SIZE);
+
+            VkCommandBufferBeginInfo beginInfo{};
+            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            vkBeginCommandBuffer(device_data_.command_buffer, &beginInfo);
+
+            auto& target = memories_.at(key);
+
+            VkBufferCopy copyRegion{};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = 0;
+            copyRegion.size = size;
+            vkCmdCopyBuffer(device_data_.command_buffer, stage_buffer, target.buffer, 1, &copyRegion);
+
+            vkEndCommandBuffer(device_data_.command_buffer);
+
+            VkSubmitInfo submitInfo{};
+            submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            submitInfo.commandBufferCount = 1;
+            submitInfo.pCommandBuffers = &device_data_.command_buffer;
+
+            vkQueueSubmit(device_data_.graphics_queue, 1, &submitInfo, VK_NULL_HANDLE);
+            vkQueueWaitIdle(device_data_.graphics_queue);
+        }
+
+        /* ステージバッファ削除 */
+        vmaDestroyBuffer(device_data_.allocator, stage_buffer, stage_allocation);
+
+        return true;
     }
 }
