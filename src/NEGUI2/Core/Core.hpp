@@ -97,16 +97,16 @@ namespace NEGUI2
 
         void create_or_resize_window_();
         void setup_imgui_();
-    public:
         Core();
+    public:
+        static Core& get_instance();
+    
         void init();
         void update();
         bool should_colse() const;
         void destroy();
-
         bool add_userinterface(const std::string& key, std::shared_ptr<IUserInterface> ui);
         bool remove_userinteface(const std::string& key);
-
         bool add_3d_object(const std::string& key, std::shared_ptr<I3DObject> object);
         bool remove_3d_object(const std::string& key);
     };

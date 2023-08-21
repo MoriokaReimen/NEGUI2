@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv)
 {
-    NEGUI2::Core core;
+    auto& core =NEGUI2::Core::get_instance();
     core.init();
 
     {

@@ -412,6 +412,13 @@ namespace NEGUI2
     {
     }
 
+    Core& Core::get_instance()
+    {
+        static Core instance;
+
+        return instance;
+    }
+
     void Core::init()
     {
         /* Initialize instance */
