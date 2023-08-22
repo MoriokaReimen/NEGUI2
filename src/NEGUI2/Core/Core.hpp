@@ -94,6 +94,30 @@ namespace NEGUI2
         std::vector<SyncObject> sync_objects;
     };
 
+    struct TextureData
+    {
+        VkCommandPool command_pool;
+        VkCommandBuffer command_buffer;
+
+        Memory color_memory;
+        VkImage color_image;
+        VkImageView back_color_view;
+        Memory depth_memory;
+        VkImage depth_image;
+        VkImageView depth_view;
+        VkFramebuffer frame_buffer;
+        VkSampler sampler;
+    };
+
+    struct OffScreenData
+    {
+        int width;
+        int height;
+        VkRenderPass render_pass;
+        uint32_t frame_index;     // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
+        std::vector<TextureData> frames;
+    };
+
     class Core
     {
         DeviceData device_data_;
