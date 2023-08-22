@@ -2,7 +2,6 @@
 #include <fstream>
 #include <SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
-#include <vulkan/vulkan.h>
 #include <spdlog/spdlog.h>
 
 namespace

@@ -1,7 +1,7 @@
 #ifndef _CUBE_HPP
 #define _CUBE_HPP
 #include "NEGUI2/3D/I3DObject.hpp"
-#include <vulkan/vulkan.h>
+#include <volk.h>
 #include <vk_mem_alloc.h>
 namespace NEGUI2
 {

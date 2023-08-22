@@ -5,7 +5,7 @@
 #include <stack>
 #include <memory>
 #include <unordered_map>
-#include <vulkan/vulkan.h>
+#include <volk.h>
 #include "NEGUI2/Core/Window.hpp"
 #include "NEGUI2/Core/Shader.hpp"
 #include "NEGUI2/3D/Camera.hpp"

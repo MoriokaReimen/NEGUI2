@@ -5,8 +5,8 @@
 #include "NEGUI2/Ui/IUserInterface.hpp"
 #include "NEGUI2/3D/I3DObject.hpp"
 #include <spdlog/spdlog.h>
+
 #define GLFW_INCLUDE_NONE
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <imgui_impl_glfw.h>
@@ -332,6 +332,9 @@ namespace NEGUI2
     {
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
+        ImGui_ImplVulkan_LoadFunctions([](const char *function_name, void *vulkan_instance)
+                                       { return vkGetInstanceProcAddr(*(reinterpret_cast<VkInstance *>(vulkan_instance)), function_name); },
+                                       &device_data_.instance);
         ImGui::CreateContext();
         ImPlot::CreateContext();
         ImGuiIO &io = ImGui::GetIO();
@@ -344,7 +347,6 @@ namespace NEGUI2
         // ImGui::StyleColorsLight();
 
         // Setup Platform/Renderer backends
-        ImGui_ImplGlfw_InitForVulkan(window_.get_window(), true);
         ImGui_ImplVulkan_InitInfo init_info = {};
         init_info.Instance = device_data_.instance;
         init_info.PhysicalDevice = device_data_.physical_device;
@@ -357,9 +359,10 @@ namespace NEGUI2
         init_info.MinImageCount = 2;
         init_info.ImageCount = window_data_.image_count;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        init_info.Allocator = nullptr;
+        init_info.Allocator = NULL;
         init_info.CheckVkResultFn = check_vk_result;
         ImGui_ImplVulkan_Init(&init_info, window_data_.render_pass);
+        ImGui_ImplGlfw_InitForVulkan(window_.get_window(), true);
 
         // Load Fonts
         // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -421,6 +424,12 @@ namespace NEGUI2
 
     void Core::init()
     {
+        /* Initialize Volk*/
+        {
+            auto result = volkInitialize();
+            check_vk_result(result);
+        }
+
         /* Initialize instance */
         {
             spdlog::info("Initialize Instance");
@@ -465,17 +474,28 @@ namespace NEGUI2
             // Create Vulkan Instance
             create_info.enabledExtensionCount = (uint32_t)instance_extensions.size();
             create_info.ppEnabledExtensionNames = instance_extensions.data();
+
+            VkApplicationInfo app_info{};
+            app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+            app_info.apiVersion = VK_API_VERSION_1_3;
+            app_info.pApplicationName = "NEGUI2";
+            app_info.applicationVersion = 0;
+            app_info.pEngineName = "NEGUI2";
+            app_info.engineVersion = 0;
+            app_info.pNext = nullptr;
+
+            create_info.pApplicationInfo = &app_info;
+
             VkResult create_err = vkCreateInstance(&create_info, nullptr, &device_data_.instance);
             check_vk_result(create_err);
             deletion_stack_.push([&]()
                                  {
                 spdlog::info("Destroy Instance");
                 vkDestroyInstance(device_data_.instance, nullptr); });
+            volkLoadInstance(device_data_.instance);
 
             // Setup the debug report callback
 #ifndef NDEBUG
-            auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(device_data_.instance, "vkCreateDebugReportCallbackEXT");
-            assert(vkCreateDebugReportCallbackEXT != nullptr);
             VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
             debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
             debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
@@ -489,6 +509,7 @@ namespace NEGUI2
                     auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(device_data_.instance, "vkDestroyDebugReportCallbackEXT");
                 vkDestroyDebugReportCallbackEXT(device_data_.instance, device_data_.debug_report, nullptr); });
 #endif
+
         }
 
         /* Physical Deviceの選定 */
@@ -599,6 +620,8 @@ namespace NEGUI2
                                  {
                 spdlog::info("Destroy Device");
                 vkDestroyDevice(device_data_.device, nullptr); });
+
+            volkLoadDevice(device_data_.device);
         }
 
         /* キュー生成 */
@@ -632,33 +655,30 @@ namespace NEGUI2
         /* Vulkan Memory Allocator */
         {
             VmaVulkanFunctions fn;
-            fn.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
-            fn.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
-            fn.vkAllocateMemory = (PFN_vkAllocateMemory)vkAllocateMemory;
-            fn.vkBindBufferMemory = (PFN_vkBindBufferMemory)vkBindBufferMemory;
-            fn.vkBindImageMemory = (PFN_vkBindImageMemory)vkBindImageMemory;
-            fn.vkCmdCopyBuffer = (PFN_vkCmdCopyBuffer)vkCmdCopyBuffer;
-            fn.vkCreateBuffer = (PFN_vkCreateBuffer)vkCreateBuffer;
-            fn.vkCreateImage = (PFN_vkCreateImage)vkCreateImage;
-            fn.vkDestroyBuffer = (PFN_vkDestroyBuffer)vkDestroyBuffer;
-            fn.vkDestroyImage = (PFN_vkDestroyImage)vkDestroyImage;
-            fn.vkFlushMappedMemoryRanges = (PFN_vkFlushMappedMemoryRanges)vkFlushMappedMemoryRanges;
-            fn.vkFreeMemory = (PFN_vkFreeMemory)vkFreeMemory;
-            fn.vkGetBufferMemoryRequirements = (PFN_vkGetBufferMemoryRequirements)vkGetBufferMemoryRequirements;
-            fn.vkGetImageMemoryRequirements = (PFN_vkGetImageMemoryRequirements)vkGetImageMemoryRequirements;
-            fn.vkGetPhysicalDeviceMemoryProperties = (PFN_vkGetPhysicalDeviceMemoryProperties)vkGetPhysicalDeviceMemoryProperties;
-            fn.vkGetPhysicalDeviceProperties = (PFN_vkGetPhysicalDeviceProperties)vkGetPhysicalDeviceProperties;
-            fn.vkInvalidateMappedMemoryRanges = (PFN_vkInvalidateMappedMemoryRanges)vkInvalidateMappedMemoryRanges;
-            fn.vkMapMemory = (PFN_vkMapMemory)vkMapMemory;
-            fn.vkUnmapMemory = (PFN_vkUnmapMemory)vkUnmapMemory;
-            fn.vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetBufferMemoryRequirements2KHR");
-            fn.vkGetImageMemoryRequirements2KHR = (PFN_vkGetImageMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetImageMemoryRequirements2KHR");
-            fn.vkBindBufferMemory2KHR = (PFN_vkBindBufferMemory2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkBindBufferMemory2KHR");
-            fn.vkBindImageMemory2KHR = (PFN_vkBindImageMemory2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkBindImageMemory2KHR");
-            fn.vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetInstanceProcAddr(device_data_.instance, "vkGetBufferMemoryRequirements2KHR");
+            fn.vkAllocateMemory = vkAllocateMemory;
+            fn.vkBindBufferMemory = vkBindBufferMemory;
+            fn.vkBindImageMemory = vkBindImageMemory;
+            fn.vkCmdCopyBuffer = vkCmdCopyBuffer;
+            fn.vkCreateBuffer = vkCreateBuffer;
+            fn.vkCreateImage = vkCreateImage;
+            fn.vkDestroyBuffer = vkDestroyBuffer;
+            fn.vkDestroyImage = vkDestroyImage;
+            fn.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
+            fn.vkFreeMemory = vkFreeMemory;
+            fn.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
+            fn.vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetBufferMemoryRequirements2;
+            fn.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+            fn.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
+            fn.vkGetImageMemoryRequirements2KHR = (PFN_vkGetImageMemoryRequirements2KHR)vkGetImageMemoryRequirements2;
+            fn.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+            fn.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
+            fn.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
+            fn.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
+            fn.vkMapMemory = vkMapMemory;
+            fn.vkUnmapMemory = vkUnmapMemory;
 
             VmaAllocatorCreateInfo allocatorCreateInfo = {};
-            allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_0;
+            allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
             allocatorCreateInfo.instance = device_data_.instance;
             allocatorCreateInfo.physicalDevice = device_data_.physical_device;
             allocatorCreateInfo.device = device_data_.device;
@@ -1085,7 +1105,7 @@ namespace NEGUI2
         if (memories_.count(key) != 0)
         {
             auto& memory = memories_.at(key); 
-            vmaDestroyBuffer(device_data_.allocator, stage_buffer, stage_allocation);
+            vmaDestroyBuffer(device_data_.allocator, memory.buffer, memory.allocation);
             ret = true;
         }
         return ret;

@@ -1,6 +1,6 @@
 #ifndef _UTILITY_HPP
 #define _UTILITY_HPP
-#include <vulkan/vulkan.h>
+#include <volk.h>
 #include <spdlog/spdlog.h>
 
 namespace NEGUI2
