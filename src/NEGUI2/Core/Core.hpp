@@ -33,12 +33,6 @@ namespace NEGUI2
         TYPE type;
     };
 
-    struct MappedMemory
-    {
-        void *data;
-        VmaAllocation allocation;
-    };
-
     struct DeviceData
     {
         VkInstance instance;
