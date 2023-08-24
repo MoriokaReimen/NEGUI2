@@ -175,6 +175,11 @@ namespace NEGUI2
         {
             back_buffers = swap_chain.getImages();
             image_count = back_buffers.size();
+            frames.resize(image_count);
+            for(int i = 0; i < image_count; i++)
+            {
+                frames[i].back_buffer = back_buffers[i];
+            }
         }
 
         /* Create RenderPass */
@@ -215,9 +220,8 @@ namespace NEGUI2
         for(int i = 0; i < image_count; i++)
         {
             frames[i].fence = device_manager.device.createFence({vk::FenceCreateFlagBits::eSignaled});
-            frames[i].back_buffer = vk::raii::Image(device_manager.device, back_buffers[i]);
             vk::ImageViewCreateInfo imageViewCreateInfo( {}, {}, vk::ImageViewType::e2D, surface_format.format, {}, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } );
-            imageViewCreateInfo.image = *frames[i].back_buffer;
+            imageViewCreateInfo.image = frames[i].back_buffer;
             vk::ImageSubresourceRange image_range{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
             imageViewCreateInfo.subresourceRange = image_range;    
             frames[i].back_buffer_view = device_manager.device.createImageView(imageViewCreateInfo);

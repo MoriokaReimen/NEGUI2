@@ -7,7 +7,7 @@ namespace NEGUI2
     struct FrameData
     {
         vk::raii::Fence fence = nullptr;
-        vk::raii::Image back_buffer = nullptr;
+        vk::Image back_buffer = nullptr;
         vk::raii::ImageView back_buffer_view = nullptr;
         vk::raii::Framebuffer frame_buffer = nullptr;
     };
@@ -27,8 +27,8 @@ namespace NEGUI2
     public:
         int width;
         int height;
-        vk::raii::SwapchainKHR swap_chain;
         vk::raii::SurfaceKHR surface;
+        vk::raii::SwapchainKHR swap_chain;
         vk::SurfaceFormatKHR surface_format;
         vk::PresentModeKHR present_mode;
         vk::raii::RenderPass render_pass;
