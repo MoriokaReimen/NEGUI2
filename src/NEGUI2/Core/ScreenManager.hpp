@@ -1,23 +1,21 @@
 #ifndef _SCREEN_MANAGER_HPP
 #define _SCREEN_MANAGER_HPP
-#include <volk.h>
 #include <vulkan/vulkan_raii.hpp>
 namespace NEGUI2
 {
 
     struct FrameData
     {
-        vk::raii::CommandBuffer command_buffer;
-        vk::raii::Fence fence;
-        vk::raii::Image back_buffer;
-        vk::raii::ImageView back_buffer_view;
-        vk::raii::Framebuffer frame_buffer;
+        vk::raii::Fence fence = nullptr;
+        vk::raii::Image back_buffer = nullptr;
+        vk::raii::ImageView back_buffer_view = nullptr;
+        vk::raii::Framebuffer frame_buffer = nullptr;
     };
 
     struct SyncObject
     {
-        vk::raii::Semaphore image_acquired_semaphore;
-        vk::raii::Semaphore image_acquire_semaphore;
+        vk::raii::Semaphore image_acquired_semaphore  = nullptr;
+        vk::raii::Semaphore image_rendered_semaphore  = nullptr;
     };
     class ScreenManager
     {
@@ -34,9 +32,7 @@ namespace NEGUI2
         vk::SurfaceFormatKHR surface_format;
         vk::PresentModeKHR present_mode;
         vk::raii::RenderPass render_pass;
-        vk::raii::Pipeline pipeline; // The window pipeline may uses a different VkRenderPass than the one passed in ImGui_ImplVulkan_InitInfo
-        bool use_dynamic_rendering;
-        bool clear_enable;
+        // vk::raii::Pipeline pipeline; // The window pipeline may uses a different VkRenderPass than the one passed in ImGui_ImplVulkan_InitInfo
         vk::ClearValue clear_value;
         bool swap_chain_rebuild;
         uint32_t frame_index;     // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)

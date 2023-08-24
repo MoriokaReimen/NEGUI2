@@ -3,6 +3,7 @@
 #include "NEGUI2/Core/DeviceManager.hpp"
 #include "NEGUI2/Core/MemoryManager.hpp"
 #include "NEGUI2/Core/Window.hpp"
+#include "NEGUI2/Core/ScreenManager.hpp"
 namespace NEGUI2
 {
     class Core
@@ -11,6 +12,7 @@ namespace NEGUI2
         DeviceManager device_manager_;
         MemoryManager memory_manager_;
         Window window_;
+        ScreenManager screen_manager_;
 // TODO DebugUtilityを導入
         Core();
         void init();
@@ -21,6 +23,7 @@ namespace NEGUI2
         DeviceManager& get_device_manager();
         MemoryManager& get_memory_manager();
         Window& get_window();
+        ScreenManager& get_screen_manager();
     };
 }
 #endif

@@ -1,7 +1,7 @@
 #include "NEGUI2/Core/Core.hpp"
 
 namespace NEGUI2 {
-    Core::Core() : initialized_(false), device_manager_(), memory_manager_()
+    Core::Core() : initialized_(false), device_manager_(), memory_manager_(), screen_manager_()
     {
     }
 
@@ -11,6 +11,7 @@ namespace NEGUI2 {
         window_.init();
         device_manager_.init();
         memory_manager_.init();
+        screen_manager_.init();
     }
 
     Core& Core::get_instance()
@@ -37,6 +38,11 @@ namespace NEGUI2 {
     Window& Core::get_window()
     {
         return window_;
+    }
+
+    ScreenManager& Core::get_screen_manager()
+    {
+        return screen_manager_;
     }
 
 }
