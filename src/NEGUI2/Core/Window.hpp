@@ -1,28 +1,29 @@
 #ifndef _WINDOW_H
 #define _WINDOW_H
 
-#define GLFW_INCLUDE_VULKAN
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include <volk.h>
 #include <cstdint>
 
 namespace NEGUI2
 {
 
-class Window
-{
-  const int WIDTH = 800;
-  const int HEIGHT = 600;
-  GLFWwindow* window_;
-  public:
+  class Window
+  {
+    friend class Core;
+    const int WIDTH = 800;
+    const int HEIGHT = 600;
+    GLFWwindow *window_;
     Window();
+
+  public:
     ~Window();
-    GLFWwindow* get_window();
+    GLFWwindow *get_window();
 
     bool should_close() const;
-    void get_extent(int& width, int& height) const;
-};
+    void get_extent(int &width, int &height) const;
+  };
 
 }
 #endif

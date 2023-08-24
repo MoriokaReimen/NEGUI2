@@ -81,19 +81,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(vma)
 
 ##################################################
-# volk
-##################################################
-if (WIN32)
-  set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
-endif()
-FetchContent_Declare(
-  volk
-  GIT_REPOSITORY  https://github.com/zeux/volk.git
-  GIT_TAG         sdk-1.3.261.0
-)
-FetchContent_MakeAvailable(volk)
-
-##################################################
 # imgui
 ##################################################
 FetchContent_Declare(
@@ -116,7 +103,7 @@ if (NOT imgui_POPULATED)
     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
   )
-  target_link_libraries(imgui PUBLIC glfw volk::volk)
+  target_link_libraries(imgui PUBLIC glfw)
   target_compile_definitions(imgui PUBLIC IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
   add_library(imgui::imgui ALIAS imgui)
   target_include_directories(imgui

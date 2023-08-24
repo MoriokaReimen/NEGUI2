@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/External.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Shader.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/RuntimeResource.cmake)
+find_package(Vulkan REQUIRED)
 
 ##################################################
 # Configure NEGUI2 Library
@@ -17,11 +18,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/RuntimeResource.cmake)
 file(GLOB_RECURSE NEGUI2_SRC ${CMAKE_CURRENT_LIST_DIR}/src/NEGUI2/*.cpp)
 add_library(NEGUI2 ${NEGUI2_SRC})
 target_include_directories(NEGUI2 PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src)
-target_link_libraries(NEGUI2 PUBLIC glfw spdlog::spdlog volk::volk Vulkan::Headers imgui::imgui
+target_link_libraries(NEGUI2 PUBLIC glfw spdlog::spdlog Vulkan::Vulkan Vulkan::Headers imgui::imgui
                                     imgui::implot imgui::imguizmo imgui::colortextedit Eigen3::Eigen
                                     glslang glslang-default-resource-limits SPIRV VulkanMemoryAllocator)
 target_glsl_shaders(NEGUI2 PUBLIC ${CMAKE_CURRENT_LIST_DIR}/shader/base.frag ${CMAKE_CURRENT_LIST_DIR}/shader/base.vert)
-target_compile_definitions(NEGUI2 PUBLIC VK_NO_PROTOTYPES VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0)
+target_compile_definitions(NEGUI2 PUBLIC VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0)
 
 ##################################################
 # Configure App Executable

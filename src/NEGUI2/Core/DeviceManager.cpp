@@ -2,7 +2,6 @@
 #include <spdlog/spdlog.h>
 #include <GLFW/glfw3.h>
 #include <set>
-
 namespace
 {
 #ifndef NDEBUG
@@ -14,7 +13,12 @@ namespace
         (void)messageCode;
         (void)pUserData;
         (void)pLayerPrefix; // Unused arguments
-        spdlog::error("[vulkan] Debug report from ObjectType: {}\nMessage: {}\n\n", static_cast<int>(objectType), pMessage);
+        if(flags & VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT)
+        {
+            spdlog::error("[vulkan] Debug report from ObjectType: {}\nMessage: {}", static_cast<int>(objectType), pMessage);
+        } else {
+            spdlog::info("[vulkan] Debug report from ObjectType: {}\nMessage: {}", static_cast<int>(objectType), pMessage);
+        }
         return VK_FALSE;
     }
 #endif // IMGUI_VULKAN_DEBUG_REPORT
@@ -45,7 +49,7 @@ namespace NEGUI2
         vk::InstanceCreateInfo create_info;
 
         // Enumerate available extensions
-        auto properties = vk::enumerateInstanceExtensionProperties();
+        auto properties =  vk::enumerateInstanceExtensionProperties();
         // TODO check_vk_result(err);
 
         // Enable required extensions
@@ -76,8 +80,6 @@ namespace NEGUI2
             VK_API_VERSION_1_3);
         create_info.setPApplicationInfo(&app_info);
         instance = vk::raii::Instance(context_, create_info);
-
-        volkLoadInstance(*instance);
 
         // Setup the debug report callback
 #ifndef NDEBUG
@@ -161,7 +163,6 @@ namespace NEGUI2
             create_info.setPEnabledExtensionNames(device_extensions);
             create_info.setQueueCreateInfos(queueCreateInfos);
             device = physical_device.createDevice(create_info);
-            volkLoadDevice(*device);
         }
     }
     void DeviceManager::init_queue_()
@@ -195,7 +196,6 @@ namespace NEGUI2
     void DeviceManager::init_pipeline_cache_()
     {
         vk::PipelineCacheCreateInfo create_info;
-        create_info.flags = vk::PipelineCacheCreateFlagBits::eExternallySynchronized;
         pipeline_cache = device.createPipelineCache(create_info);
     }
 
@@ -205,11 +205,10 @@ namespace NEGUI2
           graphics_queue(nullptr), present_queue(nullptr), debug_report(nullptr),
           descriptor_pool(nullptr), command_pool(nullptr), pipeline_cache(nullptr)
     {
-        /* Initialize Volk*/
-        {
-            auto result = volkInitialize();
-            // check_vk_result(result);
-        }
+    }
+
+    void DeviceManager::init()
+    {
         init_instance_();
         init_physical_device_();
         init_device_();
@@ -221,13 +220,6 @@ namespace NEGUI2
 
     DeviceManager::~DeviceManager()
     {
-    }
-
-    DeviceManager &DeviceManager::getInstance()
-    {
-        static DeviceManager instance;
-
-        return instance;
     }
 
     vk::Result DeviceManager::one_shot(std::function<vk::Result(vk::raii::CommandBuffer &command_buffer)> func)

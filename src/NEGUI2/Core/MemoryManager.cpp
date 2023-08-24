@@ -1,10 +1,18 @@
 #include "NEGUI2/Core/MemoryManager.hpp"
-#include "NEGUI2/Core/DeviceManager.hpp"
+#include "NEGUI2/Core/Core.hpp"
+#include <spdlog/spdlog.h>
 
+#define VMA_IMPLEMENTATION
+#include "vk_mem_alloc.h"
 namespace NEGUI2
 {
     MemoryManager::MemoryManager()
+    {}
+
+    void MemoryManager::init()
     {
+        spdlog::info("Initialize Memory Manager.");
+
         VmaVulkanFunctions fn;
         fn.vkAllocateMemory = vkAllocateMemory;
         fn.vkBindBufferMemory = vkBindBufferMemory;
@@ -27,13 +35,15 @@ namespace NEGUI2
         fn.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
         fn.vkMapMemory = vkMapMemory;
         fn.vkUnmapMemory = vkUnmapMemory;
+        fn.vkBindImageMemory2KHR = vkBindImageMemory2;
+        fn.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2;
 
-        auto &device_data = DeviceManager::getInstance();
+        auto &device_manager = Core::get_instance().get_device_manager();
         VmaAllocatorCreateInfo allocatorCreateInfo = {};
         allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
-        allocatorCreateInfo.instance = *device_data.instance;
-        allocatorCreateInfo.physicalDevice = *device_data.physical_device;
-        allocatorCreateInfo.device = *device_data.device;
+        allocatorCreateInfo.instance = *device_manager.instance;
+        allocatorCreateInfo.physicalDevice = *device_manager.physical_device;
+        allocatorCreateInfo.device = *device_manager.device;
         allocatorCreateInfo.pVulkanFunctions = &fn;
         vmaCreateAllocator(&allocatorCreateInfo, &allocator_);
     }
@@ -45,13 +55,6 @@ namespace NEGUI2
             vmaDestroyBuffer(allocator_, *memory.second.buffer, memory.second.alloc);
         }
         vmaDestroyAllocator(allocator_);
-    }
-
-    MemoryManager &MemoryManager::getInstacne()
-    {
-        static MemoryManager instance;
-
-        return instance;
     }
 
     Memory &MemoryManager::get_memory(const std::string &key)
@@ -110,7 +113,7 @@ namespace NEGUI2
         VmaAllocationInfo alloc_info;
 
         auto result = vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer, &alloc, &alloc_info);
-        auto &device = DeviceManager::getInstance();
+        auto &device = Core::get_instance().get_device_manager();
 
         memories_.insert({key, Memory{vk::raii::Buffer(device.device, buffer), alloc, alloc_info}});
 
@@ -161,7 +164,7 @@ namespace NEGUI2
         {
             std::memcpy(alloc_info.pMappedData, data, size);
             vmaFlushAllocation(allocator_, stage_allocation, 0, VK_WHOLE_SIZE);
-            DeviceManager::getInstance().one_shot([&](vk::raii::CommandBuffer &command_buffer)
+            Core::get_instance().get_device_manager().one_shot([&](vk::raii::CommandBuffer &command_buffer)
                                                   {
                     auto &target = memories_.at(key);
                     vk::BufferCopy copyRegion{0, 0, size};
