@@ -16,11 +16,14 @@ namespace NEGUI2
     const int HEIGHT = 600;
     GLFWwindow *window_;
     Window();
+    void init();
+
+    Window(const Window& other) = delete;
+    Window& operator=(const Window& other) = delete;
 
   public:
     ~Window();
     GLFWwindow *get_window();
-
     bool should_close() const;
     void get_extent(int &width, int &height) const;
   };

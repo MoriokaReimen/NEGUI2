@@ -7,6 +7,11 @@ namespace NEGUI2
 {
   Window::Window()
   {
+
+  }
+
+  void Window::init()
+  {
     spdlog::info("Initializing Window");
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -16,7 +21,7 @@ namespace NEGUI2
 
   Window::~Window()
   {
-    spdlog::info("Finalizing Window");
+    // spdlog::info("Finalizing Window");
     glfwDestroyWindow(window_);
     glfwTerminate();
   }

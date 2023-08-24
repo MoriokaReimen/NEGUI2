@@ -8,6 +8,7 @@ namespace NEGUI2 {
     void Core::init()
     {
         initialized_ = true;
+        window_.init();
         device_manager_.init();
         memory_manager_.init();
     }
@@ -31,6 +32,11 @@ namespace NEGUI2 {
     MemoryManager& Core::get_memory_manager()
     {
         return memory_manager_;
+    }
+
+    Window& Core::get_window()
+    {
+        return window_;
     }
 
 }
