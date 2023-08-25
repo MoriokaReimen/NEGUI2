@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <GLFW/glfw3.h>
 #include <set>
+#include <exception>
 namespace
 {
 #ifndef NDEBUG
@@ -16,6 +17,7 @@ namespace
         if(flags & VkDebugReportFlagBitsEXT::VK_DEBUG_REPORT_ERROR_BIT_EXT)
         {
             spdlog::error("[vulkan] Debug report from ObjectType: {}\nMessage: {}", static_cast<int>(objectType), pMessage);
+            throw std::runtime_error("Vulkan Error");
         } else {
             spdlog::info("[vulkan] Debug report from ObjectType: {}\nMessage: {}", static_cast<int>(objectType), pMessage);
         }

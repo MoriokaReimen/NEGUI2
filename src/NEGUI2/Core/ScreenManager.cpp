@@ -224,11 +224,11 @@ namespace NEGUI2
             imageViewCreateInfo.image = frames[i].color_buffer;
             vk::ImageSubresourceRange image_range{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
             imageViewCreateInfo.subresourceRange = image_range;    
-            frames[i].back_buffer_view = device_manager.device.createImageView(imageViewCreateInfo);
+            frames[i].color_buffer_view = device_manager.device.createImageView(imageViewCreateInfo);
 // TODO ルールを知る
             vk::FramebufferCreateInfo info;
             info.renderPass = *render_pass;
-            std::array<vk::ImageView, 1> target_view{*frames[i].back_buffer_view};
+            std::array<vk::ImageView, 1> target_view{*frames[i].color_buffer_view};
             info.setAttachments(target_view);
             info.width = width;
             info.height = height;

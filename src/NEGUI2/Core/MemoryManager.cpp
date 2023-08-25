@@ -13,6 +13,11 @@ namespace
         return vk::Format::eR8G8B8A8Unorm;
     }
 
+    bool hasStencilComponent(vk::Format format)
+    {
+        return format == vk::Format::eD32SfloatS8Uint || format == vk::Format::eD24UnormS8Uint;
+    }
+
     vk::Format get_depth_format(const vk::raii::PhysicalDevice &physical_device)
     {
         std::vector<vk::Format> candidates = {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint};
@@ -78,7 +83,12 @@ namespace NEGUI2
     {
         for (auto &memory : memories_)
         {
-            vmaDestroyBuffer(allocator_, *memory.second.buffer, memory.second.alloc);
+            vmaDestroyBuffer(allocator_, memory.second.buffer, memory.second.alloc);
+        }
+
+        for(auto& image : images_)
+        {
+            vmaDestroyImage(allocator_, image.second.image, image.second.alloc);
         }
         vmaDestroyAllocator(allocator_);
     }
@@ -88,10 +98,15 @@ namespace NEGUI2
         return memories_.at(key);
     }
 
-    bool MemoryManager::add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type)
+    bool MemoryManager::add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type, bool rebuild)
     {
-        if (memories_.count(key) != 0)
+        if (memories_.count(key) != 0 && !rebuild)
             return false;
+
+        if(rebuild)
+        {
+            remove_memory(key);
+        }
 
         VkBufferCreateInfo bufferInfo{};
         VmaAllocationCreateInfo allocInfo{};
@@ -141,7 +156,7 @@ namespace NEGUI2
         auto result = vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer, &alloc, &alloc_info);
         auto &device = Core::get_instance().get_device_manager();
 
-        memories_.insert({key, Memory{vk::raii::Buffer(device.device, buffer), alloc, alloc_info}});
+        memories_.insert({key, Memory{vk::Buffer(buffer), alloc, alloc_info}});
 
         return true;
     }
@@ -152,7 +167,7 @@ namespace NEGUI2
         if (memories_.count(key) != 0)
         {
             auto &memory = memories_.at(key);
-            vmaDestroyBuffer(allocator_, *memory.buffer, memory.alloc);
+            vmaDestroyBuffer(allocator_, memory.buffer, memory.alloc);
             memories_.erase(key);
             ret = true;
         }
@@ -194,7 +209,7 @@ namespace NEGUI2
                                                                {
                     auto &target = memories_.at(key);
                     vk::BufferCopy copyRegion{0, 0, size};
-                    command_buffer.copyBuffer(stage_buffer, *target.buffer, copyRegion);
+                    command_buffer.copyBuffer(stage_buffer, target.buffer, copyRegion);
                     return vk::Result::eSuccess; });
         }
 
@@ -209,8 +224,16 @@ namespace NEGUI2
         return images_.at(key);
     }
 
-    bool MemoryManager::add_image(const std::string &key, const int &width, const int &height, const Image::TYPE &type)
+    bool MemoryManager::add_image(const std::string &key, const int &width, const int &height, const Image::TYPE &type, bool rebuild)
     {
+        if(images_.count(key) && !rebuild)
+            return false;
+
+        if(rebuild)
+        {
+            remove_image(key);
+        }
+
         vk::ImageCreateInfo create_info;
         VmaAllocationCreateInfo allocInfo{};
 
@@ -244,7 +267,7 @@ namespace NEGUI2
             create_info.arrayLayers = 1;
             create_info.samples = vk::SampleCountFlagBits::e1;
             create_info.tiling = vk::ImageTiling::eOptimal;
-            create_info.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+            create_info.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
@@ -259,7 +282,7 @@ namespace NEGUI2
         auto temp_info = static_cast<VkImageCreateInfo>(create_info);
         vmaCreateImage(allocator_, &temp_info, &allocInfo, &image, &alloc, &alloc_info);
         auto &device = Core::get_instance().get_device_manager();
-        images_.insert({key, Image{vk::raii::Image(device.device, image), create_info.format, alloc, alloc_info, type}});
+        images_.insert({key, Image{vk::Image(image), create_info.format, alloc, alloc_info, type}});
         
         return true;
     }
@@ -270,8 +293,8 @@ namespace NEGUI2
         if (images_.count(key) != 0)
         {
             auto &image = images_.at(key);
-            vmaDestroyImage(allocator_, *image.image, image.alloc);
-            memories_.erase(key);
+            vmaDestroyImage(allocator_, image.image, image.alloc);
+            images_.erase(key);
             ret = true;
         }
         return ret;

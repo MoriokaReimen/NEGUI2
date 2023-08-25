@@ -7,12 +7,12 @@ namespace NEGUI2
 {
     class OffScreenManager
     {
+        friend class Core;
         OffScreenManager();
         void init(); // TODO すべてのモジュールにデストロイを追加
         OffScreenManager(const OffScreenManager& other) = delete;
         OffScreenManager& operator=(const OffScreenManager& other) = delete;
     public:
-        ~OffScreenManager();
         int width;
         int height;
         vk::raii::RenderPass render_pass;

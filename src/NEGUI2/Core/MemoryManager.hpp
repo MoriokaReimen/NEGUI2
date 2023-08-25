@@ -9,7 +9,7 @@ namespace NEGUI2
 {
     struct Memory
     {
-        vk::raii::Buffer buffer;
+        vk::Buffer buffer;
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info;
 
@@ -24,7 +24,7 @@ namespace NEGUI2
 
     struct Image
     {
-        vk::raii::Image image;
+        vk::Image image;
         vk::Format format;
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info;
@@ -49,12 +49,12 @@ namespace NEGUI2
     public:
         ~MemoryManager();
         Memory &get_memory(const std::string &key);
-        bool add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type);
+        bool add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type, bool rebuild = true);
         bool remove_memory(const std::string &key);
         bool upload_memory(const std::string &key, const void *data, const size_t size);
 
         Image &get_image(const std::string &key);
-        bool add_image(const std::string &key, const int& width, const int& height, const Image::TYPE &type);
+        bool add_image(const std::string &key, const int& width, const int& height, const Image::TYPE &type, bool rebuild = true);
         bool remove_image(const std::string &key);
     };
 }
