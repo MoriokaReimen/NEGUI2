@@ -1,13 +1,39 @@
 #include "NEGUI2/Core/MemoryManager.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include <spdlog/spdlog.h>
+#include <exception>
 
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
+
+namespace
+{
+    vk::Format get_color_format()
+    {
+        return vk::Format::eR8G8B8A8Unorm;
+    }
+
+    vk::Format get_depth_format(const vk::raii::PhysicalDevice &physical_device)
+    {
+        std::vector<vk::Format> candidates = {vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint};
+        for (vk::Format format : candidates)
+        {
+            vk::FormatProperties props = physical_device.getFormatProperties(format);
+
+            if (props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment)
+            {
+                return format;
+            }
+        }
+        spdlog::error("Nodepth Format Found");
+        throw std::runtime_error("failed to find supported format!");
+    }
+}
 namespace NEGUI2
 {
     MemoryManager::MemoryManager()
-    {}
+    {
+    }
 
     void MemoryManager::init()
     {
@@ -165,7 +191,7 @@ namespace NEGUI2
             std::memcpy(alloc_info.pMappedData, data, size);
             vmaFlushAllocation(allocator_, stage_allocation, 0, VK_WHOLE_SIZE);
             Core::get_instance().get_device_manager().one_shot([&](vk::raii::CommandBuffer &command_buffer)
-                                                  {
+                                                               {
                     auto &target = memories_.at(key);
                     vk::BufferCopy copyRegion{0, 0, size};
                     command_buffer.copyBuffer(stage_buffer, *target.buffer, copyRegion);
@@ -176,5 +202,78 @@ namespace NEGUI2
         vmaDestroyBuffer(allocator_, stage_buffer, stage_allocation);
 
         return true;
+    }
+
+    Image &MemoryManager::get_image(const std::string &key)
+    {
+        return images_.at(key);
+    }
+
+    bool MemoryManager::add_image(const std::string &key, const int &width, const int &height, const Image::TYPE &type)
+    {
+        vk::ImageCreateInfo create_info;
+        VmaAllocationCreateInfo allocInfo{};
+
+        switch (type)
+        {
+        case Image::TYPE::COLOR:
+        {
+            create_info.imageType = vk::ImageType::e2D;
+            create_info.format = vk::Format::eR8G8B8A8Unorm;
+            create_info.extent.width = static_cast<uint32_t>(width);
+            create_info.extent.height = static_cast<uint32_t>(height);
+            create_info.extent.depth = 1;
+            create_info.mipLevels = 1;
+            create_info.arrayLayers = 1;
+            create_info.samples = vk::SampleCountFlagBits::e1;
+            create_info.tiling = vk::ImageTiling::eOptimal;
+            create_info.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        }
+        break;
+        case Image::TYPE::DEPTH:
+        {
+            auto &physical_device = Core::get_instance().get_device_manager().physical_device;
+            create_info.imageType = vk::ImageType::e2D;
+            create_info.format = get_depth_format(physical_device);
+            create_info.extent.width = static_cast<uint32_t>(width);
+            create_info.extent.height = static_cast<uint32_t>(height);
+            create_info.extent.depth = 1;
+            create_info.mipLevels = 1;
+            create_info.arrayLayers = 1;
+            create_info.samples = vk::SampleCountFlagBits::e1;
+            create_info.tiling = vk::ImageTiling::eOptimal;
+            create_info.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        }
+        break;
+
+        default:
+            spdlog::error("Invalid image type");
+            break;
+        }
+        VkImage image;
+        VmaAllocation alloc;
+        VmaAllocationInfo alloc_info; // TODO 改名
+        auto temp_info = static_cast<VkImageCreateInfo>(create_info);
+        vmaCreateImage(allocator_, &temp_info, &allocInfo, &image, &alloc, &alloc_info);
+        auto &device = Core::get_instance().get_device_manager();
+        images_.insert({key, Image{vk::raii::Image(device.device, image), create_info.format, alloc, alloc_info, type}});
+        
+        return true;
+    }
+
+    bool MemoryManager::remove_image(const std::string &key)
+    {
+        bool ret = false;
+        if (images_.count(key) != 0)
+        {
+            auto &image = images_.at(key);
+            vmaDestroyImage(allocator_, *image.image, image.alloc);
+            memories_.erase(key);
+            ret = true;
+        }
+        return ret;
     }
 }

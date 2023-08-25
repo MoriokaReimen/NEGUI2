@@ -1,22 +1,9 @@
 #ifndef _SCREEN_MANAGER_HPP
 #define _SCREEN_MANAGER_HPP
 #include <vulkan/vulkan_raii.hpp>
+#include "NEGUI2/Core/ScreenCommon.hpp"
 namespace NEGUI2
 {
-
-    struct FrameData
-    {
-        vk::raii::Fence fence = nullptr;
-        vk::Image back_buffer = nullptr;
-        vk::raii::ImageView back_buffer_view = nullptr;
-        vk::raii::Framebuffer frame_buffer = nullptr;
-    };
-
-    struct SyncObject
-    {
-        vk::raii::Semaphore image_acquired_semaphore  = nullptr;
-        vk::raii::Semaphore image_rendered_semaphore  = nullptr;
-    };
     class ScreenManager
     {
         friend class Core;

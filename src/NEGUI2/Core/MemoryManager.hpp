@@ -25,8 +25,15 @@ namespace NEGUI2
     struct Image
     {
         vk::raii::Image image;
+        vk::Format format;
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info;
+        enum class TYPE : uint32_t
+        {
+            COLOR = 1,
+            DEPTH = 2,
+        };
+        TYPE type;
     };
 
     class MemoryManager
@@ -34,6 +41,7 @@ namespace NEGUI2
         friend class Core;
         VmaAllocator allocator_;
         std::unordered_map<std::string, Memory> memories_;
+        std::unordered_map<std::string, Image> images_;
         MemoryManager();
         void init();
         MemoryManager(const MemoryManager& other) = delete;
@@ -44,6 +52,10 @@ namespace NEGUI2
         bool add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type);
         bool remove_memory(const std::string &key);
         bool upload_memory(const std::string &key, const void *data, const size_t size);
+
+        Image &get_image(const std::string &key);
+        bool add_image(const std::string &key, const int& width, const int& height, const Image::TYPE &type);
+        bool remove_image(const std::string &key);
     };
 }
 
