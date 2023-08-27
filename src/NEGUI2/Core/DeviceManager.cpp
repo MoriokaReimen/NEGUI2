@@ -159,7 +159,7 @@ namespace NEGUI2
         vk::ApplicationInfo app_info(
             "NEGUI2", VK_MAKE_VERSION(0, 1, 0),
             "NEGUI2", VK_MAKE_VERSION(0, 1, 0),
-            VK_API_VERSION_1_2);
+            vk::ApiVersion12);
         create_info.setPApplicationInfo(&app_info);
         instance = vk::raii::Instance(context_, create_info);
 
@@ -169,7 +169,7 @@ namespace NEGUI2
             vk::DebugUtilsMessengerCreateInfoEXT create_info{{},
                                                              vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
                                                              vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
-                                                                 vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+                                                             vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
                                                              &::debugUtilsMessengerCallback};
             debug_func = instance.createDebugUtilsMessengerEXT(create_info);
         }
@@ -279,8 +279,7 @@ namespace NEGUI2
 
     void DeviceManager::init_pipeline_cache_()
     {
-        vk::PipelineCacheCreateInfo create_info;
-        pipeline_cache = device.createPipelineCache(create_info);
+        pipeline_cache = device.createPipelineCache({});
     }
 
     DeviceManager::DeviceManager()

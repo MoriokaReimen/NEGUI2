@@ -71,7 +71,7 @@ namespace NEGUI2
 
         auto &device_manager = Core::get_instance().get_device_manager();
         VmaAllocatorCreateInfo allocatorCreateInfo = {};
-        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+        allocatorCreateInfo.vulkanApiVersion = vk::ApiVersion12;
         allocatorCreateInfo.instance = *device_manager.instance;
         allocatorCreateInfo.physicalDevice = *device_manager.physical_device;
         allocatorCreateInfo.device = *device_manager.device;
