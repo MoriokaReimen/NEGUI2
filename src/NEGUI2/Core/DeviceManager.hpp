@@ -32,7 +32,7 @@ namespace NEGUI2
         vk::raii::Queue graphics_queue;
         vk::raii::Queue present_queue;
 #ifndef NDEBUG
-        vk::raii::DebugReportCallbackEXT debug_report;
+        vk::raii::DebugUtilsMessengerEXT debug_func;
 #endif
         vk::raii::DescriptorPool descriptor_pool;
         vk::raii::CommandPool command_pool;
