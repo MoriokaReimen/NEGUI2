@@ -15,6 +15,7 @@ namespace NEGUI2 {
         screen_manager_.init();
         offscreen_manager_.init();
         offscreen_manager_.rebuild();
+        texture_manager_.init();
     }
 
     Core& Core::get_instance()
@@ -46,6 +47,11 @@ namespace NEGUI2 {
     ScreenManager& Core::get_screen_manager()
     {
         return screen_manager_;
+    }
+
+    TextureManager& Core::get_texture_manager()
+    {
+        return texture_manager_;
     }
 
 }

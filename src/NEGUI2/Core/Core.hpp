@@ -5,6 +5,7 @@
 #include "NEGUI2/Core/Window.hpp"
 #include "NEGUI2/Core/ScreenManager.hpp"
 #include "NEGUI2/Core/OffScreenManager.hpp"
+#include "NEGUI2/Core/TextureManager.hpp"
 namespace NEGUI2
 {
     class Core
@@ -15,7 +16,8 @@ namespace NEGUI2
         Window window_;
         ScreenManager screen_manager_;
         OffScreenManager offscreen_manager_;
-// TODO DebugUtilityを導入
+        TextureManager texture_manager_;
+
         Core();
         void init();
         Core(const Core& other) = delete;
@@ -26,6 +28,7 @@ namespace NEGUI2
         MemoryManager& get_memory_manager();
         Window& get_window();
         ScreenManager& get_screen_manager();
+        TextureManager& get_texture_manager();
     };
 }
 #endif

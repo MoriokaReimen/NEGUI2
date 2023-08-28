@@ -184,3 +184,22 @@ if (NOT colortextedit_POPULATED)
     ${colortextedit_SOURCE_DIR}
   )
 endif ()
+
+##################################################
+# stb
+##################################################
+FetchContent_Declare(
+  stb
+  GIT_REPOSITORY https://github.com/nothings/stb.git
+  GIT_TAG master
+  )
+  FetchContent_GetProperties(stb)
+if (NOT stb_POPULATED)
+  FetchContent_Populate(stb)
+  add_library(stb INTERFACE)
+  add_library(stb::stb ALIAS stb)
+  target_include_directories(stb
+  INTERFACE
+    ${stb_SOURCE_DIR}
+  )
+endif ()

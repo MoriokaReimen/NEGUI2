@@ -271,6 +271,23 @@ namespace NEGUI2
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
+        case Image::TYPE::TEXTURE:
+        {
+            create_info.imageType = vk::ImageType::e2D;
+            create_info.format = vk::Format::eR8G8B8A8Srgb;
+            create_info.extent.width = static_cast<uint32_t>(width);
+            create_info.extent.height = static_cast<uint32_t>(height);
+            create_info.extent.depth = 1;
+            create_info.mipLevels = 1;
+            create_info.arrayLayers = 1;
+            create_info.initialLayout = vk::ImageLayout::eTransferDstOptimal;
+            create_info.samples = vk::SampleCountFlagBits::e1;
+            create_info.tiling = vk::ImageTiling::eOptimal;
+            create_info.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+            create_info.sharingMode = vk::SharingMode::eExclusive;
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        }
+        break;
 
         default:
             spdlog::error("Invalid image type");
@@ -298,5 +315,55 @@ namespace NEGUI2
             ret = true;
         }
         return ret;
+    }
+
+    bool MemoryManager::upload_image(const std::string& key, const void *data, const uint32_t& width, const uint32_t& height)
+    {
+        if (images_.count(key) == 0 || width * height == 0)
+        {
+            return false;
+        }
+
+        /* イメージサイズを計算 */
+        constexpr uint32_t CHANNELS = 4u;
+        const uint32_t image_size = CHANNELS * width * height;
+
+        /* ステージングバッファ生成 */
+        VkBuffer stage_buffer;
+        VmaAllocation stage_allocation;
+        VmaAllocationInfo alloc_info;
+        {
+            VkBufferCreateInfo bufferInfo{};
+            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufferInfo.size = image_size;
+            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+            VmaAllocationCreateInfo allocInfo{};
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                              VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            VkBuffer buffer;
+            VmaAllocation allocation;
+            vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &stage_buffer, &stage_allocation, &alloc_info);
+        }
+
+        /* データコピー */
+        {
+            std::memcpy(alloc_info.pMappedData, data, image_size);
+            vmaFlushAllocation(allocator_, stage_allocation, 0, VK_WHOLE_SIZE);
+            Core::get_instance().get_device_manager().one_shot([&](vk::raii::CommandBuffer &command_buffer)
+                                                               {
+                    auto &target = images_.at(key);
+                    vk::BufferImageCopy copy_region{0, width, height};
+                    std::array<vk::BufferImageCopy, 1> copyRegions{copy_region};
+                    command_buffer.copyBufferToImage(stage_buffer, target.image, vk::ImageLayout::eTransferDstOptimal, copyRegions);
+                    return vk::Result::eSuccess; });
+        }
+
+        /* ステージバッファ削除 */
+        vmaDestroyBuffer(allocator_, stage_buffer, stage_allocation);
+
+        return true;
     }
 }

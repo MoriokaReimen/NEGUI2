@@ -32,6 +32,7 @@ namespace NEGUI2
         {
             COLOR = 1,
             DEPTH = 2,
+            TEXTURE = 3,
         };
         TYPE type;
     };
@@ -56,6 +57,7 @@ namespace NEGUI2
         Image &get_image(const std::string &key);
         bool add_image(const std::string &key, const int& width, const int& height, const Image::TYPE &type, bool rebuild = true);
         bool remove_image(const std::string &key);
+        bool upload_image(const std::string& key, const void *data, const uint32_t& width, const uint32_t& height);
     };
 }
 
