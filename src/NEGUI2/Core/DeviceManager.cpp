@@ -142,7 +142,7 @@ namespace NEGUI2
         std::array<const char *, 1> layers{"VK_LAYER_KHRONOS_validation"};
         create_info.setPEnabledLayerNames(layers);
         instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
+#if 0
         auto layer_properties = vk::enumerateInstanceLayerProperties();
         if (!is_extension_available(layer_properties, VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
         {
@@ -151,7 +151,7 @@ namespace NEGUI2
         std::array<vk::ValidationFeatureEnableEXT, 1> enabled{vk::ValidationFeatureEnableEXT::eBestPractices};
         vk::ValidationFeaturesEXT features(enabled, {});
         create_info.pNext = &features;
-
+#endif
 #endif
 
         /* インスタンス生成 */

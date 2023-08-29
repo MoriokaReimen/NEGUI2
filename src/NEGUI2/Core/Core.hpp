@@ -6,6 +6,7 @@
 #include "NEGUI2/Core/ScreenManager.hpp"
 #include "NEGUI2/Core/OffScreenManager.hpp"
 #include "NEGUI2/Core/TextureManager.hpp"
+#include "NEGUI2/Core/ImGuiManager.hpp"
 namespace NEGUI2
 {
     class Core
@@ -17,6 +18,7 @@ namespace NEGUI2
         ScreenManager screen_manager_;
         OffScreenManager offscreen_manager_;
         TextureManager texture_manager_;
+        ImGuiManager imgui_manager_;
 
         Core();
         void init();
@@ -29,6 +31,7 @@ namespace NEGUI2
         Window& get_window();
         ScreenManager& get_screen_manager();
         TextureManager& get_texture_manager();
+        ImGuiManager& get_imgui_manager();
     };
 }
 #endif
