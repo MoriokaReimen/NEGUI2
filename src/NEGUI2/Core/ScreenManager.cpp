@@ -112,6 +112,13 @@ namespace NEGUI2
             clear_value = {{166.0f / 256.0f, 205.0f / 256.0f, 182.0f / 256.0f, 0.0f}};
         }
 
+        /* 各フレームにコマンドバッファ割当 */
+        {
+            vk::CommandBufferAllocateInfo info;
+            info.setCommandBufferCount(4).setCommandPool(*device_manager.command_pool).setLevel(vk::CommandBufferLevel::ePrimary);
+            command_buffers = device_manager.device.allocateCommandBuffers(info);
+        }
+
         rebuild();
 #if 0
         vk::raii::SwapchainKHR swap_chain;
@@ -132,6 +139,8 @@ namespace NEGUI2
         semaphore_index = 0u;
         vk::raii::SwapchainKHR old_swapchain = std::move(swap_chain);
         auto &device_manager = Core::get_instance().get_device_manager();
+
+        device_manager.device.waitIdle();
         
         /* Create Swap Chain */
         {

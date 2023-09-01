@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <set>
 #include <exception>
+#include <iostream>
 namespace
 {
 #ifndef NDEBUG
@@ -274,6 +275,7 @@ namespace NEGUI2
     {
         vk::CommandPoolCreateInfo create_info;
         create_info.queueFamilyIndex = graphics_queue_index;
+        create_info.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
         command_pool = device.createCommandPool(create_info);
     }
 
@@ -303,6 +305,7 @@ namespace NEGUI2
 
     DeviceManager::~DeviceManager()
     {
+        device.waitIdle();
     }
 
     vk::Result DeviceManager::one_shot(std::function<vk::Result(vk::raii::CommandBuffer &command_buffer)> func)

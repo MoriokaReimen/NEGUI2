@@ -32,6 +32,10 @@ namespace NEGUI2
         ScreenManager& get_screen_manager();
         TextureManager& get_texture_manager();
         ImGuiManager& get_imgui_manager();
+
+        bool should_close();
+        void update();
+        void wait_idle();
     };
 }
 #endif

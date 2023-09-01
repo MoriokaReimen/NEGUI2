@@ -97,6 +97,10 @@ namespace NEGUI2
                     { ImGui_ImplVulkan_CreateFontsTexture(*command_buffer);
                         return vk::Result::eSuccess; });
         ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
     }
 
     void ImGuiManager::update(vk::raii::CommandBuffer &command_buffer)

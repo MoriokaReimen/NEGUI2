@@ -27,6 +27,7 @@ namespace NEGUI2
         uint32_t semaphore_index; // Current set of swapchain wait semaphores we're using (needs to be distinct from per frame data)
         std::vector<FrameData> frames;
         std::vector<SyncObject> sync_objects;
+        std::vector<vk::raii::CommandBuffer> command_buffers;
 
         void rebuild();
     };
