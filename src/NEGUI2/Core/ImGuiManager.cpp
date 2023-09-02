@@ -93,12 +93,15 @@ namespace NEGUI2
         // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
         // ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
         // IM_ASSERT(font != nullptr);
-
+        
         // Upload Fonts
         dm.one_shot([&](vk::raii::CommandBuffer &command_buffer)
                     { ImGui_ImplVulkan_CreateFontsTexture(*command_buffer);
                         return vk::Result::eSuccess; });
         ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        io.IniFilename = nullptr;
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
