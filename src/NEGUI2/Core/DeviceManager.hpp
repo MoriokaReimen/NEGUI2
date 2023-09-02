@@ -31,9 +31,7 @@ namespace NEGUI2
         uint32_t present_queue_index;
         vk::raii::Queue graphics_queue;
         vk::raii::Queue present_queue;
-#ifndef NDEBUG
         vk::raii::DebugUtilsMessengerEXT debug_func;
-#endif
         vk::raii::DescriptorPool descriptor_pool;
         vk::raii::CommandPool command_pool;
         vk::raii::PipelineCache pipeline_cache;

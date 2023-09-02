@@ -8,9 +8,16 @@ function(target_runtime_resource TARGET_NAME)
     target_runtime_resource "${OPTIONS}" "${SINGLE_VALUE_KEYWORDS}"
     "${MULTI_VALUE_KEYWORDS}" ${ARGN})
 
+  # Create output directory
+  set(RUNTIME_OUT_DIR ${CMAKE_BINARY_DIR}/runtime)
+  add_custom_command(
+    OUTPUT ${RUNTIME_OUT_DIR}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${RUNTIME_OUT_DIR}
+  )
+
   foreach(RESOURCE_FILE IN LISTS target_runtime_resource_INTERFACE)
     get_filename_component(FILE_NAME ${RESOURCE_FILE} NAME)
-    set(OUT_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FILE_NAME}")
+    set(OUT_FILE "${RUNTIME_OUT_DIR}/${FILE_NAME}")
     add_custom_command(
         OUTPUT ${OUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E copy "${RESOURCE_FILE}" "${OUT_FILE}"
@@ -20,7 +27,7 @@ function(target_runtime_resource TARGET_NAME)
 
   foreach(RESOURCE_FILE IN LISTS target_runtime_resource_PUBLIC)
     get_filename_component(FILE_NAME ${RESOURCE_FILE} NAME)
-    set(OUT_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FILE_NAME}.spv")
+    set(OUT_FILE "${RUNTIME_OUT_DIR}/${FILE_NAME}")
     add_custom_command(
         OUTPUT ${OUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E copy "${RESOURCE_FILE}" "${OUT_FILE}"
@@ -30,7 +37,7 @@ function(target_runtime_resource TARGET_NAME)
 
   foreach(RESOURCE_FILE IN LISTS target_runtime_resource_PRIVATE)
     get_filename_component(FILE_NAME ${RESOURCE_FILE} NAME)
-    set(OUT_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FILE_NAME}")
+    set(OUT_FILE "${RUNTIME_OUT_DIR}/${FILE_NAME}")
     add_custom_command(
         OUTPUT ${OUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E copy "${RESOURCE_FILE}" "${OUT_FILE}"

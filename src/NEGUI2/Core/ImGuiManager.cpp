@@ -11,10 +11,12 @@ namespace
     {
         if (err == 0)
             return;
-        spdlog::error("[vulkan] Error: VkResult = %d\n", err);
+        vk::Result result = static_cast<vk::Result>(err);
+
+        spdlog::error("[vulkan] Error: VkResult = {}\n", vk::to_string(result));
         if (err < 0)
             std::abort();
-    }
+    } 
 }
 
 namespace NEGUI2

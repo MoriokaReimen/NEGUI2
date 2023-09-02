@@ -262,12 +262,22 @@ namespace NEGUI2
         spdlog::info("Initialize Descriptor Pool");
         std::vector<vk::DescriptorPoolSize> pool_sizes =
             {
-                {vk::DescriptorType::eCombinedImageSampler, 1000},
                 {vk::DescriptorType::eUniformBuffer, 1000},
-                {vk::DescriptorType::eStorageBuffer, 1000}};
+                {vk::DescriptorType::eStorageBuffer, 1000},
+				{vk::DescriptorType::eSampler, 1000},
+                {vk::DescriptorType::eCombinedImageSampler, 1000},
+				{vk::DescriptorType::eSampledImage, 1000},
+				{vk::DescriptorType::eStorageImage, 1000},
+				{vk::DescriptorType::eUniformTexelBuffer, 1000},
+				{vk::DescriptorType::eStorageTexelBuffer, 1000},
+				{vk::DescriptorType::eUniformBufferDynamic, 1000},
+				{vk::DescriptorType::eStorageBufferDynamic, 1000},
+				{vk::DescriptorType::eInputAttachment, 1000}};
+
+
         vk::DescriptorPoolCreateInfo pool_info;
         pool_info.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-        pool_info.maxSets = 1;
+        pool_info.maxSets = 100;
         pool_info.setPoolSizes(pool_sizes);
         descriptor_pool = device.createDescriptorPool(pool_info);
     }

@@ -25,6 +25,8 @@ namespace NEGUI2
     struct Image
     {
         vk::Image image;
+        vk::ImageView image_view;
+        vk::Sampler sampler;
         vk::Format format;
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info;
