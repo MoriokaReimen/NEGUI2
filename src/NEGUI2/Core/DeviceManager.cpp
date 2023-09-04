@@ -94,7 +94,7 @@ namespace
         return false;
     }
 
-    bool is_extension_available(const std::vector<vk::LayerProperties> properties, const char *extension)
+    bool is_layer_available(const std::vector<vk::LayerProperties> properties, const char *extension)
     {
         for (auto &property : properties)
         {
@@ -124,7 +124,14 @@ namespace NEGUI2
         vk::InstanceCreateInfo create_info;
 
         // Enumerate available extensions
-        auto properties = vk::enumerateInstanceExtensionProperties();
+        auto properties = context_.enumerateInstanceExtensionProperties();
+        for(auto& property : properties)
+        {
+            spdlog::info("Available Instance Extensions:");
+            spdlog::info("\t{} : Ver.{}.{}.{}.{}", property.extensionName,
+            vk::apiVersionVariant(property.specVersion), vk::apiVersionMajor(property.specVersion),
+            vk::apiVersionMinor(property.specVersion), vk::apiVersionPatch(property.specVersion));
+        }
         // TODO check_vk_result(err);
 
         // Enable required extensions
@@ -140,30 +147,40 @@ namespace NEGUI2
 
         /* 検証レイヤ有効 */
 #ifndef NDEBUG
-        std::array<const char *, 1> layers{"VK_LAYER_KHRONOS_validation"};
-        create_info.setPEnabledLayerNames(layers);
-        instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#if 0
-        auto layer_properties = vk::enumerateInstanceLayerProperties();
-        if (!is_extension_available(layer_properties, VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
+        if (is_extension_available(properties, VK_EXT_DEBUG_UTILS_EXTENSION_NAME))
         {
-            spdlog::error("VK_EXT_validation_features not found");
+            instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
-        std::array<vk::ValidationFeatureEnableEXT, 1> enabled{vk::ValidationFeatureEnableEXT::eBestPractices};
-        vk::ValidationFeaturesEXT features(enabled, {});
+        else
+        {
+            spdlog::error("{} not found", VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
+        auto layer_properties = vk::enumerateInstanceLayerProperties();
+        if (is_layer_available(layer_properties, VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME))
+        {
+            std::array<const char *, 1> layers{"VK_LAYER_KHRONOS_validation"};
+            create_info.setPEnabledLayerNames(layers);
+        }
+        else
+        {
+            spdlog::error("{} not found", VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
+        }
+
+        // std::array<vk::ValidationFeatureEnableEXT, 1> enabled{vk::ValidationFeatureEnableEXT::eBestPractices};
+        vk::ValidationFeaturesEXT features({}, {});
         create_info.pNext = &features;
-#endif
+
 #endif
 
         /* インスタンス生成 */
         create_info.setPEnabledExtensionNames(instance_extensions);
         vk::ApplicationInfo app_info;
-        auto api_version = context_.enumerateInstanceVersion();
-        app_info.setApiVersion(api_version)
+        app_info.setApiVersion(vk::ApiVersion12)
                 .setPApplicationName("NEGUI2")
-                .setApplicationVersion(VK_MAKE_API_VERSION(0, 1, 0, 0))
+                .setApplicationVersion(vk::makeApiVersion(0, 1, 0, 0))
                 .setPEngineName("NEGUI2")
-                .setEngineVersion(VK_MAKE_API_VERSION(0, 1, 0, 0));
+                .setEngineVersion(vk::makeApiVersion(0, 1, 0, 0));
         create_info.setPApplicationInfo(&app_info);
         instance = context_.createInstance(create_info);
 
