@@ -10,18 +10,29 @@
 namespace NEGUI2
 {
 
+    struct Texture
+    {
+        vk::Image image;
+        vk::ImageView image_view;
+        vk::Sampler sampler;
+        vk::Format format;
+        VmaAllocation alloc;
+        VmaAllocationInfo alloc_info;
+    };
+
     class TextureManager
     {
         friend class Core;
-        std::unordered_map<std::string, Image> textures_;
+        std::unordered_map<std::string, Texture> textures_;
         TextureManager();
         void init(); // TODO すべてのモジュールにデストロイを追加
         TextureManager(const TextureManager& other) = delete;
         TextureManager& operator=(const TextureManager& other) = delete;
     public:
         ~TextureManager();
-        Image get(const std::string& key);
-        bool load_from_file(const std::filesystem::path& path);
+        Texture get(const std::string& key);
+        Texture load_from_file(const std::filesystem::path& path);
+        bool remove(const std::string& key);
     };
 }
 

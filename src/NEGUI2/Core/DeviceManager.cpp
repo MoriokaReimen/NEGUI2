@@ -111,7 +111,7 @@ namespace
 namespace NEGUI2
 {
     void DeviceManager::init_instance_()
-    {
+    {     
         spdlog::info("Initialize Instance");
         std::vector<const char *> instance_extensions;
         uint32_t extensions_count = 0;
@@ -157,12 +157,15 @@ namespace NEGUI2
 
         /* インスタンス生成 */
         create_info.setPEnabledExtensionNames(instance_extensions);
-        vk::ApplicationInfo app_info(
-            "NEGUI2", VK_MAKE_VERSION(0, 1, 0),
-            "NEGUI2", VK_MAKE_VERSION(0, 1, 0),
-            vk::ApiVersion12);
+        vk::ApplicationInfo app_info;
+        auto api_version = context_.enumerateInstanceVersion();
+        app_info.setApiVersion(api_version)
+                .setPApplicationName("NEGUI2")
+                .setApplicationVersion(VK_MAKE_API_VERSION(0, 1, 0, 0))
+                .setPEngineName("NEGUI2")
+                .setEngineVersion(VK_MAKE_API_VERSION(0, 1, 0, 0));
         create_info.setPApplicationInfo(&app_info);
-        instance = vk::raii::Instance(context_, create_info);
+        instance = context_.createInstance(create_info);
 
         // Setup the debug report callback
 #ifndef NDEBUG

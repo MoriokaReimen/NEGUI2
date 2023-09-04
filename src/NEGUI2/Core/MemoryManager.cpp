@@ -90,9 +90,10 @@ namespace NEGUI2
         {
             auto &core = Core::get_instance();
             auto dm = *core.get_device_manager().device;
-            dm.destroyImageView(image.second.image_view);
+#if 0
+            dm.destroyImageView(image.second.image_view); // TODO TextureManagerに移動
             dm.destroySampler(image.second.sampler);
-
+#endif
             vmaDestroyImage(allocator_, image.second.image, image.second.alloc);
         }
         vmaDestroyAllocator(allocator_);
@@ -231,7 +232,7 @@ namespace NEGUI2
 
     bool MemoryManager::add_image(const std::string &key, const int &width, const int &height, const Image::TYPE &type, bool rebuild)
     {
-        if (images_.count(key) && !rebuild)
+        if (images_.count(key) && !rebuild) // Imageを返す
             return false;
 
         if (rebuild)
@@ -304,50 +305,7 @@ namespace NEGUI2
         auto temp_info = static_cast<VkImageCreateInfo>(image_create_info);
         vmaCreateImage(allocator_, &temp_info, &allocInfo, &image, &alloc, &alloc_info);
         auto device = *Core::get_instance().get_device_manager().device;
-
-        /* イメージビュー作成 */
-        vk::ImageView view;
-        vk::Sampler sampler;
-        if (type == Image::TYPE::TEXTURE) //TODO TextureとOffスクリーンは別に扱うこと．
-        // TODO クラス設計の見直し
-        {
-            {
-                vk::ImageSubresourceRange range;
-                range.setAspectMask(vk::ImageAspectFlagBits::eColor)
-                    .setBaseMipLevel(0)
-                    .setLevelCount(1)
-                    .setBaseArrayLayer(0)
-                    .setLayerCount(1);
-
-                vk::ImageViewCreateInfo create_info;
-                create_info.setImage(image)
-                    .setViewType(vk::ImageViewType::e2D)
-                    .setFormat(image_create_info.format)
-                    .setSubresourceRange(range);
-                view = device.createImageView(create_info);
-            }
-
-            {
-                vk::SamplerCreateInfo create_info;
-                create_info.setMagFilter(vk::Filter::eLinear)
-                    .setMinFilter(vk::Filter::eLinear)
-                    .setAddressModeU(vk::SamplerAddressMode::eRepeat)
-                    .setAddressModeV(vk::SamplerAddressMode::eRepeat)
-                    .setAddressModeW(vk::SamplerAddressMode::eRepeat)
-                    .setAnisotropyEnable(vk::False) // TODO 有効化
-                    .setBorderColor(vk::BorderColor::eIntOpaqueBlack)
-                    .setUnnormalizedCoordinates(vk::False)
-                    .setCompareEnable(vk::False)
-                    .setCompareOp(vk::CompareOp::eAlways)
-                    .setMipmapMode(vk::SamplerMipmapMode::eLinear)
-                    .setMipLodBias(0.f)
-                    .setMinLod(0.f)
-                    .setMaxLod(0.f);
-                sampler = device.createSampler(create_info);
-            }
-        }
-
-        images_.insert({key, Image{vk::Image(image), view, sampler, image_create_info.format, alloc, alloc_info, type}});
+         images_.insert({key, Image{vk::Image(image), image_create_info.format, alloc, alloc_info, type}});
 
         return true;
     }
@@ -358,10 +316,6 @@ namespace NEGUI2
         if (images_.count(key) != 0)
         {
             auto &image = images_.at(key);
-            auto &core = Core::get_instance();
-            auto dm = *core.get_device_manager().device;
-            dm.destroyImageView(image.image_view);
-            dm.destroySampler(image.sampler);
             vmaDestroyImage(allocator_, image.image, image.alloc);
             images_.erase(key);
             ret = true;
