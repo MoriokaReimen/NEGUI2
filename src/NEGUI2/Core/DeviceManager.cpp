@@ -6,6 +6,21 @@
 #include <iostream>
 namespace
 {
+    bool is_renderable(const vk::raii::Instance &instance, const vk::raii::PhysicalDevice physical_device)
+    {
+        bool ret = false;
+        auto queue_properties = physical_device.getQueueFamilyProperties();
+        for (int i = 0; i < queue_properties.size(); i++)
+        {
+            if (glfwGetPhysicalDevicePresentationSupport(*instance, *physical_device, i))
+            {
+                ret = true;
+                break;
+            }
+        }
+        return ret;
+    }
+
 #ifndef NDEBUG
     VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage, void *pUserData)
     {
@@ -111,7 +126,7 @@ namespace
 namespace NEGUI2
 {
     void DeviceManager::init_instance_()
-    {     
+    {
         spdlog::info("Initialize Instance");
         std::vector<const char *> instance_extensions;
         uint32_t extensions_count = 0;
@@ -125,12 +140,12 @@ namespace NEGUI2
 
         // Enumerate available extensions
         auto properties = context_.enumerateInstanceExtensionProperties();
-        for(auto& property : properties)
+        for (auto &property : properties)
         {
             spdlog::info("Available Instance Extensions:");
             spdlog::info("\t{} : Ver.{}.{}.{}.{}", property.extensionName,
-            vk::apiVersionVariant(property.specVersion), vk::apiVersionMajor(property.specVersion),
-            vk::apiVersionMinor(property.specVersion), vk::apiVersionPatch(property.specVersion));
+                         vk::apiVersionVariant(property.specVersion), vk::apiVersionMajor(property.specVersion),
+                         vk::apiVersionMinor(property.specVersion), vk::apiVersionPatch(property.specVersion));
         }
         // TODO check_vk_result(err);
 
@@ -177,10 +192,10 @@ namespace NEGUI2
         create_info.setPEnabledExtensionNames(instance_extensions);
         vk::ApplicationInfo app_info;
         app_info.setApiVersion(vk::ApiVersion12)
-                .setPApplicationName("NEGUI2")
-                .setApplicationVersion(vk::makeApiVersion(0, 1, 0, 0))
-                .setPEngineName("NEGUI2")
-                .setEngineVersion(vk::makeApiVersion(0, 1, 0, 0));
+            .setPApplicationName("NEGUI2")
+            .setApplicationVersion(vk::makeApiVersion(0, 1, 0, 0))
+            .setPEngineName("NEGUI2")
+            .setEngineVersion(vk::makeApiVersion(0, 1, 0, 0));
         create_info.setPApplicationInfo(&app_info);
         instance = context_.createInstance(create_info);
 
@@ -190,7 +205,7 @@ namespace NEGUI2
             vk::DebugUtilsMessengerCreateInfoEXT create_info{{},
                                                              vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
                                                              vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
-                                                             vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+                                                                 vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
                                                              &::debugUtilsMessengerCallback};
             debug_func = instance.createDebugUtilsMessengerEXT(create_info);
         }
@@ -201,27 +216,30 @@ namespace NEGUI2
     {
         spdlog::info("Initialize Physical Device");
         auto gpus = instance.enumeratePhysicalDevices();
-
-        // If a number >1 of GPUs got reported, find discrete GPU if present, or use first one available. This covers
-        // most common cases (multi-gpu/integrated+dedicated graphics). Handling more complicated setups (multiple
-        // dedicated GPUs) is out of scope of device_data_ sample.
-        for (auto &gpu : gpus)
+        int max_score = 0;
+        int selected_index = -1;
+        for (int i = 0; i < gpus.size(); i++)
         {
-            auto properties = gpu.getProperties();
-            if (properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+            auto &gpu = gpus[i];
+
+            if (!is_renderable(instance, gpu))
+                continue;
+            auto property = gpu.getProperties();
+            uint32_t score  = property.limits.maxFramebufferWidth * property.limits.maxFramebufferHeight;
+            if (max_score < score)
             {
-                physical_device = gpu;
-                return;
+                max_score = score;
+                selected_index = i;
             }
         }
-
-        // Use first GPU (Integrated) is a Discrete one is not available.
-        if (gpus.size() > 0)
+        if (selected_index >= 0)
         {
-            physical_device = gpus[0];
-            return;
+            physical_device = gpus[selected_index];
         }
-        assert(!"No Physical Device Found!");
+        else {
+            spdlog::error("No good Device Found");
+            std::abort();
+        }
     }
 
     void DeviceManager::init_device_()
@@ -284,16 +302,15 @@ namespace NEGUI2
             {
                 {vk::DescriptorType::eUniformBuffer, 1000},
                 {vk::DescriptorType::eStorageBuffer, 1000},
-				{vk::DescriptorType::eSampler, 1000},
+                {vk::DescriptorType::eSampler, 1000},
                 {vk::DescriptorType::eCombinedImageSampler, 1000},
-				{vk::DescriptorType::eSampledImage, 1000},
-				{vk::DescriptorType::eStorageImage, 1000},
-				{vk::DescriptorType::eUniformTexelBuffer, 1000},
-				{vk::DescriptorType::eStorageTexelBuffer, 1000},
-				{vk::DescriptorType::eUniformBufferDynamic, 1000},
-				{vk::DescriptorType::eStorageBufferDynamic, 1000},
-				{vk::DescriptorType::eInputAttachment, 1000}};
-
+                {vk::DescriptorType::eSampledImage, 1000},
+                {vk::DescriptorType::eStorageImage, 1000},
+                {vk::DescriptorType::eUniformTexelBuffer, 1000},
+                {vk::DescriptorType::eStorageTexelBuffer, 1000},
+                {vk::DescriptorType::eUniformBufferDynamic, 1000},
+                {vk::DescriptorType::eStorageBufferDynamic, 1000},
+                {vk::DescriptorType::eInputAttachment, 1000}};
 
         vk::DescriptorPoolCreateInfo pool_info;
         pool_info.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
