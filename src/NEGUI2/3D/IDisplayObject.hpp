@@ -13,10 +13,10 @@ namespace NEGUI2
         virtual ~IDisplayObject();
         virtual void init() = 0;
         virtual void destroy() = 0;
-        virtual void update(vk::CommandBuffer& command) = 0;
+        virtual void update(vk::raii::CommandBuffer& command) = 0;
 
         virtual uint32_t get_type_id() = 0;
-        virtual uint32_t get_instance_it() = 0;
+        virtual uint32_t get_instance_id() = 0;
     };
 }
 
