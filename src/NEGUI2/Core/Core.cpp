@@ -8,6 +8,11 @@ namespace NEGUI2 {
     {
     }
 
+    Core::~Core()
+    {
+        shader_.destroy();
+    }
+
     void Core::init()
     {
         initialized_ = true;
@@ -19,6 +24,7 @@ namespace NEGUI2 {
         offscreen_manager_.rebuild();
         texture_manager_.init();
         imgui_manager_.init();
+        shader_.init();
     }
 
     Core& Core::get_instance()
@@ -60,6 +66,11 @@ namespace NEGUI2 {
     ImGuiManager& Core::get_imgui_manager()
     {
         return imgui_manager_;
+    }
+
+    Shader& Core::get_shader()
+    {
+        return shader_;
     }
 
     bool Core::should_close()

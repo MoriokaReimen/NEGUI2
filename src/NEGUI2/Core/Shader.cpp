@@ -3,6 +3,7 @@
 #include <SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
 #include <spdlog/spdlog.h>
+#include "NEGUI2/Core/Core.hpp"
 
 namespace
 {
@@ -92,7 +93,7 @@ namespace
     VkShaderModuleCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     info.codeSize = spv_code.size();
-    info.pCode = reinterpret_cast<const uint32_t*>(spv_code.data());
+    info.pCode = reinterpret_cast<const uint32_t *>(spv_code.data());
     VkShaderModule shader_module;
     vkCreateShaderModule(device, &info, nullptr, &shader_module);
 
@@ -109,7 +110,7 @@ namespace
     VkShaderModuleCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     info.codeSize = spv_code.size();
-    info.pCode = reinterpret_cast<const uint32_t*>(spv_code.data());
+    info.pCode = reinterpret_cast<const uint32_t *>(spv_code.data());
     VkShaderModule shader_module;
     vkCreateShaderModule(device, &info, nullptr, &shader_module);
 
@@ -120,19 +121,21 @@ namespace
 namespace NEGUI2
 {
   Shader::Shader()
-      : device_(nullptr), shader_modules_()
+      : shader_modules_()
   {
   }
 
-  Shader::Shader(VkDevice &device)
-      : device_(device), shader_modules_()
+  void Shader::init()
   {
+    add_spv_from_file("TRIANGLE.VERT", "./shader/base.vert.spv");
+    add_spv_from_file("TRIANGLE.FRAG", "./shader/base.frag.spv");
   }
 
   void Shader::add_glsl(const std::string &key, const VkShaderStageFlagBits &shader_stage, const std::string &shader_text)
   {
+    auto &device = Core::get_instance().get_device_manager().device;
     glslang::InitializeProcess();
-    VkShaderModule shader_module = ::makeShaderModule(device_, shader_stage, shader_text);
+    VkShaderModule shader_module = ::makeShaderModule(*device, shader_stage, shader_text);
     glslang::FinalizeProcess();
     shader_modules_.emplace(key, shader_module);
   }
@@ -142,9 +145,10 @@ namespace NEGUI2
     VkShaderModuleCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     info.codeSize = sizeof(unsigned int) * spv_code.size();
-    info.pCode = reinterpret_cast<const uint32_t*>(spv_code.data());
+    info.pCode = reinterpret_cast<const uint32_t *>(spv_code.data());
     VkShaderModule shader_module;
-    vkCreateShaderModule(device_, &info, nullptr, &shader_module);
+    auto &device = Core::get_instance().get_device_manager().device;
+    vkCreateShaderModule(*device, &info, nullptr, &shader_module);
     shader_modules_.emplace(key, std::move(shader_module));
   }
 
@@ -176,16 +180,17 @@ namespace NEGUI2
     add_spv(key, spv_code);
   }
 
-  VkShaderModule& Shader::get(const std::string &key)
+  VkShaderModule &Shader::get(const std::string &key)
   {
     return shader_modules_.at(key);
   }
 
   void Shader::destroy()
   {
-    for(auto& shader_module : shader_modules_)
+    for (auto &shader_module : shader_modules_)
     {
-      vkDestroyShaderModule(device_, shader_module.second, nullptr);
+      auto &device = Core::get_instance().get_device_manager().device;
+      vkDestroyShaderModule(*device, shader_module.second, nullptr);
     }
   }
 }

@@ -7,6 +7,7 @@
 #include "NEGUI2/Core/OffScreenManager.hpp"
 #include "NEGUI2/Core/TextureManager.hpp"
 #include "NEGUI2/Core/ImGuiManager.hpp"
+#include "NEGUI2/Core/Shader.hpp"
 namespace NEGUI2
 {
     class Core
@@ -19,12 +20,14 @@ namespace NEGUI2
         OffScreenManager offscreen_manager_;
         TextureManager texture_manager_;
         ImGuiManager imgui_manager_;
+        Shader shader_;
 
         Core();
         void init();
         Core(const Core& other) = delete;
         Core& operator=(const Core& other) = delete;
     public:
+        ~Core();
         static Core &get_instance();
         DeviceManager& get_device_manager();
         MemoryManager& get_memory_manager();
@@ -32,7 +35,7 @@ namespace NEGUI2
         ScreenManager& get_screen_manager();
         TextureManager& get_texture_manager();
         ImGuiManager& get_imgui_manager();
-
+        Shader& get_shader();
         bool should_close();
         void update();
         void wait_idle();

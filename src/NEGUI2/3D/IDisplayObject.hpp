@@ -14,7 +14,7 @@ namespace NEGUI2
         virtual void init() = 0;
         virtual void destroy() = 0;
         virtual void update(vk::raii::CommandBuffer& command) = 0;
-
+        virtual void rebuild() = 0;
         virtual uint32_t get_type_id() = 0;
         virtual uint32_t get_instance_id() = 0;
     };
