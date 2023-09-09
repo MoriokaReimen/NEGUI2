@@ -64,7 +64,7 @@ namespace
 
 namespace NEGUI2
 {
-    ScreenManager::ScreenManager() : width(0), height(0),
+    ScreenManager::ScreenManager() : extent(),
                                      swap_chain(nullptr), surface(nullptr),
                                      surface_format(), present_mode(), render_pass(nullptr),
                                      clear_value(), swap_chain_rebuild(false),
@@ -80,7 +80,7 @@ namespace NEGUI2
         auto &device_manager = Core::get_instance().get_device_manager();
 
         {
-            window.get_extent(width, height);
+            extent = window.get_extent();
         }
 
         {
@@ -133,15 +133,17 @@ namespace NEGUI2
 
     void ScreenManager::rebuild()
     {
+        auto &window = Core::get_instance().get_window();
+        extent = window.get_extent();
         swap_chain_rebuild = false;
-        frame_index = 0u;     // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
-        image_count = 0u;     // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
+        frame_index = 0u; // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
+        image_count = 0u; // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
         semaphore_index = 0u;
         vk::raii::SwapchainKHR old_swapchain = std::move(swap_chain);
         auto &device_manager = Core::get_instance().get_device_manager();
 
         device_manager.device.waitIdle();
-        
+
         /* Create Swap Chain */
         {
             vk::SwapchainCreateInfoKHR info = {};
@@ -152,7 +154,7 @@ namespace NEGUI2
             info.imageArrayLayers = 1;
             info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
             info.imageSharingMode = vk::SharingMode::eExclusive; // Assume that graphics family == present family
-            info.preTransform =  vk::SurfaceTransformFlagBitsKHR::eIdentity;
+            info.preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
             info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
             info.presentMode = present_mode;
             info.clipped = vk::True;
@@ -165,16 +167,14 @@ namespace NEGUI2
                 info.minImageCount = cap.maxImageCount;
 
             if (cap.currentExtent.width == 0xffffffff)
-            {        
+            {
                 auto &window = Core::get_instance().get_window();
-                window.get_extent(width, height);
-                info.imageExtent.width = width;
-                info.imageExtent.height = height;
+                extent = window.get_extent();
+                info.imageExtent = extent;
             }
             else
             {
-                info.imageExtent.width = width = cap.currentExtent.width;
-                info.imageExtent.height = height = cap.currentExtent.height;
+                info.imageExtent = cap.currentExtent;
             }
             swap_chain = device_manager.device.createSwapchainKHR(info);
         }
@@ -185,7 +185,7 @@ namespace NEGUI2
             back_buffers = swap_chain.getImages();
             image_count = back_buffers.size();
             frames.resize(image_count);
-            for(int i = 0; i < image_count; i++)
+            for (int i = 0; i < image_count; i++)
             {
                 frames[i].color_buffer = back_buffers[i];
             }
@@ -226,28 +226,27 @@ namespace NEGUI2
         }
 
         frames.resize(image_count);
-        for(int i = 0; i < image_count; i++)
+        for (int i = 0; i < image_count; i++)
         {
             frames[i].fence = device_manager.device.createFence({vk::FenceCreateFlagBits::eSignaled});
-            vk::ImageViewCreateInfo imageViewCreateInfo( {}, {}, vk::ImageViewType::e2D, surface_format.format, {}, { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 } );
+            vk::ImageViewCreateInfo imageViewCreateInfo({}, {}, vk::ImageViewType::e2D, surface_format.format, {}, {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
             imageViewCreateInfo.image = frames[i].color_buffer;
             vk::ImageSubresourceRange image_range{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
-            imageViewCreateInfo.subresourceRange = image_range;    
+            imageViewCreateInfo.subresourceRange = image_range;
             frames[i].color_buffer_view = device_manager.device.createImageView(imageViewCreateInfo);
-// TODO ルールを知る
+            // TODO ルールを知る
             vk::FramebufferCreateInfo info;
             info.renderPass = *render_pass;
             std::array<vk::ImageView, 1> target_view{*frames[i].color_buffer_view};
             info.setAttachments(target_view);
-            info.width = width;
-            info.height = height;
+            info.width = extent.width;
+            info.height = extent.height;
             info.layers = 1;
             frames[i].frame_buffer = device_manager.device.createFramebuffer(info);
-
         }
 
         sync_objects.resize(image_count);
-        for(int i = 0; i < image_count; i++)
+        for (int i = 0; i < image_count; i++)
         {
             sync_objects[i].image_acquired_semaphore = device_manager.device.createSemaphore({});
             sync_objects[i].image_rendered_semaphore = device_manager.device.createSemaphore({});

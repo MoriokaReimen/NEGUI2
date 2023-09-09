@@ -40,4 +40,13 @@ namespace NEGUI2
   {
     glfwGetFramebufferSize(window_, &width, &height);
   }
+
+  vk::Extent2D Window::get_extent() const
+  {
+    int width, height;
+    glfwGetFramebufferSize(window_, &width, &height);
+    vk::Extent2D extent{static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
+
+    return extent;
+  }
 }

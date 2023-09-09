@@ -12,8 +12,7 @@ namespace NEGUI2
         ScreenManager(const ScreenManager& other) = delete;
         ScreenManager& operator=(const ScreenManager& other) = delete;
     public:
-        int width;
-        int height;
+        vk::Extent2D extent;
         vk::raii::SurfaceKHR surface;
         vk::raii::SwapchainKHR swap_chain;
         vk::SurfaceFormatKHR surface_format;

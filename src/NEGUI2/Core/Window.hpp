@@ -3,7 +3,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
+#include <vulkan/vulkan.hpp>
 #include <cstdint>
 
 namespace NEGUI2
@@ -26,6 +26,7 @@ namespace NEGUI2
     GLFWwindow *get_window();
     bool should_close() const;
     void get_extent(int &width, int &height) const;
+    vk::Extent2D get_extent() const;
   };
 
 }

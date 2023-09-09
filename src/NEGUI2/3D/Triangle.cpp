@@ -54,8 +54,7 @@ namespace NEGUI2
     void Triangle::rebuild()
     {
         auto &core = Core::get_instance();
-        int width, height;
-        core.get_window().get_extent(width, height);
+        auto extent = core.get_window().get_extent();
         auto& shader = core.get_shader();
 
         /* Init pipeline */
@@ -87,12 +86,12 @@ namespace NEGUI2
             .setPrimitiveRestartEnable(vk::False);
 
         std::array<vk::Viewport, 1> viewport;
-        viewport[0].setX(0.f).setY(0.f).setWidth(width).setHeight(height) // TODO Implement
+        viewport[0].setX(0.f).setY(0.f).setWidth(extent.width).setHeight(extent.height)
             .setMinDepth(0.f)
             .setMaxDepth(1.f);
 
         std::array<vk::Rect2D, 1> scissor;
-        scissor[0].setOffset({0u, 0u}).setExtent({width, height});
+        scissor[0].setOffset({0u, 0u}).setExtent(extent);
 
         vk::PipelineViewportStateCreateInfo viewport_state;
         viewport_state.setViewports(viewport).setScissors(scissor);

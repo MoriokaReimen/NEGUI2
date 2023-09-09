@@ -122,7 +122,7 @@ namespace NEGUI2 {
             vk::RenderPassBeginInfo begin_info;
             begin_info.setRenderPass(*screen_manager_.render_pass)
             .setFramebuffer(*screen_manager_.frames[frame_index].frame_buffer)
-            .setRenderArea({{0, 0}, {static_cast<uint32_t>(screen_manager_.width), static_cast<uint32_t>(screen_manager_.height)}})
+            .setRenderArea({{0, 0}, {screen_manager_.extent}})
             .setClearValueCount(1).setPClearValues(&screen_manager_.clear_value);
 
             command_buffer.beginRenderPass(begin_info,
