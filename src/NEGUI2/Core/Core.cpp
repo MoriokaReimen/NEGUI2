@@ -88,6 +88,10 @@ namespace NEGUI2 {
         if(screen_manager_.swap_chain_rebuild)
         {
             screen_manager_.rebuild();
+            for(auto object : display_objects)
+            {
+                object->rebuild();
+            }
         }
 
         auto& image_acqurired_semaphore = screen_manager_.sync_objects[screen_manager_.semaphore_index].image_acquired_semaphore;
@@ -126,6 +130,10 @@ namespace NEGUI2 {
         }
 
         imgui_manager_.update(command_buffer);
+        for(auto display_object : display_objects)
+        {
+            display_object->update(command_buffer);
+        }
 
         command_buffer.endRenderPass();
         command_buffer.end();

@@ -6,6 +6,14 @@
 namespace NEGUI2
 {
     uint32_t Triangle::instance_count_ = 0u;
+    Triangle::Triangle()
+    : pipeline_(nullptr), pipeline_layout_(nullptr)
+    {
+    }
+
+    Triangle::~Triangle()
+    {
+    }
 
     void Triangle::init()
     {
@@ -15,13 +23,14 @@ namespace NEGUI2
         /* Init Vertex buffer */
         {
             vertex_data_.fill(0.f);
-            vertex_data_[0] = 0.5f;
+            vertex_data_[0] = -0.5f;
+            vertex_data_[3] = 0.5f;
             vertex_data_[4] = 0.5f;
-            vertex_data_[6] = -0.5f;
             auto &core = Core::get_instance();
             core.get_memory_manager().add_memory("TriangleVertex",
                                                  sizeof(float) * vertex_data_.size(),
                                                  Memory::TYPE::VERTEX);
+            core.get_memory_manager().upload_memory("TriangleVertex", vertex_data_.data(), sizeof(float) * vertex_data_.size());
         }
 
         /* パイプライン生成 */
@@ -64,7 +73,7 @@ namespace NEGUI2
         }
         std::array<vk::VertexInputBindingDescription, 1> binding_description;
         binding_description[0].binding = 0;
-        binding_description[0].setBinding(0).setStride(9 * sizeof(float)).setInputRate(vk::VertexInputRate::eVertex);
+        binding_description[0].setBinding(0).setStride(2 * sizeof(float)).setInputRate(vk::VertexInputRate::eVertex);
 
         std::array<vk::VertexInputAttributeDescription, 1> attribute_description;
         attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32Sfloat);
@@ -74,7 +83,7 @@ namespace NEGUI2
             .setVertexAttributeDescriptions(attribute_description);
 
         vk::PipelineInputAssemblyStateCreateInfo input_assembly;
-        input_assembly.setTopology(vk::PrimitiveTopology::eTriangleList)
+        input_assembly.setTopology(vk::PrimitiveTopology::eTriangleFan)
             .setPrimitiveRestartEnable(vk::False);
 
         std::array<vk::Viewport, 1> viewport;
@@ -94,7 +103,7 @@ namespace NEGUI2
             .setPolygonMode(vk::PolygonMode::eFill)
             .setLineWidth(1.f)
             .setCullMode(vk::CullModeFlagBits::eBack)
-            .setFrontFace(vk::FrontFace::eClockwise)
+            .setFrontFace(vk::FrontFace::eCounterClockwise)
             .setDepthBiasEnable(vk::False);
 
         vk::PipelineMultisampleStateCreateInfo multisampling;
@@ -102,12 +111,13 @@ namespace NEGUI2
             .setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
         std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment;
-        colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA).setBlendEnable(vk::True);
+        colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+                               .setBlendEnable(vk::False);
 
         std::array<float, 4> blend_constant;
 
         vk::PipelineColorBlendStateCreateInfo color_blending;
-        color_blending.setLogicOpEnable(vk::True)
+        color_blending.setLogicOpEnable(vk::False)
             .setLogicOp(vk::LogicOp::eCopy)
             .setAttachments(colorBlendAttachment)
             .setBlendConstants(blend_constant);

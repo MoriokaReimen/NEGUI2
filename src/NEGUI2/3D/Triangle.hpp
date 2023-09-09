@@ -5,7 +5,7 @@
 
 namespace NEGUI2
 {
-    class Triangle : IDisplayObject
+    class Triangle : public IDisplayObject
     {
         static uint32_t instance_count_;
         uint32_t instance_id_;

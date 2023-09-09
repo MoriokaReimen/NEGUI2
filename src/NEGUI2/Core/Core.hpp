@@ -8,6 +8,10 @@
 #include "NEGUI2/Core/TextureManager.hpp"
 #include "NEGUI2/Core/ImGuiManager.hpp"
 #include "NEGUI2/Core/Shader.hpp"
+#include "NEGUI2/3D/IDisplayObject.hpp"
+
+#include <memory>
+
 namespace NEGUI2
 {
     class Core
@@ -39,6 +43,8 @@ namespace NEGUI2
         bool should_close();
         void update();
         void wait_idle();
+
+        std::vector<std::shared_ptr<IDisplayObject>> display_objects;
     };
 }
 #endif

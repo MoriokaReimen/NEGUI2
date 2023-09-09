@@ -3,6 +3,8 @@
 #include "NEGUI2/Ui/PlotDemo.hpp"
 #include "NEGUI2/Ui/TextEditDemo.hpp"
 #include "NEGUI2/Ui/TextureDemo.hpp"
+#include "NEGUI2/3D/Triangle.hpp"
+#include "NEGUI2/3D/IDisplayObject.hpp"
 #include <cstdlib>
 #include <memory>
 
@@ -12,6 +14,9 @@ int main(int argc, char** argv)
 
     NEGUI2::TextureDemo demo2;
     NEGUI2::PlotDemo demo;
+    auto triangle = std::make_shared<NEGUI2::Triangle>();
+    triangle->init();
+    core.display_objects.push_back(triangle);
 
     while(!core.should_close())
     {
