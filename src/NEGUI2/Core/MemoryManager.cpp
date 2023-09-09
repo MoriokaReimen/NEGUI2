@@ -114,37 +114,34 @@ namespace NEGUI2
             remove_memory(key);
         }
 
-        VkBufferCreateInfo bufferInfo{};
+
+        vk::BufferCreateInfo buffer_info;
+        vk::BufferViewCreateInfo view_info;
         VmaAllocationCreateInfo allocInfo{};
 
         switch (type)
         {
         case Memory::TYPE::VERTEX:
         {
-            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            bufferInfo.size = size;
-            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
+            buffer_info.setSize(size)
+                       .setUsage(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
+                       .setSharingMode(vk::SharingMode::eExclusive);
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         case Memory::TYPE::INDEX:
         {
-            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            bufferInfo.size = size;
-            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-
+            buffer_info.setSize(size)
+                       .setUsage(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer)
+                       .setSharingMode(vk::SharingMode::eExclusive);
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         case Memory::TYPE::UNIFORM:
         {
-
-            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            bufferInfo.size = size;
-            bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            buffer_info.setSize(size)
+                       .setUsage(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer)
+                       .setSharingMode(vk::SharingMode::eExclusive);
 
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
             allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
@@ -159,7 +156,7 @@ namespace NEGUI2
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info;
 
-        auto result = vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &buffer, &alloc, &alloc_info);
+        auto result = vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo*>(&buffer_info), &allocInfo, &buffer, &alloc, &alloc_info);
         auto &device = Core::get_instance().get_device_manager();
 
         memories_.insert({key, Memory{vk::Buffer(buffer), alloc, alloc_info}});
@@ -192,11 +189,10 @@ namespace NEGUI2
         VmaAllocation stage_allocation;
         VmaAllocationInfo alloc_info;
         {
-            VkBufferCreateInfo bufferInfo{};
-            bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            bufferInfo.size = size;
-            bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-            bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            vk::BufferCreateInfo buffer_info;
+            buffer_info.setSize(size)
+                       .setUsage(vk::BufferUsageFlagBits::eTransferSrc)
+                       .setSharingMode(vk::SharingMode::eExclusive);
 
             VmaAllocationCreateInfo allocInfo{};
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
@@ -204,7 +200,7 @@ namespace NEGUI2
                               VMA_ALLOCATION_CREATE_MAPPED_BIT;
             VkBuffer buffer;
             VmaAllocation allocation;
-            vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &stage_buffer, &stage_allocation, &alloc_info);
+            vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo*>(&buffer_info), &allocInfo, &stage_buffer, &stage_allocation, &alloc_info);
         }
 
         /* データコピー */
@@ -247,17 +243,14 @@ namespace NEGUI2
         {
         case Image::TYPE::COLOR:
         {
-            image_create_info.imageType = vk::ImageType::e2D;
-            image_create_info.format = vk::Format::eR8G8B8A8Unorm;
-            image_create_info.extent.width = static_cast<uint32_t>(width);
-            image_create_info.extent.height = static_cast<uint32_t>(height);
-            image_create_info.extent.depth = 1;
-            image_create_info.mipLevels = 1;
-            image_create_info.arrayLayers = 1;
-            image_create_info.samples = vk::SampleCountFlagBits::e1;
-            image_create_info.tiling = vk::ImageTiling::eOptimal;
-            image_create_info.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
-
+            image_create_info.setImageType(vk::ImageType::e2D)
+                             .setFormat(vk::Format::eR8G8B8A8Unorm)
+                             .setExtent({static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u})
+                             .setMipLevels(1)
+                             .setArrayLayers(1)
+                             .setSamples(vk::SampleCountFlagBits::e1)
+                             .setTiling(vk::ImageTiling::eOptimal)
+                             .setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
@@ -302,8 +295,7 @@ namespace NEGUI2
         VkImage image;
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info; // TODO 改名
-        auto temp_info = static_cast<VkImageCreateInfo>(image_create_info);
-        vmaCreateImage(allocator_, &temp_info, &allocInfo, &image, &alloc, &alloc_info);
+        vmaCreateImage(allocator_, reinterpret_cast<const VkImageCreateInfo*>(&image_create_info), &allocInfo, &image, &alloc, &alloc_info);
         auto device = *Core::get_instance().get_device_manager().device;
          images_.insert({key, Image{vk::Image(image), image_create_info.format, alloc, alloc_info, type}});
 

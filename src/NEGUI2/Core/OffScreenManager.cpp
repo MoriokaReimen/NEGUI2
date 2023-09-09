@@ -1,66 +1,6 @@
 #include "NEGUI2/Core/OffScreenManager.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include <spdlog/spdlog.h>
-namespace
-{
-    vk::SurfaceFormatKHR select_surface_format(vk::raii::PhysicalDevice &physical_device, vk::raii::SurfaceKHR &surface, const std::vector<vk::Format> &request_formats, vk::ColorSpaceKHR &request_color_space)
-    {
-        // Per Spec Format and View Format are expected to be the same unless VK_IMAGE_CREATE_MUTABLE_BIT was set at image creation
-        // Assuming that the default behavior is without setting this bit, there is no need for separate Swapchain image and image view format
-        // Additionally several new color spaces were introduced with Vulkan Spec v1.0.40,
-        // hence we must make sure that a format with the mostly available color space, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR, is found and used.
-        auto avail_format = physical_device.getSurfaceFormatsKHR(*surface);
-
-        // First check if only one format, VK_FORMAT_UNDEFINED, is available, which would imply that any format is available
-        if (avail_format.size() == 1)
-        {
-            if (avail_format[0].format == vk::Format::eUndefined)
-            {
-                vk::SurfaceFormatKHR ret;
-                ret.format = request_formats[0];
-                ret.colorSpace = request_color_space;
-                return ret;
-            }
-            else
-            {
-                // No point in searching another format
-                return avail_format[0];
-            }
-        }
-        else
-        {
-            // Request several formats, the first found will be used
-            for (int request_i = 0; request_i < request_formats.size(); request_i++)
-                for (uint32_t avail_i = 0; avail_i < avail_format.size(); avail_i++)
-                    if (avail_format[avail_i].format == request_formats[request_i] && avail_format[avail_i].colorSpace == request_color_space)
-                        return avail_format[avail_i];
-
-            // If none of the requested image formats could be found, use the first available
-            return avail_format[0];
-        }
-    }
-
-    vk::PresentModeKHR select_present_mode(const vk::raii::PhysicalDevice &physical_device, const vk::raii::SurfaceKHR &surface)
-    {
-        std::array<vk::PresentModeKHR, 3> request_modes{vk::PresentModeKHR::eMailbox, vk::PresentModeKHR::eImmediate, vk::PresentModeKHR::eFifo};
-
-        // Request a certain mode and confirm that it is available. If not use VK_PRESENT_MODE_FIFO_KHR which is mandatory
-        auto avail_modes = physical_device.getSurfacePresentModesKHR(*surface);
-
-        for (int request_i = 0; request_i < request_modes.size(); request_i++)
-        {
-            for (uint32_t avail_i = 0; avail_i < avail_modes.size(); avail_i++)
-            {
-                if (request_modes[request_i] == avail_modes[avail_i])
-                {
-                    return request_modes[request_i];
-                }
-            }
-        }
-
-        return vk::PresentModeKHR::eFifo; // Always available
-    }
-}
 
 namespace NEGUI2
 {
@@ -159,7 +99,7 @@ namespace NEGUI2
 
         /* イメージビュー作成 */
         for (int i = 0; i < image_count; i++)
-        {
+        { //TODO メモリマネージャに移動
             /* 色 */
             vk::ImageViewCreateInfo color_view_create_info({}, {}, vk::ImageViewType::e2D, color_format, {}, {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
             color_view_create_info.image = frames[i].color_buffer;
