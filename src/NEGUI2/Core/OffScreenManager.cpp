@@ -21,7 +21,8 @@ namespace NEGUI2
 
         /* 背景色設定 */
         {
-            clear_value = {{166.0f / 256.0f, 205.0f / 256.0f, 182.0f / 256.0f, 0.0f}};
+            clear_value[0].setColor({200.0f / 256.0f, 200.0f / 256.0f, 200.0f / 256.0f, 1.0f});
+            clear_value[1].setDepthStencil({1.f, 1u});
         }
 
         rebuild();
@@ -75,7 +76,7 @@ namespace NEGUI2
                                                                   vk::AttachmentLoadOp::eDontCare,
                                                                   vk::AttachmentStoreOp::eDontCare,
                                                                   vk::ImageLayout::eUndefined,
-                                                                  vk::ImageLayout::ePresentSrcKHR);
+                                                                  vk::ImageLayout::eGeneral);
             attachmentDescriptions[1] = vk::AttachmentDescription({},
                                                                   depth_format,
                                                                   vk::SampleCountFlagBits::e1,
@@ -86,7 +87,7 @@ namespace NEGUI2
                                                                   vk::ImageLayout::eUndefined,
                                                                   vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-            vk::AttachmentReference colorReference(0, vk::ImageLayout::eColorAttachmentOptimal);
+            vk::AttachmentReference colorReference(0, vk::ImageLayout::eGeneral);
             vk::AttachmentReference depthReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
             vk::SubpassDescription subpass({}, vk::PipelineBindPoint::eGraphics, {}, colorReference, {}, &depthReference);
 

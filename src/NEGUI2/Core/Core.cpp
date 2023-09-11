@@ -82,6 +82,23 @@ namespace NEGUI2 {
             command_buffer.begin({{vk::CommandBufferUsageFlagBits::eOneTimeSubmit}});
         }
 
+        {
+            vk::RenderPassBeginInfo begin_info;
+            begin_info.setRenderPass(*off_screen.render_pass)
+            .setFramebuffer(*off_screen.frames[0].frame_buffer)
+            .setRenderArea({{0, 0}, {off_screen.extent}})
+            .setClearValueCount(2).setPClearValues(off_screen.clear_value.data());
+
+            command_buffer.beginRenderPass(begin_info,
+                                           vk::SubpassContents::eInline);
+            
+            for (auto display_object : display_objects)
+            {
+                display_object->update(command_buffer);
+            }
+            command_buffer.endRenderPass();
+        }
+
         // TODO 型のエラーintをuint32_tに変換
         {
             vk::RenderPassBeginInfo begin_info;
@@ -92,15 +109,10 @@ namespace NEGUI2 {
 
             command_buffer.beginRenderPass(begin_info,
                                            vk::SubpassContents::eInline);
+            imgui.update(command_buffer);
+            command_buffer.endRenderPass();
         }
 
-        imgui.update(command_buffer);
-        for(auto display_object : display_objects)
-        {
-            display_object->update(command_buffer);
-        }
-
-        command_buffer.endRenderPass();
         command_buffer.end();
 
         auto& image_rendered_semaphore = screen.sync_objects[screen.semaphore_index].image_rendered_semaphore;

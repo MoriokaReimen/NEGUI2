@@ -85,6 +85,15 @@ namespace NEGUI2
         input_assembly.setTopology(vk::PrimitiveTopology::eTriangleFan)
             .setPrimitiveRestartEnable(vk::False);
 
+        vk::PipelineDepthStencilStateCreateInfo depth_stencil;
+        depth_stencil.setDepthBoundsTestEnable(vk::False)
+                     .setDepthCompareOp(vk::CompareOp::eLess)
+                     .setDepthTestEnable(vk::True)
+                     .setDepthWriteEnable(vk::True)
+                     .setMaxDepthBounds(1.f)
+                     .setMinDepthBounds(0.f);
+
+
         std::array<vk::Viewport, 1> viewport;
         viewport[0].setX(0.f).setY(0.f).setWidth(extent.width).setHeight(extent.height)
             .setMinDepth(0.f)
@@ -127,7 +136,8 @@ namespace NEGUI2
         auto &device = core.gpu.device;
         pipeline_layout_ = device.createPipelineLayout(pipeline_layout);
 
-        auto &render_pass = core.screen.render_pass;
+        auto &render_pass = core.off_screen.render_pass;
+
         vk::GraphicsPipelineCreateInfo pipeline_info;
         pipeline_info.setStages(shader_stages)
             .setPVertexInputState(&vertex_input_state)
@@ -138,6 +148,7 @@ namespace NEGUI2
             .setPColorBlendState(&color_blending)
             .setLayout(*pipeline_layout_)
             .setRenderPass(*render_pass)
+            .setPDepthStencilState(&depth_stencil)
             .setSubpass(0)
             .setBasePipelineHandle(nullptr);
 

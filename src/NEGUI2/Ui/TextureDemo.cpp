@@ -84,11 +84,7 @@ namespace NEGUI2
     {
         auto &core = Core::get_instance();
 
-        auto &tm = core.tm;
-        tm.load_from_file("./runtime/idle.png");
-        auto texture = tm.get("./runtime/idle.png");
-
-        texture_id_ = ImGui_ImplVulkan_AddTexture(texture.sampler, texture.image_view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        texture_id_ = ImGui_ImplVulkan_AddTexture(*core.off_screen.sampler, *core.off_screen.frames[0].color_buffer_view, VK_IMAGE_LAYOUT_GENERAL);
         ::setup_dock();
     }
 
