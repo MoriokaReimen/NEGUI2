@@ -4,8 +4,9 @@
 
 namespace NEGUI2
 {
-    OffScreenManager::OffScreenManager() : extent{1920, 1080},
+    OffScreenManager::OffScreenManager() : extent{1920u, 1080u},
                                            render_pass(nullptr),
+                                           sampler(nullptr),
                                            clear_value(), swap_chain_rebuild(false),
                                            frame_index(0u), image_count(0u), semaphore_index(0u),
                                            frames(), sync_objects()
@@ -17,10 +18,6 @@ namespace NEGUI2
     {
         auto &window = Core::get_instance().window;
         auto &device_manager = Core::get_instance().gpu;
-
-        {
-            extent = vk::Extent2D(1920u, 1080);
-        }
 
         /* 背景色設定 */
         {
@@ -95,6 +92,26 @@ namespace NEGUI2
 
             vk::RenderPassCreateInfo renderPassCreateInfo({}, attachmentDescriptions, subpass);
             render_pass = device_manager.device.createRenderPass(renderPassCreateInfo);
+        }
+
+        {
+            vk::SamplerCreateInfo create_info;
+            create_info.setMagFilter(vk::Filter::eLinear)
+                .setMinFilter(vk::Filter::eLinear)
+                .setAddressModeU(vk::SamplerAddressMode::eRepeat)
+                .setAddressModeV(vk::SamplerAddressMode::eRepeat)
+                .setAddressModeW(vk::SamplerAddressMode::eRepeat)
+                .setAnisotropyEnable(vk::False) // TODO 有効化
+                .setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+                .setUnnormalizedCoordinates(vk::False)
+                .setCompareEnable(vk::False)
+                .setCompareOp(vk::CompareOp::eAlways)
+                .setMipmapMode(vk::SamplerMipmapMode::eLinear)
+                .setMipLodBias(0.f)
+                .setMinLod(0.f)
+                .setMaxLod(0.f);
+            auto &device = Core::get_instance().gpu.device;
+            sampler = device.createSampler(create_info);
         }
 
         /* イメージビュー作成 */

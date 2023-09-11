@@ -15,6 +15,7 @@ namespace NEGUI2
     public:
         vk::Extent2D extent;
         vk::raii::RenderPass render_pass;
+        vk::raii::Sampler sampler;
         vk::ClearValue clear_value;
         vk::Format color_format;
         vk::Format depth_format;
@@ -24,7 +25,6 @@ namespace NEGUI2
         uint32_t semaphore_index; // Current set of swapchain wait semaphores we're using (needs to be distinct from per frame data)
         std::vector<FrameData> frames;
         std::vector<SyncObject> sync_objects;
-
         void rebuild();
     };
 }
