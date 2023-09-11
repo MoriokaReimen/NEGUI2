@@ -4,7 +4,7 @@
 
 namespace NEGUI2
 {
-    OffScreenManager::OffScreenManager() : width(0), height(0),
+    OffScreenManager::OffScreenManager() : extent{1920, 1080},
                                            render_pass(nullptr),
                                            clear_value(), swap_chain_rebuild(false),
                                            frame_index(0u), image_count(0u), semaphore_index(0u),
@@ -19,8 +19,7 @@ namespace NEGUI2
         auto &device_manager = Core::get_instance().gpu;
 
         {
-            width = 100;
-            height = 100;
+            extent = vk::Extent2D(1920u, 1080);
         }
 
         /* 背景色設定 */
@@ -49,10 +48,11 @@ namespace NEGUI2
             image_count = 2;
             color_buffers.resize(2);
             depth_buffers.resize(2);
-            memory_manager.add_image("OffScreenColor0", width, height, NEGUI2::Image::TYPE::COLOR);
-            memory_manager.add_image("OffScreenColor1", width, height, NEGUI2::Image::TYPE::COLOR);
-            memory_manager.add_image("OffScreenDepth0", width, height, NEGUI2::Image::TYPE::DEPTH);
-            memory_manager.add_image("OffScreenDepth1", width, height, NEGUI2::Image::TYPE::DEPTH);
+            // TODO widthとheightをextentに置き換え
+            memory_manager.add_image("OffScreenColor0", extent.width, extent.height, NEGUI2::Image::TYPE::COLOR);
+            memory_manager.add_image("OffScreenColor1", extent.width, extent.height, NEGUI2::Image::TYPE::COLOR);
+            memory_manager.add_image("OffScreenDepth0", extent.width, extent.height, NEGUI2::Image::TYPE::DEPTH);
+            memory_manager.add_image("OffScreenDepth1", extent.width, extent.height, NEGUI2::Image::TYPE::DEPTH);
             color_buffers[0] = memory_manager.get_image("OffScreenColor0").image;
             color_buffers[1] = memory_manager.get_image("OffScreenColor1").image;
             depth_buffers[0] = memory_manager.get_image("OffScreenDepth0").image;
@@ -122,8 +122,8 @@ namespace NEGUI2
             info.renderPass = *render_pass;
             std::array<vk::ImageView, 2> target_view{*frames[i].color_buffer_view, *frames[i].depth_buffer_view};
             info.setAttachments(target_view);
-            info.width = width;
-            info.height = height;
+            info.width = extent.width;
+            info.height = extent.height;
             info.layers = 1;
             frames[i].frame_buffer = device_manager.device.createFramebuffer(info);
         }

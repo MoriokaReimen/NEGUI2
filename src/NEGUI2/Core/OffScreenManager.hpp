@@ -13,8 +13,7 @@ namespace NEGUI2
         OffScreenManager(const OffScreenManager& other) = delete;
         OffScreenManager& operator=(const OffScreenManager& other) = delete;
     public:
-        int width;
-        int height;
+        vk::Extent2D extent;
         vk::raii::RenderPass render_pass;
         vk::ClearValue clear_value;
         vk::Format color_format;
