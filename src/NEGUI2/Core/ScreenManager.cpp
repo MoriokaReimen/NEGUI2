@@ -76,8 +76,8 @@ namespace NEGUI2
 
     void ScreenManager::init()
     {
-        auto &window = Core::get_instance().get_window();
-        auto &device_manager = Core::get_instance().get_device_manager();
+        auto &window = Core::get_instance().window;
+        auto &device_manager = Core::get_instance().gpu;
 
         {
             extent = window.get_extent();
@@ -85,7 +85,7 @@ namespace NEGUI2
 
         {
             VkSurfaceKHR temp_surface;
-            glfwCreateWindowSurface(*device_manager.instance, window.get_window(), nullptr, &temp_surface);
+            glfwCreateWindowSurface(*device_manager.instance, window.get_raw(), nullptr, &temp_surface);
             surface = vk::raii::SurfaceKHR(device_manager.instance, temp_surface);
         }
 
@@ -133,14 +133,14 @@ namespace NEGUI2
 
     void ScreenManager::rebuild()
     {
-        auto &window = Core::get_instance().get_window();
+        auto &window = Core::get_instance().window;
         extent = window.get_extent();
         swap_chain_rebuild = false;
         frame_index = 0u; // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
         image_count = 0u; // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
         semaphore_index = 0u;
         vk::raii::SwapchainKHR old_swapchain = std::move(swap_chain);
-        auto &device_manager = Core::get_instance().get_device_manager();
+        auto &device_manager = Core::get_instance().gpu;
 
         device_manager.device.waitIdle();
 
@@ -168,7 +168,7 @@ namespace NEGUI2
 
             if (cap.currentExtent.width == 0xffffffff)
             {
-                auto &window = Core::get_instance().get_window();
+                auto &window = Core::get_instance().window;
                 extent = window.get_extent();
                 info.imageExtent = extent;
             }

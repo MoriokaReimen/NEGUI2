@@ -151,9 +151,9 @@ namespace NEGUI2
     void ImGuiManager::init()
     {
         auto &core = Core::get_instance();
-        auto &dm = core.get_device_manager();
-        auto &sm = core.get_screen_manager();
-        auto &window = core.get_window();
+        auto &dm = core.gpu;
+        auto &sm = core.screen;
+        auto &window = core.window;
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui_ImplVulkan_LoadFunctions([](const char *function_name, void *vulkan_instance)
@@ -185,7 +185,7 @@ namespace NEGUI2
         init_info.Allocator = NULL;
         init_info.CheckVkResultFn = check_vk_result;
         ImGui_ImplVulkan_Init(&init_info, *sm.render_pass);
-        ImGui_ImplGlfw_InitForVulkan(window.get_window(), true);
+        ImGui_ImplGlfw_InitForVulkan(window.get_raw(), true);
 
         // Load Fonts
         // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.

@@ -15,8 +15,8 @@ namespace NEGUI2
 
     void OffScreenManager::init()
     {
-        auto &window = Core::get_instance().get_window();
-        auto &device_manager = Core::get_instance().get_device_manager();
+        auto &window = Core::get_instance().window;
+        auto &device_manager = Core::get_instance().gpu;
 
         {
             width = 100;
@@ -38,8 +38,8 @@ namespace NEGUI2
         image_count = 2u; // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
         semaphore_index = 0u;
 
-        auto &device_manager = Core::get_instance().get_device_manager();
-        auto &memory_manager = Core::get_instance().get_memory_manager();
+        auto &device_manager = Core::get_instance().gpu;
+        auto &memory_manager = Core::get_instance().mm;
 
         /* フレーム作成 ********************************************************************/
         /* イメージ取得 */

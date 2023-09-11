@@ -69,7 +69,7 @@ namespace NEGUI2
         fn.vkBindImageMemory2KHR = vkBindImageMemory2;
         fn.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2;
 
-        auto &device_manager = Core::get_instance().get_device_manager();
+        auto &device_manager = Core::get_instance().gpu;
         VmaAllocatorCreateInfo allocatorCreateInfo = {};
         allocatorCreateInfo.vulkanApiVersion = vk::ApiVersion12;
         allocatorCreateInfo.instance = *device_manager.instance;
@@ -89,7 +89,7 @@ namespace NEGUI2
         for (auto &image : images_)
         {
             auto &core = Core::get_instance();
-            auto dm = *core.get_device_manager().device;
+            auto dm = *core.gpu.device;
 #if 0
             dm.destroyImageView(image.second.image_view); // TODO TextureManagerに移動
             dm.destroySampler(image.second.sampler);
@@ -157,7 +157,7 @@ namespace NEGUI2
         VmaAllocationInfo alloc_info;
 
         auto result = vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo*>(&buffer_info), &allocInfo, &buffer, &alloc, &alloc_info);
-        auto &device = Core::get_instance().get_device_manager();
+        auto &device = Core::get_instance().gpu;
 
         memories_.insert({key, Memory{vk::Buffer(buffer), alloc, alloc_info}});
 
@@ -207,7 +207,7 @@ namespace NEGUI2
         {
             std::memcpy(alloc_info.pMappedData, data, size);
             vmaFlushAllocation(allocator_, stage_allocation, 0, VK_WHOLE_SIZE);
-            Core::get_instance().get_device_manager().one_shot([&](vk::raii::CommandBuffer &command_buffer)
+            Core::get_instance().gpu.one_shot([&](vk::raii::CommandBuffer &command_buffer)
                                                                {
                     auto &target = memories_.at(key);
                     vk::BufferCopy copyRegion{0, 0, size};
@@ -256,7 +256,7 @@ namespace NEGUI2
         break;
         case Image::TYPE::DEPTH:
         {
-            auto &physical_device = Core::get_instance().get_device_manager().physical_device;
+            auto &physical_device = Core::get_instance().gpu.physical_device;
             image_create_info.imageType = vk::ImageType::e2D;
             image_create_info.format = get_depth_format(physical_device);
             image_create_info.extent.width = static_cast<uint32_t>(width);
@@ -296,7 +296,7 @@ namespace NEGUI2
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info; // TODO 改名
         vmaCreateImage(allocator_, reinterpret_cast<const VkImageCreateInfo*>(&image_create_info), &allocInfo, &image, &alloc, &alloc_info);
-        auto device = *Core::get_instance().get_device_manager().device;
+        auto device = *Core::get_instance().gpu.device;
          images_.insert({key, Image{vk::Image(image), image_create_info.format, alloc, alloc_info, type}});
 
         return true;
@@ -350,7 +350,7 @@ namespace NEGUI2
         {
             std::memcpy(alloc_info.pMappedData, data, image_size);
             vmaFlushAllocation(allocator_, stage_allocation, 0, VK_WHOLE_SIZE);
-            Core::get_instance().get_device_manager().one_shot([&](vk::raii::CommandBuffer &command_buffer)
+            Core::get_instance().gpu.one_shot([&](vk::raii::CommandBuffer &command_buffer)
                                                                {
                     auto &target = images_.at(key);
                     vk::ImageSubresourceLayers subresource;

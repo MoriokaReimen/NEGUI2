@@ -48,7 +48,7 @@ namespace NEGUI2
     {
         projection_ = ::perspective(fovy_, aspect_, znear_, zfar_);
         auto& core = Core::get_instance();
-        auto& mm = core.get_memory_manager();
+        auto& mm = core.mm;
         mm.add_memory("camera", 16 * sizeof(float), Memory::TYPE::UNIFORM);
         mm.add_memory("mouse", 2 * sizeof(float), Memory::TYPE::UNIFORM);
     }
@@ -77,7 +77,7 @@ namespace NEGUI2
     void Camera::upload()
     {
         auto &core = Core::get_instance();
-        auto &mm = core.get_memory_manager();
+        auto &mm = core.mm;
         
         {
             auto memory = mm.get_memory("camera");

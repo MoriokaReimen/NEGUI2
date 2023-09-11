@@ -27,10 +27,10 @@ namespace NEGUI2
             vertex_data_[3] = 0.5f;
             vertex_data_[4] = 0.5f;
             auto &core = Core::get_instance();
-            core.get_memory_manager().add_memory("TriangleVertex",
+            core.mm.add_memory("TriangleVertex",
                                                  sizeof(float) * vertex_data_.size(),
                                                  Memory::TYPE::VERTEX);
-            core.get_memory_manager().upload_memory("TriangleVertex", vertex_data_.data(), sizeof(float) * vertex_data_.size());
+            core.mm.upload_memory("TriangleVertex", vertex_data_.data(), sizeof(float) * vertex_data_.size());
         }
 
         /* パイプライン生成 */
@@ -46,7 +46,7 @@ namespace NEGUI2
         command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
 
         auto &core = Core::get_instance();
-        auto vertex_buffer = core.get_memory_manager().get_memory("TriangleVertex");
+        auto vertex_buffer = core.mm.get_memory("TriangleVertex");
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.draw(3, 1, 0, 0);
     }
@@ -54,8 +54,8 @@ namespace NEGUI2
     void Triangle::rebuild()
     {
         auto &core = Core::get_instance();
-        auto extent = core.get_window().get_extent();
-        auto& shader = core.get_shader();
+        auto extent = core.window.get_extent();
+        auto& shader = core.shader;
 
         /* Init pipeline */
         std::array<vk::PipelineShaderStageCreateInfo, 2> shader_stages;
@@ -124,10 +124,10 @@ namespace NEGUI2
         vk::PipelineLayoutCreateInfo pipeline_layout;
         // TODO push constnatの実装
 
-        auto &device = core.get_device_manager().device;
+        auto &device = core.gpu.device;
         pipeline_layout_ = device.createPipelineLayout(pipeline_layout);
 
-        auto &render_pass = core.get_screen_manager().render_pass;
+        auto &render_pass = core.screen.render_pass;
         vk::GraphicsPipelineCreateInfo pipeline_info;
         pipeline_info.setStages(shader_stages)
             .setPVertexInputState(&vertex_input_state)
@@ -141,7 +141,7 @@ namespace NEGUI2
             .setSubpass(0)
             .setBasePipelineHandle(nullptr);
 
-        auto &pipeline_cache = core.get_device_manager().pipeline_cache;
+        auto &pipeline_cache = core.gpu.pipeline_cache;
         pipeline_ = device.createGraphicsPipeline(pipeline_cache, pipeline_info);
     }
 

@@ -16,7 +16,7 @@ namespace NEGUI2
     TextureManager::~TextureManager()
     {
         auto &core = Core::get_instance();
-        vk::Device device = *core.get_device_manager().device;
+        vk::Device device = *core.gpu.device;
 
         for(auto& texture : textures_)
         {
@@ -45,7 +45,7 @@ namespace NEGUI2
         Texture texture;
         if (img != nullptr)
         {
-            auto &memory_manager = Core::get_instance().get_memory_manager();
+            auto &memory_manager = Core::get_instance().mm;
             memory_manager.add_image(path.string(), width, height, Image::TYPE::TEXTURE, true);
             Image image = memory_manager.get_image(path.string());
             texture.image = image.image;
@@ -58,7 +58,7 @@ namespace NEGUI2
             vk::Sampler sampler;
 
             auto& core = Core::get_instance();
-            vk::Device device = *core.get_device_manager().device;
+            vk::Device device = *core.gpu.device;
             {
                 vk::ImageSubresourceRange range;
                 range.setAspectMask(vk::ImageAspectFlagBits::eColor)
@@ -116,7 +116,7 @@ namespace NEGUI2
             ret = true;
             auto texture = textures_.at(key);
             auto &core = Core::get_instance();
-            vk::Device device = *core.get_device_manager().device;
+            vk::Device device = *core.gpu.device;
 
             device.destroyImageView(texture.image_view);
             device.destroySampler(texture.sampler);

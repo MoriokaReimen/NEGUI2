@@ -84,7 +84,7 @@ namespace NEGUI2
     {
         auto &core = Core::get_instance();
 
-        auto &tm = core.get_texture_manager();
+        auto &tm = core.tm;
         tm.load_from_file("./runtime/idle.png");
         auto texture = tm.get("./runtime/idle.png");
 

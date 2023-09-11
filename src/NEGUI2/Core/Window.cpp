@@ -26,7 +26,7 @@ namespace NEGUI2
     glfwTerminate();
   }
 
-  GLFWwindow *Window::get_window()
+  GLFWwindow *Window::get_raw()
   {
     return window_;
   }

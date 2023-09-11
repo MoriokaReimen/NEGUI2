@@ -17,14 +17,6 @@ namespace NEGUI2
     class Core
     {
         bool initialized_;
-        DeviceManager device_manager_;
-        MemoryManager memory_manager_;
-        Window window_;
-        ScreenManager screen_manager_;
-        OffScreenManager offscreen_manager_;
-        TextureManager texture_manager_;
-        ImGuiManager imgui_manager_;
-        Shader shader_;
 
         Core();
         void init();
@@ -33,13 +25,16 @@ namespace NEGUI2
     public:
         ~Core();
         static Core &get_instance();
-        DeviceManager& get_device_manager();
-        MemoryManager& get_memory_manager();
-        Window& get_window();
-        ScreenManager& get_screen_manager();
-        TextureManager& get_texture_manager();
-        ImGuiManager& get_imgui_manager();
-        Shader& get_shader();
+
+        DeviceManager gpu;
+        MemoryManager mm;
+        TextureManager tm;
+        Window window;
+        ScreenManager screen;
+        OffScreenManager off_screen;
+        ImGuiManager imgui;
+        Shader shader;
+
         bool should_close();
         void update();
         void wait_idle();

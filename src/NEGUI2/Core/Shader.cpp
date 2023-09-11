@@ -133,7 +133,7 @@ namespace NEGUI2
 
   void Shader::add_glsl(const std::string &key, const VkShaderStageFlagBits &shader_stage, const std::string &shader_text)
   {
-    auto &device = Core::get_instance().get_device_manager().device;
+    auto &device = Core::get_instance().gpu.device;
     glslang::InitializeProcess();
     VkShaderModule shader_module = ::makeShaderModule(*device, shader_stage, shader_text);
     glslang::FinalizeProcess();
@@ -147,7 +147,7 @@ namespace NEGUI2
     info.codeSize = sizeof(unsigned int) * spv_code.size();
     info.pCode = reinterpret_cast<const uint32_t *>(spv_code.data());
     VkShaderModule shader_module;
-    auto &device = Core::get_instance().get_device_manager().device;
+    auto &device = Core::get_instance().gpu.device;
     vkCreateShaderModule(*device, &info, nullptr, &shader_module);
     shader_modules_.emplace(key, std::move(shader_module));
   }
@@ -189,7 +189,7 @@ namespace NEGUI2
   {
     for (auto &shader_module : shader_modules_)
     {
-      auto &device = Core::get_instance().get_device_manager().device;
+      auto &device = Core::get_instance().gpu.device;
       vkDestroyShaderModule(*device, shader_module.second, nullptr);
     }
   }
