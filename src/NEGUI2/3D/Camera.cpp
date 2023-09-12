@@ -66,6 +66,11 @@ namespace NEGUI2
         projection_ = ::perspective(fovy_, aspect_, znear_, zfar_);
     }
 
+    void Camera::set_extent(const vk::Extent2D& extent)
+    {
+        set_extent(extent.width, extent.height);
+    }
+
     void Camera::set_mouse(const uint32_t& x, const uint32_t& y)
     {
         mouse_x_ = static_cast<float>(x);
