@@ -20,11 +20,7 @@ namespace NEGUI2
         vk::Format color_format;
         vk::Format depth_format;
         bool swap_chain_rebuild;
-        uint32_t frame_index;     // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
-        uint32_t image_count;     // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
-        uint32_t semaphore_index; // Current set of swapchain wait semaphores we're using (needs to be distinct from per frame data)
-        std::vector<FrameData> frames;
-        std::vector<SyncObject> sync_objects;
+        FrameData frame;
         void rebuild();
     };
 }

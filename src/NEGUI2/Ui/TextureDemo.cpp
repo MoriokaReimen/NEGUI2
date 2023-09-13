@@ -84,7 +84,7 @@ namespace NEGUI2
     {
         auto &core = Core::get_instance();
 
-        texture_id_ = ImGui_ImplVulkan_AddTexture(*core.off_screen.sampler, *core.off_screen.frames[0].color_buffer_view, VK_IMAGE_LAYOUT_GENERAL);
+        texture_id_ = ImGui_ImplVulkan_AddTexture(*core.off_screen.sampler, *core.off_screen.frame.color_buffer_view, VK_IMAGE_LAYOUT_GENERAL);
         ::setup_dock();
     }
 

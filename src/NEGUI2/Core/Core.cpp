@@ -85,7 +85,7 @@ namespace NEGUI2 {
         {
             vk::RenderPassBeginInfo begin_info;
             begin_info.setRenderPass(*off_screen.render_pass)
-            .setFramebuffer(*off_screen.frames[0].frame_buffer)
+            .setFramebuffer(*off_screen.frame.frame_buffer)
             .setRenderArea({{0, 0}, {off_screen.extent}})
             .setClearValueCount(2).setPClearValues(off_screen.clear_value.data());
 

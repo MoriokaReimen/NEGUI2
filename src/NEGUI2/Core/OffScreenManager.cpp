@@ -8,8 +8,7 @@ namespace NEGUI2
                                            render_pass(nullptr),
                                            sampler(nullptr),
                                            clear_value(), swap_chain_rebuild(false),
-                                           frame_index(0u), image_count(0u), semaphore_index(0u),
-                                           frames(), sync_objects()
+                                           frame()
 
     {
     }
@@ -30,38 +29,22 @@ namespace NEGUI2
 
     void OffScreenManager::rebuild()
     {
-        /* カウンタリセット */
-        frame_index = 0u; // Current frame being rendered to (0 <= FrameIndex < FrameInFlightCount)
-        image_count = 2u; // Number of simultaneous in-flight frames (returned by vkGetSwapchainImagesKHR, usually derived from min_image_count)
-        semaphore_index = 0u;
-
         auto &device_manager = Core::get_instance().gpu;
         auto &memory_manager = Core::get_instance().mm;
 
         /* フレーム作成 ********************************************************************/
         /* イメージ取得 */
-        std::vector<vk::Image> color_buffers;
-        std::vector<vk::Image> depth_buffers;
-        {
-            image_count = 2;
-            color_buffers.resize(2);
-            depth_buffers.resize(2);
-            // TODO widthとheightをextentに置き換え
-            memory_manager.add_image("OffScreenColor0", extent.width, extent.height, NEGUI2::Image::TYPE::COLOR);
-            memory_manager.add_image("OffScreenColor1", extent.width, extent.height, NEGUI2::Image::TYPE::COLOR);
-            memory_manager.add_image("OffScreenDepth0", extent.width, extent.height, NEGUI2::Image::TYPE::DEPTH);
-            memory_manager.add_image("OffScreenDepth1", extent.width, extent.height, NEGUI2::Image::TYPE::DEPTH);
-            color_buffers[0] = memory_manager.get_image("OffScreenColor0").image;
-            color_buffers[1] = memory_manager.get_image("OffScreenColor1").image;
-            depth_buffers[0] = memory_manager.get_image("OffScreenDepth0").image;
-            depth_buffers[1] = memory_manager.get_image("OffScreenDepth1").image;
-            frames.resize(image_count);
-            for (int i = 0; i < image_count; i++)
-            {
-                frames[i].color_buffer = color_buffers[i];
-                frames[i].depth_buffer = depth_buffers[i];
-            }
-        }
+        vk::Image color_buffers;
+        vk::Image depth_buffers;
+
+        // TODO widthとheightをextentに置き換え
+        memory_manager.add_image("OffScreenColor0", extent.width, extent.height, NEGUI2::Image::TYPE::COLOR);
+        memory_manager.add_image("OffScreenDepth0", extent.width, extent.height, NEGUI2::Image::TYPE::DEPTH);
+        color_buffers = memory_manager.get_image("OffScreenColor0").image;
+        depth_buffers = memory_manager.get_image("OffScreenDepth0").image;
+
+        frame.color_buffer = color_buffers;
+        frame.depth_buffer = depth_buffers;
 
         color_format = memory_manager.get_image("OffScreenColor0").format;
         depth_format = memory_manager.get_image("OffScreenDepth0").format;
@@ -116,48 +99,30 @@ namespace NEGUI2
         }
 
         /* イメージビュー作成 */
-        for (int i = 0; i < image_count; i++)
-        { //TODO メモリマネージャに移動
-            /* 色 */
-            vk::ImageViewCreateInfo color_view_create_info({}, {}, vk::ImageViewType::e2D, color_format, {}, {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
-            color_view_create_info.image = frames[i].color_buffer;
-            vk::ImageSubresourceRange color_image_range{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
-            color_view_create_info.subresourceRange = color_image_range;
-            frames[i].color_buffer_view = device_manager.device.createImageView(color_view_create_info);
 
-            /* 深度 */
-            vk::ImageViewCreateInfo depth_view_create_info({}, {}, vk::ImageViewType::e2D, depth_format, {}, {vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1});
-            depth_view_create_info.image = frames[i].depth_buffer;
-            vk::ImageSubresourceRange depth_image_range{vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1};
-            depth_view_create_info.subresourceRange = depth_image_range;
-            frames[i].depth_buffer_view = device_manager.device.createImageView(depth_view_create_info);
-        }
+        /* 色 */
+        vk::ImageViewCreateInfo color_view_create_info({}, {}, vk::ImageViewType::e2D, color_format, {}, {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
+        color_view_create_info.image = frame.color_buffer;
+        vk::ImageSubresourceRange color_image_range{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
+        color_view_create_info.subresourceRange = color_image_range;
+        frame.color_buffer_view = device_manager.device.createImageView(color_view_create_info);
+
+        /* 深度 */
+        vk::ImageViewCreateInfo depth_view_create_info({}, {}, vk::ImageViewType::e2D, depth_format, {}, {vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1});
+        depth_view_create_info.image = frame.depth_buffer;
+        vk::ImageSubresourceRange depth_image_range{vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1};
+        depth_view_create_info.subresourceRange = depth_image_range;
+        frame.depth_buffer_view = device_manager.device.createImageView(depth_view_create_info);
 
         /* フレームバッファ作成 */
-        for (int i = 0; i < image_count; i++)
-        {
-            vk::FramebufferCreateInfo info;
-            info.renderPass = *render_pass;
-            std::array<vk::ImageView, 2> target_view{*frames[i].color_buffer_view, *frames[i].depth_buffer_view};
-            info.setAttachments(target_view);
-            info.width = extent.width;
-            info.height = extent.height;
-            info.layers = 1;
-            frames[i].frame_buffer = device_manager.device.createFramebuffer(info);
-        }
 
-        /* フェンス作成 */
-        for (int i = 0; i < image_count; i++)
-        {
-            frames[i].fence = device_manager.device.createFence({vk::FenceCreateFlagBits::eSignaled});
-        }
-
-        /* セマフォ作成 */
-        sync_objects.resize(image_count);
-        for (int i = 0; i < image_count; i++)
-        {
-            sync_objects[i].image_acquired_semaphore = device_manager.device.createSemaphore({});
-            sync_objects[i].image_rendered_semaphore = device_manager.device.createSemaphore({});
-        }
+        vk::FramebufferCreateInfo info;
+        info.renderPass = *render_pass;
+        std::array<vk::ImageView, 2> target_view{*frame.color_buffer_view, *frame.depth_buffer_view};
+        info.setAttachments(target_view);
+        info.width = extent.width;
+        info.height = extent.height;
+        info.layers = 1;
+        frame.frame_buffer = device_manager.device.createFramebuffer(info);
     }
 }
