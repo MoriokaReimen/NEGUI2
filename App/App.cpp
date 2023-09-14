@@ -7,6 +7,7 @@
 #include "NEGUI2/3D/IDisplayObject.hpp"
 #include <cstdlib>
 #include <memory>
+#include "NEGUI2/3D/Camera.hpp"
 
 int main(int argc, char** argv)
 {
@@ -14,12 +15,17 @@ int main(int argc, char** argv)
 
     NEGUI2::TextureDemo demo2;
     NEGUI2::PlotDemo demo;
+    NEGUI2::Camera camera;
     auto triangle = std::make_shared<NEGUI2::Triangle>();
     triangle->init();
     core.display_objects.push_back(triangle);
+    int pos = 0u;
 
     while(!core.should_close())
     {
+        pos = pos < 10000 ? pos + 1 : -5000u;
+        camera.set_mouse(pos, pos);
+        camera.upload();
         demo.update();
         demo2.update();
         core.update();

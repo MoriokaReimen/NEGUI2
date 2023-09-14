@@ -47,6 +47,7 @@ namespace NEGUI2
 
         auto &core = Core::get_instance();
         auto vertex_buffer = core.mm.get_memory("TriangleVertex");
+        command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.draw(3, 1, 0, 0);
     }
@@ -131,6 +132,7 @@ namespace NEGUI2
             .setBlendConstants(blend_constant);
 
         vk::PipelineLayoutCreateInfo pipeline_layout;
+        pipeline_layout.setSetLayouts(*core.gpu.descriptor_set_layout);
         // TODO push constnatの実装
 
         auto &device = core.gpu.device;

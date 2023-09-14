@@ -48,9 +48,32 @@ namespace NEGUI2
     {
         projection_ = ::perspective(fovy_, aspect_, znear_, zfar_);
         auto& core = Core::get_instance();
+        
         auto& mm = core.mm;
-        mm.add_memory("camera", 16 * sizeof(float), Memory::TYPE::UNIFORM);
-        mm.add_memory("mouse", 2 * sizeof(float), Memory::TYPE::UNIFORM);
+        {
+            mm.add_memory("camera", 16 * sizeof(float), Memory::TYPE::UNIFORM);
+            mm.add_memory("mouse", 2 * sizeof(float), Memory::TYPE::UNIFORM);
+        }
+
+        auto& gpu = core.gpu;
+        {            
+            std::array<vk::DescriptorBufferInfo, 1> buffer_infos;
+            auto memory = mm.get_memory("mouse");
+            buffer_infos[0].setBuffer(memory.buffer)
+                           .setOffset(0u)
+                           .setRange(vk::WholeSize);
+
+            std::array<vk::WriteDescriptorSet, 1> write_descriptor_sets;
+            write_descriptor_sets[0].setDstSet(*gpu.descriptor_set)
+                                    .setDstBinding(0u)
+                                    .setDstArrayElement(0)
+                                    .setDescriptorCount(1)
+                                    .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                                    .setBufferInfo(buffer_infos[0]);
+            
+            gpu.device.updateDescriptorSets(write_descriptor_sets, nullptr);
+        }
+
     }
 
     Camera::~Camera()
@@ -75,8 +98,6 @@ namespace NEGUI2
     {
         mouse_x_ = static_cast<float>(x);
         mouse_y_ = static_cast<float>(y);
-
-
     }
 
     void Camera::upload()

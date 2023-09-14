@@ -33,6 +33,8 @@ namespace NEGUI2
         vk::raii::Queue present_queue;
         vk::raii::DebugUtilsMessengerEXT debug_func;
         vk::raii::DescriptorPool descriptor_pool;
+        vk::raii::DescriptorSetLayout descriptor_set_layout;
+        vk::raii::DescriptorSet descriptor_set;
         vk::raii::CommandPool command_pool;
         vk::raii::PipelineCache pipeline_cache;
         vk::Result one_shot(std::function<vk::Result(vk::raii::CommandBuffer &command_buffer)> func);
