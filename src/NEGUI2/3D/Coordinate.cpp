@@ -1,60 +1,61 @@
-#include "NEGUI2/3D/Triangle.hpp"
+#include "NEGUI2/3D/Coordinate.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>
 
 namespace NEGUI2
 {
-    uint32_t Triangle::instance_count_ = 0u;
-    Triangle::Triangle()
+    uint32_t Coordinate::instance_count_ = 0u;
+    Coordinate::Coordinate()
     : pipeline_(nullptr), pipeline_layout_(nullptr)
     {
     }
 
-    Triangle::~Triangle()
+    Coordinate::~Coordinate()
     {
     }
 
-    void Triangle::init()
+    void Coordinate::init()
     {
         instance_count_++;
         instance_id_ = instance_count_;
 
         /* Init Vertex buffer */
         {
-            vertex_data_[0] = 0.5f * Eigen::Vector3f::UnitY();
-            vertex_data_[1] = 0.5f * Eigen::Vector3f::UnitX();
-            vertex_data_[2] = -0.5f * Eigen::Vector3f::UnitX();
+            vertex_data_.fill(0.f);
+            vertex_data_[0] = -0.5f;
+            vertex_data_[3] = 0.5f;
+            vertex_data_[4] = 0.5f;
             auto &core = Core::get_instance();
-            core.mm.add_memory("TriangleVertex",
-                                                 sizeof(Eigen::Vector3f) * vertex_data_.size(),
+            core.mm.add_memory("CoordinateVertex",
+                                                 sizeof(float) * vertex_data_.size(),
                                                  Memory::TYPE::VERTEX);
-            core.mm.upload_memory("TriangleVertex", vertex_data_.data(), sizeof(Eigen::Vector3f) * vertex_data_.size());
+            core.mm.upload_memory("CoordinateVertex", vertex_data_.data(), sizeof(float) * vertex_data_.size());
         }
 
         /* パイプライン生成 */
         rebuild();
     }
 
-    void Triangle::destroy()
+    void Coordinate::destroy()
     {
     }
 
-    void Triangle::update(vk::raii::CommandBuffer &command)
+    void Coordinate::update(vk::raii::CommandBuffer &command)
     {       
         command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
 
         auto &core = Core::get_instance();
-        auto vertex_buffer = core.mm.get_memory("TriangleVertex");
+        auto vertex_buffer = core.mm.get_memory("CoordinateVertex");
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.draw(3, 1, 0, 0);
     }
 
-    void Triangle::rebuild()
+    void Coordinate::rebuild()
     {
         auto &core = Core::get_instance();
-        auto extent = core.off_screen.extent;
+        auto extent = core.window.get_extent();
         auto& shader = core.shader;
 
         /* Init pipeline */
@@ -62,27 +63,27 @@ namespace NEGUI2
         /* Vertexシェーダ */
         {
             shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main")
-                            .setModule(shader.get("TRIANGLE.VERT"));
+                            .setModule(shader.get("Coordinate.VERT"));
         }
 
         /* Fragmentシェーダ */
         {
             shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main")
-                            .setModule(shader.get("TRIANGLE.FRAG"));
+                            .setModule(shader.get("Coordinate.FRAG"));
         }
         std::array<vk::VertexInputBindingDescription, 1> binding_description;
         binding_description[0].binding = 0;
-        binding_description[0].setBinding(0).setStride(sizeof(Eigen::Vector3f)).setInputRate(vk::VertexInputRate::eVertex);
+        binding_description[0].setBinding(0).setStride(2 * sizeof(float)).setInputRate(vk::VertexInputRate::eVertex);
 
         std::array<vk::VertexInputAttributeDescription, 1> attribute_description;
-        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32B32Sfloat);
+        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32Sfloat);
 
         vk::PipelineVertexInputStateCreateInfo vertex_input_state;
         vertex_input_state.setVertexBindingDescriptions(binding_description)
             .setVertexAttributeDescriptions(attribute_description);
 
         vk::PipelineInputAssemblyStateCreateInfo input_assembly;
-        input_assembly.setTopology(vk::PrimitiveTopology::eTriangleFan)
+        input_assembly.setTopology(vk::PrimitiveTopology::eCoordinateFan)
             .setPrimitiveRestartEnable(vk::False);
 
         vk::PipelineDepthStencilStateCreateInfo depth_stencil;
@@ -157,13 +158,13 @@ namespace NEGUI2
         pipeline_ = device.createGraphicsPipeline(pipeline_cache, pipeline_info);
     }
 
-    uint32_t Triangle::get_type_id()
+    uint32_t Coordinate::get_type_id()
     {
-        auto &id = typeid(Triangle);
+        auto &id = typeid(Coordinate);
         return static_cast<uint32_t>(id.hash_code());
     }
 
-    uint32_t Triangle::get_instance_id()
+    uint32_t Coordinate::get_instance_id()
     {
         return instance_id_;
     }

@@ -1,22 +1,22 @@
-#ifndef _TRIANGLE_HPP
-#define _TRIANGLE_HPP
+#ifndef _COORDINATE_HPP
+#define _COORDINATE_HPP
 #include "NEGUI2/3D/IDisplayObject.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Triangle : public IDisplayObject
+    class Coordinate : public IDisplayObject
     {
         static uint32_t instance_count_;
         uint32_t instance_id_;
         vk::raii::Pipeline pipeline_;
         vk::raii::PipelineLayout pipeline_layout_;
 
-        std::array<Eigen::Vector3f, 3> vertex_data_;
+        std::array<float, 6 * 3> vertex_data_;
 
         public:
-        Triangle();
-        ~Triangle() override;
+        Coordinate();
+        ~Coordinate() override;
 
         void init() override;
         void destroy() override;
