@@ -23,7 +23,6 @@ namespace NEGUI2
             clear_value[0].setColor({200.0f / 256.0f, 200.0f / 256.0f, 200.0f / 256.0f, 1.0f});
             clear_value[1].setDepthStencil({1.f, 1u});
         }
-
         rebuild();
     }
 
@@ -31,7 +30,7 @@ namespace NEGUI2
     {
         auto &device_manager = Core::get_instance().gpu;
         auto &memory_manager = Core::get_instance().mm;
-
+        extent = Core::get_instance().window.get_extent();
         /* フレーム作成 ********************************************************************/
         /* イメージ取得 */
         vk::Image color_buffers;

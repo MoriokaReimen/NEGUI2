@@ -21,7 +21,6 @@ namespace NEGUI2 {
         mm.init();
         screen.init();
         off_screen.init();
-        off_screen.rebuild();
         tm.init();
         imgui.init();
         shader.init();
