@@ -30,7 +30,7 @@ namespace {
         projection << x,   0.0,   0.0, 0.0,
                       0.0,   y,   0.0, 0.0,
                       0.0, 0.0, alpha, beta,
-                      0.0, 0.0,  -1.0, 0.0;
+                      0.0, 0.0,  -1.0, 1.0;
         
         return projection;
     }
@@ -57,19 +57,28 @@ namespace NEGUI2
 
         auto& gpu = core.gpu;
         {            
-            std::array<vk::DescriptorBufferInfo, 1> buffer_infos;
-            auto memory = mm.get_memory("mouse");
-            buffer_infos[0].setBuffer(memory.buffer)
+            std::array<vk::DescriptorBufferInfo, 2> buffer_infos;
+            auto mouse_memory = mm.get_memory("mouse");
+            buffer_infos[0].setBuffer(mouse_memory.buffer)
                            .setOffset(0u)
                            .setRange(vk::WholeSize);
 
-            std::array<vk::WriteDescriptorSet, 1> write_descriptor_sets;
+            auto camera_memory = mm.get_memory("camera");
+            buffer_infos[1].setBuffer(camera_memory.buffer).setOffset(0u).setRange(vk::WholeSize);
+
+            std::array<vk::WriteDescriptorSet, 2> write_descriptor_sets;
             write_descriptor_sets[0].setDstSet(*gpu.descriptor_set)
                                     .setDstBinding(0u)
                                     .setDstArrayElement(0)
                                     .setDescriptorCount(1)
                                     .setDescriptorType(vk::DescriptorType::eUniformBuffer)
                                     .setBufferInfo(buffer_infos[0]);
+            write_descriptor_sets[1].setDstSet(*gpu.descriptor_set)
+                                    .setDstBinding(1u)
+                                    .setDstArrayElement(0)
+                                    .setDescriptorCount(1)
+                                    .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+                                    .setBufferInfo(buffer_infos[1]);
             
             gpu.device.updateDescriptorSets(write_descriptor_sets, nullptr);
         }
@@ -107,7 +116,7 @@ namespace NEGUI2
         
         {
             auto memory = mm.get_memory("camera");
-            auto transform = projection_ * transform_.inverse();
+            auto transform = projection_ * transform_.matrix().transpose();
             Eigen::Matrix4f pv = transform.matrix().cast<float>();
             std::memcpy(memory.alloc_info.pMappedData, pv.data(), sizeof(float) * 16);
         }

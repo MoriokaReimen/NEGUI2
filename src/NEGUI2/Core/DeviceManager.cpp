@@ -319,16 +319,21 @@ namespace NEGUI2
         descriptor_pool = device.createDescriptorPool(pool_info);
 
         vk::DescriptorSetLayoutCreateInfo create_info;
-        std::array<vk::DescriptorSetLayoutBinding, 1> bindings;
+        std::array<vk::DescriptorSetLayoutBinding, 2> bindings;
         bindings[0] = vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
+        bindings[1] = vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
         create_info.setBindings(bindings);
         descriptor_set_layout = device.createDescriptorSetLayout(create_info);
 
         vk::DescriptorSetAllocateInfo alloc_info;
         alloc_info.setDescriptorPool(*descriptor_pool)
-            .setSetLayouts(*descriptor_set_layout);
-        descriptor_set = std::move(device.allocateDescriptorSets(alloc_info).front());
+                  .setSetLayouts(*descriptor_set_layout);
+        auto descriptors = device.allocateDescriptorSets(alloc_info);
+        descriptor_set = std::move(descriptors[0]);
+
+        // descriptor_set = std::move(descriptors[2]);
     }
+
     void DeviceManager::init_command_pool_()
     {
         vk::CommandPoolCreateInfo create_info;
@@ -346,7 +351,7 @@ namespace NEGUI2
         : context_(), instance(nullptr), physical_device(nullptr),
           device(nullptr), graphics_queue_index((uint32_t)-1), present_queue_index((uint32_t)-1),
           graphics_queue(nullptr), present_queue(nullptr), debug_func(nullptr),
-          descriptor_pool(nullptr), descriptor_set_layout(nullptr), descriptor_set(nullptr), 
+          descriptor_pool(nullptr), descriptor_set_layout(nullptr), descriptor_set(nullptr),
           command_pool(nullptr), pipeline_cache(nullptr)
     {
     }
