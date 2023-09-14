@@ -4,6 +4,7 @@
 #include "NEGUI2/Ui/TextEditDemo.hpp"
 #include "NEGUI2/Ui/TextureDemo.hpp"
 #include "NEGUI2/3D/Triangle.hpp"
+#include "NEGUI2/3D/Coordinate.hpp"
 #include "NEGUI2/3D/IDisplayObject.hpp"
 #include <cstdlib>
 #include <memory>
@@ -19,6 +20,11 @@ int main(int argc, char** argv)
     auto triangle = std::make_shared<NEGUI2::Triangle>();
     triangle->init();
     core.display_objects.push_back(triangle);
+
+    auto coord = std::make_shared<NEGUI2::Coordinate>();
+    coord->init();
+    core.display_objects.push_back(coord);
+
     int pos = 0u;
 
     while(!core.should_close())

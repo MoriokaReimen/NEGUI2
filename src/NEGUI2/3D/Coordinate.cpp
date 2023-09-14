@@ -22,15 +22,16 @@ namespace NEGUI2
 
         /* Init Vertex buffer */
         {
-            vertex_data_.fill(0.f);
-            vertex_data_[0] = -0.5f;
-            vertex_data_[3] = 0.5f;
-            vertex_data_[4] = 0.5f;
+            vertex_data_[0] = Eigen::Vector3f::Zero();
+            vertex_data_[1] = Eigen::Vector3f::UnitX();
+            vertex_data_[2] = Eigen::Vector3f::Zero();
+            vertex_data_[3] = Eigen::Vector3f::UnitY();
+            vertex_data_[4] = Eigen::Vector3f::Zero();
+            vertex_data_[5] = Eigen::Vector3f::UnitZ();
+
             auto &core = Core::get_instance();
-            core.mm.add_memory("CoordinateVertex",
-                                                 sizeof(float) * vertex_data_.size(),
-                                                 Memory::TYPE::VERTEX);
-            core.mm.upload_memory("CoordinateVertex", vertex_data_.data(), sizeof(float) * vertex_data_.size());
+            core.mm.add_memory("CoordinateVertex", sizeof(Eigen::Vector3f) * vertex_data_.size(), Memory::TYPE::VERTEX);
+            core.mm.upload_memory("CoordinateVertex", vertex_data_.data(), sizeof(Eigen::Vector3f) * vertex_data_.size());
         }
 
         /* パイプライン生成 */
@@ -49,13 +50,13 @@ namespace NEGUI2
         auto vertex_buffer = core.mm.get_memory("CoordinateVertex");
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
-        command.draw(3, 1, 0, 0);
+        command.draw(vertex_data_.size(), 1, 0, 0);
     }
 
     void Coordinate::rebuild()
     {
         auto &core = Core::get_instance();
-        auto extent = core.window.get_extent();
+        auto extent = core.off_screen.extent;
         auto& shader = core.shader;
 
         /* Init pipeline */
@@ -63,27 +64,27 @@ namespace NEGUI2
         /* Vertexシェーダ */
         {
             shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main")
-                            .setModule(shader.get("Coordinate.VERT"));
+                            .setModule(shader.get("TRIANGLE.VERT"));
         }
 
         /* Fragmentシェーダ */
         {
             shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main")
-                            .setModule(shader.get("Coordinate.FRAG"));
+                            .setModule(shader.get("TRIANGLE.FRAG"));
         }
         std::array<vk::VertexInputBindingDescription, 1> binding_description;
         binding_description[0].binding = 0;
-        binding_description[0].setBinding(0).setStride(2 * sizeof(float)).setInputRate(vk::VertexInputRate::eVertex);
+        binding_description[0].setBinding(0).setStride(sizeof(Eigen::Vector3f)).setInputRate(vk::VertexInputRate::eVertex);
 
         std::array<vk::VertexInputAttributeDescription, 1> attribute_description;
-        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32Sfloat);
+        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32B32Sfloat);
 
         vk::PipelineVertexInputStateCreateInfo vertex_input_state;
         vertex_input_state.setVertexBindingDescriptions(binding_description)
             .setVertexAttributeDescriptions(attribute_description);
 
         vk::PipelineInputAssemblyStateCreateInfo input_assembly;
-        input_assembly.setTopology(vk::PrimitiveTopology::eCoordinateFan)
+        input_assembly.setTopology(vk::PrimitiveTopology::eLineList)
             .setPrimitiveRestartEnable(vk::False);
 
         vk::PipelineDepthStencilStateCreateInfo depth_stencil;
