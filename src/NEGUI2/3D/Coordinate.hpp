@@ -13,6 +13,7 @@ namespace NEGUI2
         vk::raii::PipelineLayout pipeline_layout_;
 
         std::array<Eigen::Vector3f, 6> vertex_data_;
+        std::array<Eigen::Vector4f, 6> color_data_;
 
         public:
         Coordinate();

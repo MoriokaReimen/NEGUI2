@@ -34,6 +34,22 @@ namespace NEGUI2
             core.mm.upload_memory("CoordinateVertex", vertex_data_.data(), sizeof(Eigen::Vector3f) * vertex_data_.size());
         }
 
+        /* Init Color Data */
+        {
+            color_data_[0] = Eigen::Vector4f(1.f, 0.f, 0.f, 1.f);
+            color_data_[1] = Eigen::Vector4f(1.f, 0.f, 0.f, 1.f);
+
+            color_data_[2] = Eigen::Vector4f(0.f, 1.f, 0.f, 1.f);
+            color_data_[3] = Eigen::Vector4f(0.f, 1.f, 0.f, 1.f);
+
+            color_data_[4] = Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
+            color_data_[5] = Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
+
+            auto &core = Core::get_instance();
+            core.mm.add_memory("CoordinateColor", sizeof(Eigen::Vector4f) * color_data_.size(), Memory::TYPE::VERTEX);
+            core.mm.upload_memory("CoordinateColor", color_data_.data(), sizeof(Eigen::Vector4f) * color_data_.size());
+        }
+
         /* パイプライン生成 */
         rebuild();
     }
@@ -48,8 +64,9 @@ namespace NEGUI2
 
         auto &core = Core::get_instance();
         auto vertex_buffer = core.mm.get_memory("CoordinateVertex");
+        auto color_buffer = core.mm.get_memory("CoordinateColor");
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
-        command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
+        command.bindVertexBuffers(0, {vertex_buffer.buffer, color_buffer.buffer}, {0, 0});
         command.draw(vertex_data_.size(), 1, 0, 0);
     }
 
@@ -72,12 +89,15 @@ namespace NEGUI2
             shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main")
                             .setModule(shader.get("TRIANGLE.FRAG"));
         }
-        std::array<vk::VertexInputBindingDescription, 1> binding_description;
+        std::array<vk::VertexInputBindingDescription, 2> binding_description;
         binding_description[0].binding = 0;
         binding_description[0].setBinding(0).setStride(sizeof(Eigen::Vector3f)).setInputRate(vk::VertexInputRate::eVertex);
+        binding_description[1].binding = 1;
+        binding_description[1].setBinding(1).setStride(sizeof(Eigen::Vector4f)).setInputRate(vk::VertexInputRate::eVertex);
 
-        std::array<vk::VertexInputAttributeDescription, 1> attribute_description;
+        std::array<vk::VertexInputAttributeDescription, 2> attribute_description;
         attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32B32Sfloat);
+        attribute_description[1].setBinding(1).setLocation(1).setFormat(vk::Format::eR32G32B32A32Sfloat);
 
         vk::PipelineVertexInputStateCreateInfo vertex_input_state;
         vertex_input_state.setVertexBindingDescriptions(binding_description)
