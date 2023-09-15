@@ -29,9 +29,10 @@ target_runtime_resource(NEGUI2 PUBLIC ${NEGUI_RUNTIME})
 ##################################################
 # Configure App Executable
 ##################################################
-file(GLOB APP_SRC ${CMAKE_CURRENT_LIST_DIR}/App/*.cpp)
+file(GLOB APP_SRC ${CMAKE_CURRENT_LIST_DIR}/src/App/*.cpp)
 add_executable(App ${APP_SRC})
 target_link_libraries(App PRIVATE NEGUI2)
+target_include_directories(App PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/App)
 
 ##################################################
 # Configure Test Executable
