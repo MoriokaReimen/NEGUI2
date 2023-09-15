@@ -23,7 +23,7 @@ namespace NEGUI2
 
 
     public:
-        Camera(const double& fovy = 60.0, const double& aspect = 1.0, const double& znear = 0.1, const double& zfar = 500.0);
+        Camera(const double& fovy = 60.0, const double& aspect = 1.78, const double& znear = 0.1, const double& zfar = 500.0);
         ~Camera() override;
         void set_extent(const uint32_t& width, const uint32_t& height);
         void set_extent(const vk::Extent2D& extent);

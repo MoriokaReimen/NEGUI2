@@ -25,6 +25,6 @@ layout(location = 1) in vec4 color;
 layout(location = 0) out vec4 out_color;
 
 void main() {
-    gl_Position = push_constant.model_mat * vec4(inPosition, 1.0);
+    gl_Position = camera.transform * push_constant.model_mat * vec4(inPosition, 1.0);
     out_color = color;
 }

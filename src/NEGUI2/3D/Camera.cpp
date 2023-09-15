@@ -43,9 +43,10 @@ namespace NEGUI2
 
     Camera::Camera(const double& fovy, const double& aspect, const double& znear, const double& zfar)
     : projection_(Eigen::Matrix4d::Identity()), fovy_(fovy), aspect_(aspect), znear_(znear), zfar_(zfar),
-      width_(0.f), height_(0.f), mouse_x_(0.f), mouse_y_(0.f),
+      width_(1920.f), height_(1080.f), mouse_x_(0.f), mouse_y_(0.f),
       BaseTransform::BaseTransform()
     {
+        aspect_ = static_cast<double>(width_) / static_cast<double>(height_);
         projection_ = ::perspective(fovy_, aspect_, znear_, zfar_);
         auto& core = Core::get_instance();
         
