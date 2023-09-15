@@ -7,8 +7,12 @@ namespace NEGUI2
 {
     uint32_t Coordinate::instance_count_ = 0u;
     Coordinate::Coordinate()
-    : pipeline_(nullptr), pipeline_layout_(nullptr)
+    : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_()
     {
+        instance_count_++;
+        push_constant_.class_id = get_type_id();
+        push_constant_.instance_id = instance_count_;
+        push_constant_.model = get_transform().matrix().cast<float>();
     }
 
     Coordinate::~Coordinate()
@@ -17,9 +21,6 @@ namespace NEGUI2
 
     void Coordinate::init()
     {
-        instance_count_++;
-        instance_id_ = instance_count_;
-
         /* Init Vertex buffer */
         {
             vertex_data_[0] = Eigen::Vector3f::Zero();
@@ -60,13 +61,17 @@ namespace NEGUI2
 
     void Coordinate::update(vk::raii::CommandBuffer &command)
     {       
-        command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
-
+        push_constant_.model = get_transform().matrix().cast<float>();
+        
         auto &core = Core::get_instance();
+
+        command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
         auto vertex_buffer = core.mm.get_memory("CoordinateVertex");
         auto color_buffer = core.mm.get_memory("CoordinateColor");
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer, color_buffer.buffer}, {0, 0});
+        command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
+        
         command.draw(vertex_data_.size(), 1, 0, 0);
     }
 
@@ -152,8 +157,14 @@ namespace NEGUI2
             .setAttachments(colorBlendAttachment)
             .setBlendConstants(blend_constant);
 
+        vk::PushConstantRange push_constant;
+        push_constant.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+                     .setSize(sizeof(PushConstant))
+                     .setOffset(0);
+
         vk::PipelineLayoutCreateInfo pipeline_layout;
-        pipeline_layout.setSetLayouts(*core.gpu.descriptor_set_layout);
+        pipeline_layout.setSetLayouts(*core.gpu.descriptor_set_layout)
+                       .setPushConstantRanges(push_constant);
         // TODO push constnatの実装
 
         auto &device = core.gpu.device;
@@ -187,6 +198,6 @@ namespace NEGUI2
 
     uint32_t Coordinate::get_instance_id()
     {
-        return instance_id_;
+        return push_constant_.instance_id;
     }
 }

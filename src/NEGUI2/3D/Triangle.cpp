@@ -7,8 +7,12 @@ namespace NEGUI2
 {
     uint32_t Triangle::instance_count_ = 0u;
     Triangle::Triangle()
-    : pipeline_(nullptr), pipeline_layout_(nullptr)
+    : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr)
     {
+        instance_count_++;
+        push_constant_.class_id = get_type_id();
+        push_constant_.instance_id = instance_count_;
+        push_constant_.model = get_transform().matrix().cast<float>();
     }
 
     Triangle::~Triangle()
@@ -55,14 +59,18 @@ namespace NEGUI2
 
     void Triangle::update(vk::raii::CommandBuffer &command)
     {       
-        command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
-
+        push_constant_.model = get_transform().matrix().cast<float>();
+        
         auto &core = Core::get_instance();
+
+        command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
         auto vertex_buffer = core.mm.get_memory("TriangleVertex");
         auto color_buffer = core.mm.get_memory("TriangleColor");
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer, color_buffer.buffer}, {0, 0});
-        command.draw(3, 1, 0, 0);
+        command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
+        
+        command.draw(vertex_data_.size(), 1, 0, 0);
     }
 
     void Triangle::rebuild()
@@ -147,8 +155,14 @@ namespace NEGUI2
             .setAttachments(colorBlendAttachment)
             .setBlendConstants(blend_constant);
 
+        vk::PushConstantRange push_constant;
+        push_constant.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+            .setSize(sizeof(PushConstant))
+            .setOffset(0);
+
         vk::PipelineLayoutCreateInfo pipeline_layout;
-        pipeline_layout.setSetLayouts(*core.gpu.descriptor_set_layout);
+        pipeline_layout.setSetLayouts(*core.gpu.descriptor_set_layout)
+                       .setPushConstantRanges(push_constant);
         // TODO push constnatの実装
 
         auto &device = core.gpu.device;

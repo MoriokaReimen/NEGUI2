@@ -6,6 +6,12 @@
 
 namespace NEGUI2
 {
+    struct PushConstant
+    {
+        uint32_t class_id;
+        uint32_t instance_id;
+        Eigen::Matrix4f model;
+    };
     class IDisplayObject
     {
     public:

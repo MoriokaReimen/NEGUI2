@@ -1,14 +1,15 @@
 #ifndef _COORDINATE_HPP
 #define _COORDINATE_HPP
 #include "NEGUI2/3D/IDisplayObject.hpp"
+#include "NEGUI2/3D/BaseTransform.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Coordinate : public IDisplayObject
+    class Coordinate : public IDisplayObject, BaseTransform
     {
         static uint32_t instance_count_;
-        uint32_t instance_id_;
+        PushConstant push_constant_;
         vk::raii::Pipeline pipeline_;
         vk::raii::PipelineLayout pipeline_layout_;
 

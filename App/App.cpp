@@ -29,6 +29,9 @@ int main(int argc, char** argv)
 
     while(!core.should_close())
     {
+
+        Eigen::AngleAxisd aa(pos / 10000.0, Eigen::Vector3d::UnitZ());
+        triangle->set_orientation(aa.matrix());
         pos = pos < 10000 ? pos + 1 : -5000u;
         camera.set_mouse(pos, pos);
         camera.upload();
