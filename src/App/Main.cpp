@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <memory>
 #include "NEGUI2/3D/Camera.hpp"
-
+#include "NEGUI2/3D/Grid.hpp"
 #include <spdlog/spdlog.h>
 
 int main(int argc, char** argv)
@@ -17,7 +17,11 @@ int main(int argc, char** argv)
     auto& core =NEGUI2::Core::get_instance();
 
     NEGUI2::TextureDemo demo2;
-    NEGUI2::Camera camera;
+    
+    auto grid = std::make_shared<NEGUI2::Grid>();
+    grid->init();
+    core.display_objects.push_back(grid);
+
     auto triangle = std::make_shared<NEGUI2::Triangle>();
     triangle->init();
     core.display_objects.push_back(triangle);
@@ -25,6 +29,8 @@ int main(int argc, char** argv)
     auto coord = std::make_shared<NEGUI2::Coordinate>();
     coord->init();
     core.display_objects.push_back(coord);
+
+    NEGUI2::Camera camera;
 
     double x = 0.0;
     double y = 0.0;

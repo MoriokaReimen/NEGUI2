@@ -129,6 +129,8 @@ namespace NEGUI2
   {
     add_spv_from_file("TRIANGLE.VERT", "./shader/base.vert.spv");
     add_spv_from_file("TRIANGLE.FRAG", "./shader/base.frag.spv");
+    add_spv_from_file("GRID.VERT", "./shader/Grid.vert.spv");
+    add_spv_from_file("GRID.FRAG", "./shader/Grid.frag.spv");
   }
 
   void Shader::add_glsl(const std::string &key, const VkShaderStageFlagBits &shader_stage, const std::string &shader_text)
