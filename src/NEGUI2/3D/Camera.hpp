@@ -7,7 +7,7 @@
 
 namespace NEGUI2
 {
-    class Camera : BaseTransform
+    class Camera : public BaseTransform
     {
         Eigen::Matrix4d projection_;
         double fovy_;

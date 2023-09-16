@@ -15,7 +15,6 @@ int main(int argc, char** argv)
     auto& core =NEGUI2::Core::get_instance();
 
     NEGUI2::TextureDemo demo2;
-    NEGUI2::PlotDemo demo;
     NEGUI2::Camera camera;
     auto triangle = std::make_shared<NEGUI2::Triangle>();
     triangle->init();
@@ -24,11 +23,11 @@ int main(int argc, char** argv)
     auto coord = std::make_shared<NEGUI2::Coordinate>();
     coord->init();
     core.display_objects.push_back(coord);
+    camera.set_position(Eigen::Vector3d(0, 0, -400));
 
     while(!core.should_close())
     {
         camera.upload();
-        demo.update();
         demo2.update();
         core.update();
     }
