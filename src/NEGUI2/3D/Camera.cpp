@@ -20,7 +20,7 @@ namespace {
         assert(fovy_degree > 1.0);
         double focal = 1.0 / std::tan(to_rad(fovy_degree) / 2.0);
         assert(aspect > 1E-5 || aspect < -1E-5);
-        double x = focal / aspect;
+        double x = -focal / aspect;
         double y = -focal;
         assert((zfar - znear) > 1E-5);
         double alpha = znear / (zfar - znear);
@@ -30,7 +30,7 @@ namespace {
         projection << x,   0.0,   0.0, 0.0,
                       0.0,   y,   0.0, 0.0,
                       0.0, 0.0, alpha, beta,
-                      0.0, 0.0,  -1.0, 1.0;
+                      0.0, 0.0,  1.0, 1.0;
         
         return projection;
     }
@@ -117,7 +117,7 @@ namespace NEGUI2
         
         {
             auto memory = mm.get_memory("camera");
-            auto transform = projection_ * transform_.matrix().transpose();
+            auto transform = projection_ * transform_.matrix().inverse();
             Eigen::Matrix4f pv = transform.matrix().cast<float>();
             std::memcpy(memory.alloc_info.pMappedData, pv.data(), sizeof(float) * 16);
         }

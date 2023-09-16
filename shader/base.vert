@@ -1,5 +1,5 @@
 #version 450
-layout(binding = 0) uniform Mouse
+layout(std140, binding = 0) uniform Mouse
 {
     float width;
     float height;
@@ -7,7 +7,7 @@ layout(binding = 0) uniform Mouse
     float y;
 } mouse;
 
-layout(binding = 1) uniform Camera
+layout(std140, binding = 1) uniform Camera
 {
    mat4 transform; 
 } camera;

@@ -10,6 +10,8 @@
 #include <memory>
 #include "NEGUI2/3D/Camera.hpp"
 
+#include <spdlog/spdlog.h>
+
 int main(int argc, char** argv)
 {
     auto& core =NEGUI2::Core::get_instance();
@@ -23,10 +25,31 @@ int main(int argc, char** argv)
     auto coord = std::make_shared<NEGUI2::Coordinate>();
     coord->init();
     core.display_objects.push_back(coord);
-    camera.set_position(Eigen::Vector3d(0, 0, -400));
 
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
     while(!core.should_close())
     {
+
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))
+            z += 1.0;
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))
+            z -= 1.0;
+
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_W)))
+            y += 1.0;
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
+            y -= 1.0;
+
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_A)))
+            x += 1.0;
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D)))
+            x -= 1.0;
+
+        spdlog::info("{} {} {}", x, y, z);
+        camera.set_position(Eigen::Vector3d(x, y, z));
+
         camera.upload();
         demo2.update();
         core.update();
