@@ -32,6 +32,17 @@ int main(int argc, char** argv)
     coord->set_aabb();
     core.display_objects.push_back(coord);
 
+    auto coord2 = std::make_shared<NEGUI2::Coordinate>();
+    coord2->init();
+    coord2->set_aabb();
+    coord2->set_position(Eigen::Vector3d(10.0, 10.0 ,10.0));
+    core.display_objects.push_back(coord2);
+
+    auto coord3 = std::make_shared<NEGUI2::Coordinate>();
+    coord3->init();
+    coord3->set_aabb();
+    coord3->set_position(Eigen::Vector3d(-10.0, -10.0 ,10.0));
+    core.display_objects.push_back(coord3);
 
     double x = 10.0;
     double y = 10.0;
