@@ -86,13 +86,13 @@ namespace NEGUI2
         /* Vertexシェーダ */
         {
             shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main")
-                            .setModule(shader.get("TRIANGLE.VERT"));
+                            .setModule(shader.get("BASE.VERT"));
         }
 
         /* Fragmentシェーダ */
         {
             shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main")
-                            .setModule(shader.get("TRIANGLE.FRAG"));
+                            .setModule(shader.get("BASE.FRAG"));
         }
         std::array<vk::VertexInputBindingDescription, 2> binding_description;
         binding_description[0].binding = 0;

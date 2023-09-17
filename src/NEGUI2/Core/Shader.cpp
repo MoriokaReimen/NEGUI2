@@ -127,8 +127,8 @@ namespace NEGUI2
 
   void Shader::init()
   {
-    add_spv_from_file("TRIANGLE.VERT", "./shader/base.vert.spv");
-    add_spv_from_file("TRIANGLE.FRAG", "./shader/base.frag.spv");
+    add_spv_from_file("BASE.VERT", "./shader/Base.vert.spv");
+    add_spv_from_file("BASE.FRAG", "./shader/Base.frag.spv");
     add_spv_from_file("GRID.VERT", "./shader/Grid.vert.spv");
     add_spv_from_file("GRID.FRAG", "./shader/Grid.frag.spv");
   }

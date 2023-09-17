@@ -1,5 +1,5 @@
-#ifndef _TRIANGLE_HPP
-#define _TRIANGLE_HPP
+#ifndef _BASE_HPP
+#define _BASE_HPP
 #include "NEGUI2/3D/IDisplayObject.hpp"
 #include "NEGUI2/3D/BaseTransform.hpp"
 #include <Eigen/Dense>
