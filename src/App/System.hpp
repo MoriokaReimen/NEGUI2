@@ -7,7 +7,7 @@ namespace App
     class System : public IModule
     {
         public:
-        System(entt::registry& registry);
+        System(std::shared_ptr<entt::registry> registry);
         virtual ~System() override;
         virtual void init() = 0;
         virtual void update() = 0;

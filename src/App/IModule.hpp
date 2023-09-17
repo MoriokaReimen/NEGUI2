@@ -1,15 +1,16 @@
 #ifndef _IMODULE_HPP
 #define _IMODULE_HPP
 #include <entt/entt.hpp>
-
+#include <memory>
 namespace App
 {
     class IModule
     {
     protected:
-        entt::registry& registry_;
+        std::shared_ptr<entt::registry> registry_;
+
     public:
-        IModule(entt::registry& registry) : registry_(registry) {}
+        IModule(std::shared_ptr<entt::registry> registry) : registry_(registry) {}
         virtual ~IModule() {}
         virtual void init() = 0;
         virtual void update() = 0;

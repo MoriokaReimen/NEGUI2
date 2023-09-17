@@ -11,64 +11,20 @@
 #include "NEGUI2/3D/Camera.hpp"
 #include "NEGUI2/3D/Grid.hpp"
 #include <spdlog/spdlog.h>
+#include "Scene.hpp"
+#include <entt/entt.hpp>
 
 int main(int argc, char** argv)
 {
+    auto registry = std::make_shared<entt::registry>();
     auto& core =NEGUI2::Core::get_instance();
-
+    App::Scene scene(registry);
     NEGUI2::TextureDemo demo2;
-    NEGUI2::Camera camera;
-    
-    auto grid = std::make_shared<NEGUI2::Grid>();
-    grid->init();
-    core.display_objects.push_back(grid);
+    scene.init();
 
-    auto triangle = std::make_shared<NEGUI2::Triangle>();
-    triangle->init();
-    core.display_objects.push_back(triangle);
-
-    auto coord = std::make_shared<NEGUI2::Coordinate>();
-    coord->init();
-    coord->set_aabb();
-    core.display_objects.push_back(coord);
-
-    auto coord2 = std::make_shared<NEGUI2::Coordinate>();
-    coord2->init();
-    coord2->set_aabb();
-    coord2->set_position(Eigen::Vector3d(10.0, 10.0 ,10.0));
-    core.display_objects.push_back(coord2);
-
-    auto coord3 = std::make_shared<NEGUI2::Coordinate>();
-    coord3->init();
-    coord3->set_aabb();
-    coord3->set_position(Eigen::Vector3d(-10.0, -10.0 ,10.0));
-    core.display_objects.push_back(coord3);
-
-    double x = 10.0;
-    double y = 10.0;
-    double z = 10.0;
     while(!core.should_close())
     {
-
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))
-            z += 1.0;
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))
-            z -= 1.0;
-
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_W)))
-            y += 1.0;
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
-            y -= 1.0;
-
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_A)))
-            x += 1.0;
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D)))
-            x -= 1.0;
-
-        spdlog::info("{} {} {}", x, y, z);
-        camera.set_position(Eigen::Vector3d(x, y, z));
-        camera.lookat(Eigen::Vector3d::Zero());
-        camera.upload();
+        scene.update();
         demo2.update();
         core.update();
     }

@@ -2,7 +2,7 @@
 
 namespace App
 {
-    Widget::Widget(entt::registry &registry)
+    Widget::Widget(std::shared_ptr<entt::registry> registry)
         : IModule(registry)
     {
     }

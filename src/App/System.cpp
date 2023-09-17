@@ -2,7 +2,7 @@
 
 namespace App
 {
-    System::System(entt::registry &registry)
+    System::System(std::shared_ptr<entt::registry> registry)
         : IModule(registry)
     {
     }
