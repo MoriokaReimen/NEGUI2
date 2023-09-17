@@ -21,6 +21,10 @@ namespace NEGUI2
 
     void Coordinate::init()
     {
+        /* Init aabb */
+        box_ = Eigen::AlignedBox3d(Eigen::Vector3d(0, 0, 0), Eigen::Vector3d(1.0, 1.0, 1.0));
+
+
         /* Init Vertex buffer */
         {
             vertex_data_[0] = Eigen::Vector3f::Zero();

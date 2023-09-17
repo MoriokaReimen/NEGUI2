@@ -17,6 +17,7 @@ int main(int argc, char** argv)
     auto& core =NEGUI2::Core::get_instance();
 
     NEGUI2::TextureDemo demo2;
+    NEGUI2::Camera camera;
     
     auto grid = std::make_shared<NEGUI2::Grid>();
     grid->init();
@@ -28,9 +29,9 @@ int main(int argc, char** argv)
 
     auto coord = std::make_shared<NEGUI2::Coordinate>();
     coord->init();
+    coord->set_aabb();
     core.display_objects.push_back(coord);
 
-    NEGUI2::Camera camera;
 
     double x = 10.0;
     double y = 10.0;

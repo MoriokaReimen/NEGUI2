@@ -23,6 +23,7 @@ namespace NEGUI2
         void rebuild() override;
         uint32_t get_type_id() override;
         uint32_t get_instance_id() override;
+        bool show_aabb() const override;
     };
 
 }

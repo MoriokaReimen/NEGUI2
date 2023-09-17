@@ -16,7 +16,8 @@ namespace NEGUI2
     {
         bool enable_;
         bool show_aabb_;
-        
+    protected:
+        Eigen::AlignedBox3d box_;
     public:
         IDisplayObject();
         virtual ~IDisplayObject();
@@ -30,6 +31,7 @@ namespace NEGUI2
         virtual void set_enabel(const bool enable = true);
         virtual bool show_aabb() const;
         virtual void set_aabb(const bool aabb = true);
+        Eigen::AlignedBox3d box() const;
     };
 }
 

@@ -24,6 +24,7 @@ namespace NEGUI2 {
         tm.init();
         imgui.init();
         shader.init();
+        aabb.init();
     }
 
     Core& Core::get_instance()
@@ -94,6 +95,18 @@ namespace NEGUI2 {
             for (auto display_object : display_objects)
             {
                 display_object->update(command_buffer);
+
+                if(display_object->show_aabb())
+                {
+                    auto base_transform = std::dynamic_pointer_cast<BaseTransform>(display_object);
+                    if(base_transform)
+                    { // TODO 継承関係の整理
+                        auto transform = base_transform->get_transform();
+                        aabb.set_transform(transform);
+                        aabb.set_box(display_object->box());
+                        aabb.render(command_buffer);
+                    }
+                }
             }
             command_buffer.endRenderPass();
         }

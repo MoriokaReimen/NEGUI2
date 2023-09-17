@@ -6,7 +6,7 @@
 
 namespace NEGUI2
 {
-    class Coordinate : public IDisplayObject, BaseTransform
+    class Coordinate : public IDisplayObject, public BaseTransform
     {
         static uint32_t instance_count_;
         PushConstant push_constant_;

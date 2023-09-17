@@ -31,4 +31,9 @@ namespace NEGUI2
         show_aabb_ = aabb;
     }
 
+    Eigen::AlignedBox3d IDisplayObject::box() const
+    {
+        return box_;
+    }
+
 }
