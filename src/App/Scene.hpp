@@ -10,6 +10,7 @@ namespace App
     class Scene : public IModule
     {
         NEGUI2::Camera camera_;
+        void handle_camera_();
         public:
         Scene(std::shared_ptr<entt::registry> registry);
         ~Scene() override;

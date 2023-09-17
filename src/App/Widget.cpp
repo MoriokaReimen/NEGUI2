@@ -67,7 +67,7 @@ namespace
 
         // 6. Add windows to each docking space:
         ImGui::DockBuilderDockWindow("Texture Demo", dock1);
-        ImGui::DockBuilderDockWindow("Dear ImGui Metrics/Debugger", dock2);
+        ImGui::DockBuilderDockWindow("Side Panel R", dock2);
         ImGui::DockBuilderDockWindow("Ribbon", dock3);
 
         // 7. We're done setting up our docking configuration:
@@ -88,6 +88,8 @@ namespace App
 
     void Widget::init()
     {
+        Context context;
+        registry_->ctx().emplace<Context>(context);
         auto &core = NEGUI2::Core::get_instance();
 
         texture_id_ = ImGui_ImplVulkan_AddTexture(*core.off_screen.sampler, *core.off_screen.frame.color_buffer_view, VK_IMAGE_LAYOUT_GENERAL);
@@ -122,7 +124,7 @@ namespace App
 
         /* Ribbon */
         auto size = ImGui::GetMainViewport()->Size;
-
+        static bool open_side = false;
         ImGui::Begin("Ribbon", nullptr, ImGuiWindowFlags_NoScrollbar);
         ImGui::Button("Load Model", {size.y * 0.09f, size.y * 0.09f});
         ImGui::SameLine();
@@ -139,9 +141,27 @@ namespace App
         ImGui::Begin("Texture Demo", nullptr);
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         ImGui::Image(texture_id_, ImVec2{viewportPanelSize.x, viewportPanelSize.y});
+
+        auto is_scene_focused = ImGui::IsWindowFocused();
+        auto scene_size = ImGui::GetWindowSize();
+        auto scene_position = ImGui::GetWindowPos();
+        registry_->ctx().get<Context>().is_scene_focused = is_scene_focused;
+        registry_->ctx().get<Context>().scene_extent = Eigen::Vector2d(scene_size.x, scene_size.y);
+        registry_->ctx().get<Context>().scene_position = Eigen::Vector2d(scene_position.x, scene_position.y);
         ImGui::End();
 
         /* Performance */
-        ImGui::ShowMetricsWindow();
+        ImGui::Begin("Side Panel R", nullptr);
+        {
+            ImGuiContext &g = *GImGui;
+            ImGuiIO &io = g.IO;
+            ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
+            ImGui::Text("%d visible windows, %d active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations);
+            ImGui::Text("%lf, %lf", scene_size.x, scene_size.y);
+            ImGui::Text("%lf, %lf", scene_position.x, scene_position.y);
+        }
+        ImGui::End();
     }
 }

@@ -10,6 +10,7 @@ int main(int argc, char** argv)
 {
     auto registry = std::make_shared<entt::registry>();
     auto& core =NEGUI2::Core::get_instance();
+    
     App::Scene scene(registry);
     App::Widget widget(registry);
     scene.init();
