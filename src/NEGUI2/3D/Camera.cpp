@@ -146,4 +146,27 @@ namespace NEGUI2
 
         set_orientation(quat.matrix());
     }
+
+    Eigen::Vector3d Camera::uv_to_near_xyz(const Eigen::Vector2d& uv) const
+    {
+        auto vec = Eigen::Vector4d(uv.x(), uv.y(), 0.0, 0.0);
+        auto ret =  projection_.inverse() * vec;
+        return ret.head<3>();
+    }
+
+    Eigen::Vector3d Camera::uv_to_far_xyz(const Eigen::Vector2d& uv) const
+    {
+        auto vec = Eigen::Vector4d(uv.x(), uv.y(), 1.0, 0.0);
+        auto ret =  projection_.inverse() * vec;
+
+        return ret.head<3>();
+    }
+
+    Eigen::Vector3d Camera::uv_to_direction(const Eigen::Vector2d& uv) const
+    {
+        auto near = uv_to_near_xyz(uv);
+        auto far = uv_to_far_xyz(uv);
+        auto ret = far - near;
+        return ret.normalized();
+    }
 }

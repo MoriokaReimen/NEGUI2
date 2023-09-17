@@ -30,6 +30,10 @@ namespace NEGUI2
         void set_mouse(const uint32_t& x, const uint32_t& y);
         void upload();
         void lookat(const Eigen::Vector3d& target, const Eigen::Vector3d& up = Eigen::Vector3d::UnitZ());
+        
+        Eigen::Vector3d uv_to_near_xyz(const Eigen::Vector2d& uv) const;
+        Eigen::Vector3d uv_to_far_xyz(const Eigen::Vector2d& uv) const;
+        Eigen::Vector3d uv_to_direction(const Eigen::Vector2d& uv) const;
 
     };
 }
