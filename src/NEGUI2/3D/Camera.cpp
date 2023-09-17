@@ -128,4 +128,22 @@ namespace NEGUI2
             std::memcpy(memory.alloc_info.pMappedData, buffer.data(), sizeof(float) * buffer.size());
         }
     }
+
+    void Camera::lookat(const Eigen::Vector3d &target, const Eigen::Vector3d& up)
+    {
+        auto translation = get_transform()  * Eigen::Vector4d::UnitW();
+        
+        Eigen::Vector3d front = translation.head<3>() - target;
+        auto right = front.cross(up);
+        if(right.squaredNorm() < 1E-4)
+        {
+            right = Eigen::Vector3d::UnitX();
+        }
+        auto cross = right.cross(right);
+        auto quat = Eigen::Quaterniond::FromTwoVectors(-Eigen::Vector3d::UnitZ(), front);
+        quat = Eigen::Quaterniond::FromTwoVectors(quat * Eigen::Vector3d::UnitX(), right) * quat;
+
+
+        set_orientation(quat.matrix());
+    }
 }

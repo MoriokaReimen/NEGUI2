@@ -32,9 +32,9 @@ int main(int argc, char** argv)
 
     NEGUI2::Camera camera;
 
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
+    double x = 10.0;
+    double y = 10.0;
+    double z = 10.0;
     while(!core.should_close())
     {
 
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
         spdlog::info("{} {} {}", x, y, z);
         camera.set_position(Eigen::Vector3d(x, y, z));
-
+        camera.lookat(Eigen::Vector3d::Zero());
         camera.upload();
         demo2.update();
         core.update();
