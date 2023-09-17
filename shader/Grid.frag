@@ -16,10 +16,15 @@ vec4 grid(vec3 fragPos3D, float scale, bool drawAxis) {
 
     // y axis
     if(fragPos3D.x > -0.1 * minimumx && fragPos3D.x < 0.1 * minimumx)
-        color.y = 1.0;
+    {
+        color.rgb = vec3(1.0, 1.0, 1.0);
+    }
     // x axis
     if(fragPos3D.z > -0.1 * minimumz && fragPos3D.z < 0.1 * minimumz)
-        color.y = 1.0;
+    {
+        color.rgb = vec3(1.0, 1.0, 1.0);
+    }
+
     return color;
 }
 
@@ -27,6 +32,7 @@ float computeDepth(vec3 pos) {
     vec4 clip_space_pos = pv * vec4(pos.xyz, 1.0);
     return (clip_space_pos.z / clip_space_pos.w);
 }
+
 float computeLinearDepth(vec3 pos) {
     vec4 clip_space_pos = pv * vec4(pos.xyz, 1.0);
     float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0; // put back between -1 and 1
@@ -45,6 +51,9 @@ void main() {
     float linearDepth = computeLinearDepth(fragPos3D);
     float fading = max(0, (0.5 - linearDepth));
 
-    outColor = (grid(fragPos3D, 10, true) + grid(fragPos3D, 1, true))* float(t > 0); // adding multiple resolution for the grid
-    outColor.a *= fading;
+    // TODO 1mm 10mmの格子になっている理由
+    outColor = (grid(fragPos3D, 1, true) + grid(fragPos3D, 0.1, true))* float(t > 0); // adding multiple resolution for the grid
+    
+    outColor.a *= fading * float(gl_FragDepth > 0.0);
+
 }

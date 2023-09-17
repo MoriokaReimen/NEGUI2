@@ -69,10 +69,10 @@ namespace NEGUI2
             .setPrimitiveRestartEnable(vk::False);
 
         vk::PipelineDepthStencilStateCreateInfo depth_stencil;
-        depth_stencil.setDepthBoundsTestEnable(vk::False)
+        depth_stencil.setDepthBoundsTestEnable(vk::True)
                      .setDepthCompareOp(vk::CompareOp::eLess)
                      .setDepthTestEnable(vk::True)
-                     .setDepthWriteEnable(vk::True)
+                     .setDepthWriteEnable(vk::False)
                      .setMaxDepthBounds(1.f)
                      .setMinDepthBounds(0.f);
 
@@ -89,7 +89,7 @@ namespace NEGUI2
         viewport_state.setViewports(viewport).setScissors(scissor);
 
         vk::PipelineRasterizationStateCreateInfo rasterizer;
-        rasterizer.setDepthClampEnable(vk::False)
+        rasterizer.setDepthClampEnable(vk::True)
             .setRasterizerDiscardEnable(vk::False)
             .setPolygonMode(vk::PolygonMode::eFill)
             .setLineWidth(1.f)
@@ -103,7 +103,13 @@ namespace NEGUI2
 
         std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment;
         colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
-                               .setBlendEnable(vk::False);
+                               .setBlendEnable(vk::True)
+                               .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+                               .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+                               .setColorBlendOp(vk::BlendOp::eAdd)
+                               .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+                               .setDstAlphaBlendFactor(vk::BlendFactor::eOne)
+                               .setAlphaBlendOp(vk::BlendOp::eMax);
 
         std::array<float, 4> blend_constant;
 

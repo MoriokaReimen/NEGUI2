@@ -286,6 +286,13 @@ namespace NEGUI2
             vk::DeviceCreateInfo create_info;
             create_info.setPEnabledExtensionNames(device_extensions);
             create_info.setQueueCreateInfos(queueCreateInfos);
+            
+            /* 物理デバイス機能の選択 */
+            vk::PhysicalDeviceFeatures features;
+            features.setLogicOp(vk::True);
+            features.setDepthBounds(vk::True);
+            features.setDepthClamp(vk::True);
+            create_info.setPEnabledFeatures(&features);
             device = physical_device.createDevice(create_info);
         }
     }
