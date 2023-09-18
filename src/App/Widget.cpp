@@ -1,6 +1,7 @@
 #include "Widget.hpp"
 #include <fstream>
 #include "NEGUI2/Core/Core.hpp"
+#include "NEGUI2/3D/Coordinate.hpp"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_internal.h>
@@ -78,7 +79,7 @@ namespace
 namespace App
 {
     Widget::Widget(std::shared_ptr<entt::registry> registry)
-        : IModule(registry)
+        : IModule(registry), texture_id_(nullptr), show_coord_input_(false)
     {
     }
 
@@ -126,7 +127,10 @@ namespace App
         auto size = ImGui::GetMainViewport()->Size;
         static bool open_side = false;
         ImGui::Begin("Ribbon", nullptr, ImGuiWindowFlags_NoScrollbar);
-        ImGui::Button("Load Model", {size.y * 0.09f, size.y * 0.09f});
+        if (ImGui::Button("Add Coordinate", {size.y * 0.09f, size.y * 0.09f}))
+        {
+            show_coord_input_ = true;
+        }
         ImGui::SameLine();
         ImGui::Button("Measurement\nSetup", {size.y * 0.09f, size.y * 0.09f});
         ImGui::SameLine();
@@ -163,5 +167,56 @@ namespace App
             ImGui::Text("%lf, %lf", scene_position.x, scene_position.y);
         }
         ImGui::End();
+
+        if (show_coord_input_)
+        {
+            auto &io = ImGui::GetIO();
+            auto window_size = io.DisplaySize;
+            ImGui::SetNextWindowPos({window_size.x * 0.75f, window_size.y * 0.75f}, ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowSize({0.f, 0.f});
+            static std::shared_ptr<NEGUI2::Coordinate> coord;
+            ImGui::Begin("Create Coord", nullptr, ImGuiWindowFlags_NoResize);
+            if (coord.get() == nullptr)
+            {
+                coord = std::make_shared<NEGUI2::Coordinate>();
+                coord->init();
+                auto &core = NEGUI2::Core::get_instance();
+                core.display_objects.push_back(coord);
+            }
+            static double x = 0.0;
+            static double y = 0.0;
+            static double z = 0.0;
+            ImGui::Text("Center X[mm]");
+            ImGui::SameLine();
+            ImGui::InputDouble("##Coord X", &x, 0.1);
+
+            ImGui::Text("Center Y[mm]");
+            ImGui::SameLine();
+            ImGui::InputDouble("##Coord Y", &y, 0.1);
+
+            ImGui::Text("Center Z[mm]");
+            ImGui::SameLine();
+            ImGui::InputDouble("##Coord Z", &z, 0.1);
+
+            coord->set_position(Eigen::Vector3d(x, y, z));
+            if (ImGui::Button("OK"))
+            {
+                coord = nullptr;
+                show_coord_input_ = false;
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("CANCEL"))
+            {
+                auto &core = NEGUI2::Core::get_instance();
+                core.wait_idle();
+                core.display_objects.erase(std::remove(std::begin(core.display_objects), std::end(core.display_objects), coord),
+                                           std::cend(core.display_objects));
+                coord = nullptr;
+                show_coord_input_ = false;
+            }
+
+            ImGui::End();
+        }
     }
 }

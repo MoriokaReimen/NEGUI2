@@ -35,7 +35,7 @@ namespace NEGUI2
             vertex_data_[5] = Eigen::Vector3f::UnitZ();
 
             auto &core = Core::get_instance();
-            core.mm.add_memory("CoordinateVertex", sizeof(Eigen::Vector3f) * vertex_data_.size(), Memory::TYPE::VERTEX);
+            core.mm.add_memory("CoordinateVertex", sizeof(Eigen::Vector3f) * vertex_data_.size(), Memory::TYPE::VERTEX, false);
             core.mm.upload_memory("CoordinateVertex", vertex_data_.data(), sizeof(Eigen::Vector3f) * vertex_data_.size());
         }
 
@@ -51,7 +51,8 @@ namespace NEGUI2
             color_data_[5] = Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
 
             auto &core = Core::get_instance();
-            core.mm.add_memory("CoordinateColor", sizeof(Eigen::Vector4f) * color_data_.size(), Memory::TYPE::VERTEX);
+            core.wait_idle();
+            core.mm.add_memory("CoordinateColor", sizeof(Eigen::Vector4f) * color_data_.size(), Memory::TYPE::VERTEX, false);
             core.mm.upload_memory("CoordinateColor", color_data_.data(), sizeof(Eigen::Vector4f) * color_data_.size());
         }
 

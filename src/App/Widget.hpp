@@ -8,6 +8,7 @@ namespace App
     class Widget : public IModule
     {
         VkDescriptorSet texture_id_;
+        bool show_coord_input_;
         public:
         struct Context
         {
