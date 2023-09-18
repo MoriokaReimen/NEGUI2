@@ -6,27 +6,8 @@ layout(std140, binding = 1) uniform Camera
    vec2 resolution;
    uint time_ms;
 } camera;
-
 layout(origin_upper_left) in vec4 gl_FragCoord;
 layout(location = 0) out vec4 fragColor;
-
-/**
- * Convert r, g, b to normalized vec3
- */
-vec3 rgb(float r, float g, float b) {
-	return vec3(r / 255.0, g / 255.0, b / 255.0);
-}
-
-/**
- * Draw a circle at vec2 `pos` with radius `rad` and
- * color `color`.
- */
-vec4 circle(vec2 uv, vec2 pos, float rad, vec3 color) {
-	float d = rad - length(uv - pos);
-	float a = clamp(10 * d, 0.0, 1.0);
-    float t = float(d >0.0);
-	return vec4(0.0, a, 0.0, t);
-}
 
 float arrow(vec3 position, vec3 start, vec3 end, float baseRadius, float tipRadius, float tipHeight)
 {
@@ -151,7 +132,7 @@ void main()
 {
     vec3 targetPosition = vec3(0.0);
     vec3 rayOrigin = vec3(0.0, 0.0, 4.0);
-    float timeDelta = 0.25;
+    float timeDelta = 0.00025;
     vec3 cameraPosition = vec3(sin(timeDelta * camera.time_ms), 0.0, cos(timeDelta * camera.time_ms));
     
     mat3 eyeTransform = lookAtMatrix(cameraPosition, targetPosition);
@@ -159,13 +140,8 @@ void main()
     
     mat3 cameraTransform = lookAtMatrix(rayOrigin, targetPosition);
     vec3 result = vec3(0.0);
-    const float quality = 1.0;
-    ivec2 sampleCount = ivec2(quality, quality);
-    for (int y = 0; y < sampleCount.y; y++)
-    {
-        for (int x = 0; x < sampleCount.x; x++)
-        {
-            vec2 uv = gl_FragCoord.xy + (vec2(float(x), float(y)) / vec2(sampleCount) - 0.5);
+
+            vec2 uv = gl_FragCoord.xy - 0.5;
             
             uv = uv / camera.resolution.xy;
             uv = (uv * 2.0) - 1.0;
@@ -197,14 +173,12 @@ void main()
                 float spec = pow(max(dot(rayDirection, reflectDir), 0.0), 32.0);
                 vec3 specular = specularStrength * spec * specularColor;
                 color += specular;
-            }
             // gamma
             color = sqrt(color);
             result += color;
-        }
-    }
-    result /= float(sampleCount.x * sampleCount.y);
+
     fragColor = vec4(result, 1.0);
-    if(length(result) < 0.01)
-    fragColor.a = 0.0;
+            } else {
+                fragColor = vec4(0.0);
+            }
 }
