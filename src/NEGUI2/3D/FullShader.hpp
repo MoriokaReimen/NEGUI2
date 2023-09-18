@@ -1,12 +1,12 @@
-#ifndef _GRID_HPP
-#define _GRID_HPP
+#ifndef _FullShader_HPP
+#define _FullShader_HPP
 #include "NEGUI2/3D/IDisplayObject.hpp"
 #include "NEGUI2/3D/BaseTransform.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Grid : public IDisplayObject, public BaseTransform
+    class FullShader : public IDisplayObject, public BaseTransform
     {
         static uint32_t instance_count_;
         PushConstant push_constant_;
@@ -14,8 +14,8 @@ namespace NEGUI2
         vk::raii::PipelineLayout pipeline_layout_;
 
         public:
-        Grid();
-        ~Grid() override;
+        FullShader();
+        ~FullShader() override;
 
         void init() override;
         void destroy() override;

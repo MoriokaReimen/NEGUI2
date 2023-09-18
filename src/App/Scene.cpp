@@ -3,6 +3,7 @@
 #include "NEGUI2/3D/Coordinate.hpp"
 #include "NEGUI2/3D/Triangle.hpp"
 #include "NEGUI2/3D/Grid.hpp"
+#include "NEGUI2/3D/FullShader.hpp"
 #include <imgui/backends/imgui_impl_glfw.h>
 #include "NEGUI2/Core/Core.hpp"
 #include "Widget.hpp"
@@ -46,6 +47,12 @@ namespace App
         coord3->set_aabb();
         coord3->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
         core.display_objects.push_back(coord3);
+
+        auto arrow = std::make_shared<NEGUI2::FullShader>();
+        arrow->init();
+        arrow->set_aabb();
+        arrow->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
+        core.display_objects.push_back(arrow);
 
         camera_.set_position(Eigen::Vector3d(10.0, 10.0, 10.0));
         camera_.lookat(Eigen::Vector3d::Zero());
