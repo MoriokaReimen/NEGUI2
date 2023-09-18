@@ -42,4 +42,29 @@ namespace NEGUI2
         auto inv = transform_.rotation();
         transform_ = rotation * inv.inverse() * transform_;
     }
+
+    Eigen::Vector3d BaseTransform::front() const
+    {
+        auto camera_inv = transform_.rotation();
+        camera_inv.inverse();
+        auto front = camera_inv * Eigen::Vector3d(0.0, 0.0, 1.0);
+        return front.normalized();
+    }
+
+    Eigen::Vector3d BaseTransform::right() const
+    {
+        auto camera_inv = transform_.rotation();
+        camera_inv.inverse();
+        auto right = camera_inv * Eigen::Vector3d(1.0, 0.0, 0.0);
+        return right.normalized();
+    }
+
+    Eigen::Vector3d BaseTransform::up() const
+    {
+        auto camera_inv = transform_.rotation();
+        camera_inv.inverse();
+        auto up = camera_inv * Eigen::Vector3d(0.0, 1.0, 0.0);
+        return up.normalized();
+    }
+
 }

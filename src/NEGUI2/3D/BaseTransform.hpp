@@ -20,6 +20,9 @@ namespace NEGUI2
         void set_position(const Eigen::Vector3d& position);
         Eigen::Matrix3d get_orientation() const;
         void set_orientation(const Eigen::Matrix3d& rotation);
+        Eigen::Vector3d front() const;
+        Eigen::Vector3d right() const;
+        Eigen::Vector3d up() const;
 
     };
 }

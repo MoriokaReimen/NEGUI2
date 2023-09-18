@@ -64,10 +64,14 @@ namespace App
         //TODO CameraのExtentの扱い
         if(!wideget_context.is_scene_focused) return;
         
-        static double x = 10.0;
-        static double y = 10.0;
-        static double z = 10.0;
+        static Eigen::Vector3d position(10, 10, 10);
+        auto up = camera_.up();
+        auto right = camera_.right();
+        auto front = camera_.front();
 
+        // TODO Cameraのsetポジションのバグ
+
+#if 0
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))
             z += 1.0;
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))
@@ -83,11 +87,15 @@ namespace App
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D)))
             x -= 1.0;
 
-        auto diff = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 100.0);
-        x += diff.x * 0.0001;
-        y += diff.y * 0.0001;
+#endif
+        auto diff = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 1.0);
+        position += diff.x * 0.1 * right;
+        position += diff.y * 0.1 * up;
+        ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
 
-        camera_.set_position(Eigen::Vector3d(x, y, z));
+        position += ImGui::GetIO().MouseWheel * front;
+
+        camera_.set_position(position);
         camera_.lookat(Eigen::Vector3d::Zero());
         camera_.upload();
     }
