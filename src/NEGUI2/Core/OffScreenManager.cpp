@@ -30,7 +30,6 @@ namespace NEGUI2
     {
         auto &device_manager = Core::get_instance().gpu;
         auto &memory_manager = Core::get_instance().mm;
-        extent = Core::get_instance().window.get_extent();
         /* フレーム作成 ********************************************************************/
         /* イメージ取得 */
         vk::Image color_buffers;

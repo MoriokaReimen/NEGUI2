@@ -28,16 +28,10 @@ vec3 gridPlane[6] = vec3[](
     vec3(-1, -1, 0), vec3(1, 1, 0), vec3(1, -1, 0)
 );
 
-layout(location = 0) out mat4 pv;
-layout(location = 4) out vec2 resolution;
-layout(location = 5) out uint time_ms;
-
 // normal vertice projection
 void main() {
     vec3 p = gridPlane[gl_VertexIndex].xyz;
     gl_Position = vec4(p.xy, 0.1, 1.0); // using directly the clipped coordinates
-    pv = camera.transform;
-    resolution = camera.resolution;
-    time_ms = camera.time_ms;
+
 }
 

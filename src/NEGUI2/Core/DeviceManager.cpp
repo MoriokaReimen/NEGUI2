@@ -327,8 +327,8 @@ namespace NEGUI2
 
         vk::DescriptorSetLayoutCreateInfo create_info;
         std::array<vk::DescriptorSetLayoutBinding, 2> bindings;
-        bindings[0] = vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
-        bindings[1] = vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
+        bindings[0] = vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+        bindings[1] = vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
         create_info.setBindings(bindings);
         descriptor_set_layout = device.createDescriptorSetLayout(create_info);
 
