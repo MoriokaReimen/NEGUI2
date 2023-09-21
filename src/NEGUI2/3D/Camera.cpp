@@ -136,14 +136,15 @@ namespace NEGUI2
     {
         auto translation = get_transform() * Eigen::Vector4d::UnitW();
 
-        Eigen::Vector3d front = translation.head<3>() - target;
+        Eigen::Vector3d front = target - translation.head<3>();
         auto right = front.cross(up);
         if (right.squaredNorm() < 1E-4)
         {
             right = Eigen::Vector3d::UnitX();
         }
+        right = -1.0 * right;
         auto cross = right.cross(right);
-        auto quat = Eigen::Quaterniond::FromTwoVectors(-Eigen::Vector3d::UnitZ(), front);
+        auto quat = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), front);
         quat = Eigen::Quaterniond::FromTwoVectors(quat * Eigen::Vector3d::UnitX(), right) * quat;
 
         set_orientation(quat.matrix());
