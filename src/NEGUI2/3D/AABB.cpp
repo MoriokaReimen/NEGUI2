@@ -25,8 +25,9 @@ namespace NEGUI2
         Eigen::Vector3f max = box_.max().cast<float>();
         Eigen::Vector3f min = box_.min().cast<float>();
         auto diff = max - min;
+        Eigen::Affine3f offset(Eigen::Translation3f(diff.x() / 2.f, diff.y() / 2.f, diff.z() / 2.f));
         Eigen::Matrix4f scale = Eigen::Scaling(Eigen::Vector4f(diff.x(), diff.y(), diff.z(), 1.f));
-        Eigen::Matrix4f mat = transform_.matrix().cast<float>() * scale;
+        Eigen::Matrix4f mat = scale.matrix() * offset.matrix() * transform_.matrix().cast<float>();
         command.pushConstants<Eigen::Matrix4f>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, mat);
         
         command.draw(24, 1, 0, 0);

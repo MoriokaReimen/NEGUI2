@@ -162,9 +162,4 @@ namespace NEGUI2
         return push_constant_.instance_id;
     }
 
-    bool FullShader::show_aabb() const
-    {
-        /* AABBの表示禁止 */
-        return false;
-    }
 }

@@ -7,7 +7,7 @@ namespace NEGUI2
 {
     uint32_t Coordinate::instance_count_ = 0u;
     Coordinate::Coordinate()
-    : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_()
+    : BaseTransform(), BasePickable(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_()
     {
         instance_count_++;
         push_constant_.class_id = get_type_id();
@@ -23,7 +23,6 @@ namespace NEGUI2
     {
         /* Init aabb */
         box_ = Eigen::AlignedBox3d(Eigen::Vector3d(0, 0, 0), Eigen::Vector3d(1.0, 1.0, 1.0));
-
 
         /* Init Vertex buffer */
         {
@@ -212,8 +211,12 @@ namespace NEGUI2
         auto diff = position - origin;
         auto L = diff.dot(direction) * direction;
         auto  dist = L.cross(diff).norm() / L.norm();
-        if(dist > 1.0) dist = -1.0;
+        auto ret = diff.squaredNorm();
+        if(dist > 1.0)
+        {
+            ret = -1.0;
+        }
 
-        return dist;
+        return ret;
     }
 }

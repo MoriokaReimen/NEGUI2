@@ -1,4 +1,5 @@
 #include "NEGUI2/Core/Core.hpp"
+#include "NEGUI2/3D/BasePickable.hpp"
 #include <spdlog/spdlog.h>
 #include <imgui.h>
 
@@ -96,14 +97,15 @@ namespace NEGUI2 {
             {
                 display_object->update(command_buffer);
 
-                if(display_object->show_aabb())
+                auto pickable = std::dynamic_pointer_cast<BasePickable>(display_object);
+                if(pickable && pickable->display_aabb())
                 {
                     auto base_transform = std::dynamic_pointer_cast<BaseTransform>(display_object);
                     if(base_transform)
                     { // TODO 継承関係の整理
                         auto transform = base_transform->get_transform();
                         aabb.set_transform(transform);
-                        aabb.set_box(display_object->box());
+                        aabb.set_box(pickable->box());
                         aabb.render(command_buffer);
                     }
                 }

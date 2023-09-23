@@ -3,7 +3,7 @@
 namespace NEGUI2
 {
     IDisplayObject::IDisplayObject()
-    : enable_(true), show_aabb_(false)
+    : enable_(true)
     {
     }
 
@@ -20,20 +20,4 @@ namespace NEGUI2
     {
         enable_ = enable;
     }
-
-    bool IDisplayObject::show_aabb() const
-    {
-        return show_aabb_;
-    }
-
-    void IDisplayObject::set_aabb(const bool aabb)
-    {
-        show_aabb_ = aabb;
-    }
-
-    Eigen::AlignedBox3d IDisplayObject::box() const
-    {
-        return box_;
-    }
-
 }

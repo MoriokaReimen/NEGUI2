@@ -162,9 +162,4 @@ namespace NEGUI2
         return push_constant_.instance_id;
     }
 
-    bool Grid::show_aabb() const
-    {
-        /* AABBの表示禁止 */
-        return false;
-    }
 }
