@@ -153,19 +153,18 @@ namespace NEGUI2
 
     Eigen::Vector3d Camera::uv_to_near_xyz(const Eigen::Vector2d &uv) const
     {
-        auto vec = Eigen::Vector4d(uv.x(), uv.y(), 0.0, 0.0);
+        auto vec = Eigen::Vector4d(uv.x(), uv.y(), 0.0, 1.0);
         auto ndc = projection_.inverse() * vec;
-        auto ret = ndc.head<3>() / ndc.w();
-        return ret;
+        auto ret = transform_.matrix() * ndc;
+        return ret.head<3>() / ret.w();
     }
 
     Eigen::Vector3d Camera::uv_to_far_xyz(const Eigen::Vector2d &uv) const
     {
-        auto vec = Eigen::Vector4d(uv.x(), uv.y(), 1.0, 0.0);
+        auto vec = Eigen::Vector4d(uv.x(), uv.y(), 1.0, 1.0);
         auto ndc = projection_.inverse() * vec;
-        auto ret = ndc.head<3>() / ndc.w();
-
-        return ret;
+        auto ret = transform_.matrix() * ndc;
+        return ret.head<3>() / ret.w();
     }
 
     Eigen::Vector3d Camera::uv_to_direction(const Eigen::Vector2d &uv) const
@@ -173,6 +172,7 @@ namespace NEGUI2
         auto near = uv_to_near_xyz(uv);
         auto far = uv_to_far_xyz(uv);
         auto ret = far - near;
+
         return ret.normalized();
     }
 }

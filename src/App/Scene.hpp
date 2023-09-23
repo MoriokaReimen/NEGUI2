@@ -3,12 +3,20 @@
 #include "IModule.hpp"
 #include "NEGUI2/3D/Camera.hpp"
 #include "NEGUI2/3D/IDisplayObject.hpp"
-
+#include <Eigen/Dense>
 
 namespace App
 {
     class Scene : public IModule
     {
+    public:
+        struct Context {
+            Eigen::Vector3d position;
+            Eigen::Vector3d direction;
+        };
+    private:
+        Context context_;
+    public:
         NEGUI2::Camera camera_;
         void handle_camera_();
         public:

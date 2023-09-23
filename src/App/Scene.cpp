@@ -6,6 +6,7 @@
 #include "NEGUI2/3D/FullShader.hpp"
 #include <imgui/backends/imgui_impl_glfw.h>
 #include "NEGUI2/Core/Core.hpp"
+#include "NEGUI2/3D/IPickable.hpp"
 #include "Widget.hpp"
 
 namespace App
@@ -13,6 +14,11 @@ namespace App
     Scene::Scene(std::shared_ptr<entt::registry> registry)
         : IModule(registry)
     {
+        Context context;
+        context.direction = Eigen::Vector3d::Zero();
+        context.position = Eigen::Vector3d::Zero();
+
+        registry_->ctx().emplace<Context>(context);
     }
 
     Scene::~Scene()
@@ -33,27 +39,28 @@ namespace App
 
         auto coord = std::make_shared<NEGUI2::Coordinate>();
         coord->init();
-        coord->set_aabb();
+        // coord->set_aabb();
         core.display_objects.push_back(coord);
 
         auto coord2 = std::make_shared<NEGUI2::Coordinate>();
         coord2->init();
-        coord2->set_aabb();
+        // coord2->set_aabb();
         coord2->set_position(Eigen::Vector3d(10.0, 10.0, 10.0));
         core.display_objects.push_back(coord2);
 
         auto coord3 = std::make_shared<NEGUI2::Coordinate>();
         coord3->init();
-        coord3->set_aabb();
+        // coord3->set_aabb();
         coord3->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
         core.display_objects.push_back(coord3);
 
+#if 0
         auto arrow = std::make_shared<NEGUI2::FullShader>();
         arrow->init();
-        arrow->set_aabb();
+        // arrow->set_aabb();
         arrow->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
         core.display_objects.push_back(arrow);
-
+#endif
         camera_.set_position(Eigen::Vector3d(10.0, 10.0, 10.0));
         camera_.lookat(Eigen::Vector3d::Zero());
         camera_.upload();
@@ -63,6 +70,29 @@ namespace App
     {
         handle_camera_();
 
+        auto &core = NEGUI2::Core::get_instance();
+        for (auto display_object : core.display_objects)
+        {
+            auto pickable = std::dynamic_pointer_cast<NEGUI2::IPickable>(display_object);
+            auto mouse = ImGui::GetMousePos();
+            auto pos = registry_->ctx().get<Widget::Context>().scene_position;
+            auto extent = registry_->ctx().get<Widget::Context>().scene_extent;
+            auto uv = Eigen::Vector2d(2.0 * (mouse.x- pos.x())/ extent.x() - 1.0, 2.0 * (mouse.y- pos.y())/ extent.y() - 1.0);
+            
+            auto origin = camera_.uv_to_near_xyz(uv);
+            auto direction = camera_.uv_to_direction(uv);
+
+            if (pickable)
+            {
+                auto dist = pickable->pick(origin, direction);
+                registry_->ctx().get<Context>().position = origin;
+                registry_->ctx().get<Context>().direction = direction;
+                if(0.0 < dist && dist < 1.0)
+                {
+                    display_object->set_aabb(true);
+                }
+            }
+        }
     }
 
     void Scene::handle_camera_()

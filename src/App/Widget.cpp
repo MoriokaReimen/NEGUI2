@@ -1,4 +1,5 @@
 #include "Widget.hpp"
+#include "Scene.hpp"
 #include <fstream>
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/3D/Coordinate.hpp"
@@ -165,6 +166,13 @@ namespace App
             ImGui::Text("%d visible windows, %d active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations);
             ImGui::Text("%lf, %lf", scene_size.x, scene_size.y);
             ImGui::Text("%lf, %lf", scene_position.x, scene_position.y);
+
+            {
+                auto position = registry_->ctx().get<Scene::Context>().position;
+                auto direction = registry_->ctx().get<Scene::Context>().direction;
+                ImGui::Text("Position: %lf, %lf, %lf", position.x(), position.y(), position.z());
+                ImGui::Text("Direction: %lf, %lf, %lf", direction.x(), direction.y(), direction.z());
+            }
         }
         ImGui::End();
 
