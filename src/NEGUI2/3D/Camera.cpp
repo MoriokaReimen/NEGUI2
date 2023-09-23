@@ -21,17 +21,18 @@ namespace
         assert(fovy_degree > 1.0);
         double focal = 1.0 / std::tan(to_rad(fovy_degree) / 2.0);
         assert(aspect > 1E-5 || aspect < -1E-5);
-        double x = -focal / aspect;
-        double y = -focal;
+        double x = focal / aspect;
+        double y = focal;
         assert((zfar - znear) > 1E-5);
-        double alpha = znear / (zfar - znear);
-        double beta = zfar * alpha;
+        double alpha = zfar / (zfar - znear);
+        double beta = -znear * alpha;
 
         Eigen::Matrix4d projection;
-        projection << x, 0.0, 0.0, 0.0,
-            0.0, y, 0.0, 0.0,
+        projection << 
+              x, 0.0,   0.0, 0.0,
+            0.0,   y,   0.0, 0.0,
             0.0, 0.0, alpha, beta,
-            0.0, 0.0, 1.0, 1.0;
+            0.0, 0.0,   1.0, 0.0;
 
         return projection;
     }
@@ -142,7 +143,7 @@ namespace NEGUI2
         {
             right = Eigen::Vector3d::UnitX();
         }
-        right = -1.0 * right;
+        right = right;
         auto cross = right.cross(right);
         auto quat = Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d::UnitZ(), front);
         quat = Eigen::Quaterniond::FromTwoVectors(quat * Eigen::Vector3d::UnitX(), right) * quat;
