@@ -1,4 +1,4 @@
-#include "NEGUI2/3D/BaseDisplayObject.hpp"
+#include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
 
 namespace NEGUI2
 {

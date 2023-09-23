@@ -1,5 +1,5 @@
 #include "NEGUI2/Core/Core.hpp"
-#include "NEGUI2/3D/BasePickable.hpp"
+#include "NEGUI2/ThreeD/BasePickable.hpp"
 #include <spdlog/spdlog.h>
 #include <imgui.h>
 

@@ -1,12 +1,12 @@
 #include "Scene.hpp"
-#include "NEGUI2/3D/AABB.hpp"
-#include "NEGUI2/3D/Coordinate.hpp"
-#include "NEGUI2/3D/Triangle.hpp"
-#include "NEGUI2/3D/Grid.hpp"
-#include "NEGUI2/3D/FullShader.hpp"
+#include "NEGUI2/ThreeD/AABB.hpp"
+#include "NEGUI2/ThreeD/Coordinate.hpp"
+#include "NEGUI2/ThreeD/Triangle.hpp"
+#include "NEGUI2/ThreeD/Grid.hpp"
+#include "NEGUI2/ThreeD/FullShader.hpp"
 #include <imgui/backends/imgui_impl_glfw.h>
 #include "NEGUI2/Core/Core.hpp"
-#include "NEGUI2/3D/BasePickable.hpp"
+#include "NEGUI2/ThreeD/BasePickable.hpp"
 #include "Widget.hpp"
 
 namespace App

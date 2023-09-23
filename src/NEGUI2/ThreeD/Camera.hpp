@@ -2,7 +2,7 @@
 #define _CAMERA_HPP
 #include <Eigen/Dense>
 #include <vulkan/vulkan_raii.hpp>
-#include "NEGUI2/3D/BaseTransform.hpp"
+#include "NEGUI2/ThreeD/BaseTransform.hpp"
 #include <cinttypes>
 
 namespace NEGUI2

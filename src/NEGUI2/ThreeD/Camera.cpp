@@ -1,4 +1,4 @@
-#include "NEGUI2/3D/Camera.hpp"
+#include "NEGUI2/ThreeD/Camera.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/Core/MemoryManager.hpp"
 #include <cstdlib>

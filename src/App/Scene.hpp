@@ -1,8 +1,8 @@
 #ifndef _SCENE_HPP
 #define _SCENE_HPP
 #include "IModule.hpp"
-#include "NEGUI2/3D/Camera.hpp"
-#include "NEGUI2/3D/BaseDisplayObject.hpp"
+#include "NEGUI2/ThreeD/Camera.hpp"
+#include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
 #include <Eigen/Dense>
 
 namespace App

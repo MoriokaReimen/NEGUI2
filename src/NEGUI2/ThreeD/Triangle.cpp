@@ -1,4 +1,4 @@
-#include "NEGUI2/3D/Triangle.hpp"
+#include "NEGUI2/ThreeD/Triangle.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>

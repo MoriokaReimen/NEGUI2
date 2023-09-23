@@ -1,4 +1,4 @@
-#include "NEGUI2/3D/BasePickable.hpp"
+#include "NEGUI2/ThreeD/BasePickable.hpp"
 
 namespace NEGUI2
 {

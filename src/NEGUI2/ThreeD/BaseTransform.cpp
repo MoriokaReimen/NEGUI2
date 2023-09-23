@@ -1,4 +1,4 @@
-#include "NEGUI2/3D/BaseTransform.hpp"
+#include "NEGUI2/ThreeD/BaseTransform.hpp"
 
 namespace NEGUI2
 {

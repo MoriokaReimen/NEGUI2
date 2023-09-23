@@ -2,7 +2,7 @@
 #include "Scene.hpp"
 #include <fstream>
 #include "NEGUI2/Core/Core.hpp"
-#include "NEGUI2/3D/Coordinate.hpp"
+#include "NEGUI2/ThreeD/Coordinate.hpp"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_internal.h>

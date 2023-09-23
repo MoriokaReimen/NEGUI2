@@ -1,48 +1,44 @@
-#include "NEGUI2/3D/Grid.hpp"
+#include "NEGUI2/ThreeD/AABB.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>
 
 namespace NEGUI2
 {
-    uint32_t Grid::instance_count_ = 0u;
-    Grid::Grid()
-    : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_()
-    {
-        instance_count_++;
-        push_constant_.class_id = get_type_id();
-        push_constant_.instance_id = instance_count_;
-        push_constant_.model = get_transform().matrix().cast<float>();
-    }
-
-    Grid::~Grid()
+    AABB::AABB()
+    : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr),
+      box_()
     {
     }
 
-    void Grid::init()
-    {
-        /* パイプライン生成 */
-        rebuild();
-    }
-
-    void Grid::destroy()
+    AABB::~AABB()
     {
     }
 
-    void Grid::update(vk::raii::CommandBuffer &command)
+
+    void AABB::render(vk::raii::CommandBuffer &command)
     {       
-        push_constant_.model = get_transform().matrix().cast<float>();
-        
         auto &core = Core::get_instance();
 
         command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
-        command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
+        Eigen::Vector3f max = box_.max().cast<float>();
+        Eigen::Vector3f min = box_.min().cast<float>();
+        auto diff = max - min;
+        Eigen::Affine3f offset(Eigen::Translation3f(diff.x() / 2.f, diff.y() / 2.f, diff.z() / 2.f));
+        Eigen::Matrix4f scale = Eigen::Scaling(Eigen::Vector4f(diff.x(), diff.y(), diff.z(), 1.f));
+        Eigen::Matrix4f mat = scale.matrix() * offset.matrix() * transform_.matrix().cast<float>();
+        command.pushConstants<Eigen::Matrix4f>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, mat);
         
-        command.draw(6, 1, 0, 0);
+        command.draw(24, 1, 0, 0);
     }
 
-    void Grid::rebuild()
+    void AABB::set_box(const Eigen::AlignedBox3d &box)
+    {
+        box_ = box;
+    }
+
+    void AABB::init()
     {
         auto &core = Core::get_instance();
         auto extent = core.off_screen.extent;
@@ -53,19 +49,19 @@ namespace NEGUI2
         /* Vertexシェーダ */
         {
             shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main")
-                            .setModule(shader.get("GRID.VERT"));
+                            .setModule(shader.get("AABB.VERT"));
         }
 
         /* Fragmentシェーダ */
         {
             shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main")
-                            .setModule(shader.get("GRID.FRAG"));
+                            .setModule(shader.get("AABB.FRAG"));
         }
 
         vk::PipelineVertexInputStateCreateInfo vertex_input_state;
 
         vk::PipelineInputAssemblyStateCreateInfo input_assembly;
-        input_assembly.setTopology(vk::PrimitiveTopology::eTriangleList)
+        input_assembly.setTopology(vk::PrimitiveTopology::eLineList)
             .setPrimitiveRestartEnable(vk::False);
 
         vk::PipelineDepthStencilStateCreateInfo depth_stencil;
@@ -75,7 +71,6 @@ namespace NEGUI2
                      .setDepthWriteEnable(vk::False)
                      .setMaxDepthBounds(1.f)
                      .setMinDepthBounds(0.f);
-
 
         std::array<vk::Viewport, 1> viewport;
         viewport[0].setX(0.f).setY(0.f).setWidth(extent.width).setHeight(extent.height)
@@ -121,7 +116,7 @@ namespace NEGUI2
 
         vk::PushConstantRange push_constant;
         push_constant.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-                     .setSize(sizeof(PushConstant))
+                     .setSize(sizeof(Eigen::Matrix4f))
                      .setOffset(0);
 
         vk::PipelineLayoutCreateInfo pipeline_layout;
@@ -149,17 +144,6 @@ namespace NEGUI2
 
         auto &pipeline_cache = core.gpu.pipeline_cache;
         pipeline_ = device.createGraphicsPipeline(pipeline_cache, pipeline_info);
-    }
-
-    uint32_t Grid::get_type_id()
-    {
-        auto &id = typeid(Grid);
-        return static_cast<uint32_t>(id.hash_code());
-    }
-
-    uint32_t Grid::get_instance_id()
-    {
-        return push_constant_.instance_id;
     }
 
 }

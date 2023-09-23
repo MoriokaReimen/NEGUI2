@@ -1,4 +1,4 @@
-#include "NEGUI2/3D/FullShader.hpp"
+#include "NEGUI2/ThreeD/FullShader.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>

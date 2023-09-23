@@ -1,7 +1,7 @@
 #ifndef _BASE_HPP
 #define _BASE_HPP
-#include "NEGUI2/3D/BaseDisplayObject.hpp"
-#include "NEGUI2/3D/BaseTransform.hpp"
+#include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
+#include "NEGUI2/ThreeD/BaseTransform.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2

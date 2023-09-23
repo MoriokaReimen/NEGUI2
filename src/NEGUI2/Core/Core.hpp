@@ -8,8 +8,8 @@
 #include "NEGUI2/Core/TextureManager.hpp"
 #include "NEGUI2/Core/ImGuiManager.hpp"
 #include "NEGUI2/Core/Shader.hpp"
-#include "NEGUI2/3D/BaseDisplayObject.hpp"
-#include "NEGUI2/3D/AABB.hpp"
+#include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
+#include "NEGUI2/ThreeD/AABB.hpp"
 #include <memory>
 
 namespace NEGUI2
