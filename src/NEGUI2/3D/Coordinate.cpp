@@ -205,4 +205,15 @@ namespace NEGUI2
     {
         return push_constant_.instance_id;
     }
+
+    double Coordinate::pick(const Eigen::Vector3d &origin, const Eigen::Vector3d &direction)
+    {
+         const Eigen::Vector3d position = get_position();
+        auto diff = position - origin;
+        auto L = diff.dot(direction) * direction;
+        auto  dist = L.cross(diff).norm() / L.norm();
+        if(dist > 1.0) dist = -1.0;
+
+        return dist;
+    }
 }

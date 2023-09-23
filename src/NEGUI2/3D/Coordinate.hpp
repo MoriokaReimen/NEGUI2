@@ -2,11 +2,12 @@
 #define _COORDINATE_HPP
 #include "NEGUI2/3D/IDisplayObject.hpp"
 #include "NEGUI2/3D/BaseTransform.hpp"
+#include "NEGUI2/3D/IPickable.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Coordinate : public IDisplayObject, public BaseTransform
+    class Coordinate : public IDisplayObject, public BaseTransform, public IPickable
     {
         static uint32_t instance_count_;
         PushConstant push_constant_;
@@ -26,6 +27,8 @@ namespace NEGUI2
         void rebuild() override;
         uint32_t get_type_id() override;
         uint32_t get_instance_id() override;
+
+        double pick(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction) override;
     };
 
 }
