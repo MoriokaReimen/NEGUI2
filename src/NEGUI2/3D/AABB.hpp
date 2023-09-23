@@ -1,6 +1,6 @@
 #ifndef _AABB_HPP
 #define _AABB_HPP
-#include "NEGUI2/3D/IDisplayObject.hpp"
+#include "NEGUI2/3D/BaseDisplayObject.hpp"
 #include "NEGUI2/3D/BaseTransform.hpp"
 #include <Eigen/Dense>
 

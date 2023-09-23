@@ -1,5 +1,5 @@
-#ifndef _IDISPLAY_OBJECT_HPP
-#define _IDISPLAY_OBJECT_HPP
+#ifndef _BASEDISPLAY_OBJECT_HPP
+#define _BASEDISPLAY_OBJECT_HPP
 #include <cinttypes>
 #include <Eigen/Dense>
 #include <vulkan/vulkan_raii.hpp>
@@ -12,12 +12,12 @@ namespace NEGUI2
         uint32_t instance_id;
         Eigen::Matrix4f model;
     };
-    class IDisplayObject
+    class BaseDisplayObject
     {
         bool enable_;
     public:
-        IDisplayObject();
-        virtual ~IDisplayObject();
+        BaseDisplayObject();
+        virtual ~BaseDisplayObject();
         virtual void init() = 0;
         virtual void destroy() = 0;
         virtual void update(vk::raii::CommandBuffer& command) = 0;

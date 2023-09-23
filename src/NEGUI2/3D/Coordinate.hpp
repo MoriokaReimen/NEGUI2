@@ -1,13 +1,13 @@
 #ifndef _COORDINATE_HPP
 #define _COORDINATE_HPP
-#include "NEGUI2/3D/IDisplayObject.hpp"
+#include "NEGUI2/3D/BaseDisplayObject.hpp"
 #include "NEGUI2/3D/BaseTransform.hpp"
 #include "NEGUI2/3D/BasePickable.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Coordinate : public IDisplayObject, public BaseTransform, public BasePickable
+    class Coordinate : public BaseDisplayObject, public BaseTransform, public BasePickable
     {
         static uint32_t instance_count_;
         PushConstant push_constant_;

@@ -1,12 +1,12 @@
 #ifndef _BASE_HPP
 #define _BASE_HPP
-#include "NEGUI2/3D/IDisplayObject.hpp"
+#include "NEGUI2/3D/BaseDisplayObject.hpp"
 #include "NEGUI2/3D/BaseTransform.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Triangle : public IDisplayObject, public BaseTransform
+    class Triangle : public BaseDisplayObject, public BaseTransform
     {
         static uint32_t instance_count_;
         PushConstant push_constant_;

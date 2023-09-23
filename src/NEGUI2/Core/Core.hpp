@@ -8,7 +8,7 @@
 #include "NEGUI2/Core/TextureManager.hpp"
 #include "NEGUI2/Core/ImGuiManager.hpp"
 #include "NEGUI2/Core/Shader.hpp"
-#include "NEGUI2/3D/IDisplayObject.hpp"
+#include "NEGUI2/3D/BaseDisplayObject.hpp"
 #include "NEGUI2/3D/AABB.hpp"
 #include <memory>
 
@@ -34,7 +34,7 @@ namespace NEGUI2
         OffScreenManager off_screen;
         ImGuiManager imgui;
         AABB aabb;
-        std::vector<std::shared_ptr<IDisplayObject>> display_objects;
+        std::vector<std::shared_ptr<BaseDisplayObject>> display_objects;
         Shader shader;
 
         bool should_close();

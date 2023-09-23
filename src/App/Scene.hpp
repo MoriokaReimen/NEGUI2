@@ -2,7 +2,7 @@
 #define _SCENE_HPP
 #include "IModule.hpp"
 #include "NEGUI2/3D/Camera.hpp"
-#include "NEGUI2/3D/IDisplayObject.hpp"
+#include "NEGUI2/3D/BaseDisplayObject.hpp"
 #include <Eigen/Dense>
 
 namespace App

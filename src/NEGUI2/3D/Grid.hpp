@@ -1,12 +1,12 @@
 #ifndef _GRID_HPP
 #define _GRID_HPP
-#include "NEGUI2/3D/IDisplayObject.hpp"
+#include "NEGUI2/3D/BaseDisplayObject.hpp"
 #include "NEGUI2/3D/BaseTransform.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Grid : public IDisplayObject, public BaseTransform
+    class Grid : public BaseDisplayObject, public BaseTransform
     {
         static uint32_t instance_count_;
         PushConstant push_constant_;
