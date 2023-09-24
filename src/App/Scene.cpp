@@ -69,6 +69,8 @@ namespace App
         line->add(Eigen::Vector3f(0,0,10), Eigen::Vector3f(0, 20, 10), Eigen::Vector4f(1.f, 0.f, 1.f, 1.f));
         line->add(Eigen::Vector3f(0,20,10), Eigen::Vector3f(10, 20, 10), Eigen::Vector4f(1.f, 0.f, 1.f, 1.f));
         core.three_d.add(line);
+        
+        target_ = coord;
     }
 
     void Scene::update()

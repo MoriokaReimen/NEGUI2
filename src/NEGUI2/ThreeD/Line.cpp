@@ -5,7 +5,7 @@
 #include <algorithm>
 namespace
 {
-    constexpr size_t MAX_LINE(10000u);
+    constexpr size_t MAX_LINE(1000000u);
 }
 
 namespace NEGUI2
