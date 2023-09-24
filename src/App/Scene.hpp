@@ -4,7 +4,7 @@
 #include "NEGUI2/ThreeD/Camera.hpp"
 #include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
 #include <Eigen/Dense>
-
+#include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
 namespace App
 {
     class Scene : public IModule
@@ -16,8 +16,8 @@ namespace App
         };
     private:
         Context context_;
+        std::shared_ptr<NEGUI2::BaseDisplayObject> target_;
     public:
-        NEGUI2::Camera camera_;
         void handle_camera_();
         public:
         Scene(std::shared_ptr<entt::registry> registry);

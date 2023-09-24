@@ -28,11 +28,10 @@ namespace
         double beta = -znear * alpha;
 
         Eigen::Matrix4d projection;
-        projection << 
-              x, 0.0,   0.0, 0.0,
-            0.0,   y,   0.0, 0.0,
+        projection << x, 0.0, 0.0, 0.0,
+            0.0, y, 0.0, 0.0,
             0.0, 0.0, alpha, beta,
-            0.0, 0.0,   1.0, 0.0;
+            0.0, 0.0, 1.0, 0.0;
 
         return projection;
     }
@@ -61,8 +60,15 @@ namespace NEGUI2
     {
         aspect_ = static_cast<double>(width_) / static_cast<double>(height_);
         projection_ = ::perspective(fovy_, aspect_, znear_, zfar_);
-        auto &core = Core::get_instance();
+    }
 
+    Camera::~Camera()
+    {
+    }
+
+    void Camera::init()
+    {
+        auto &core = Core::get_instance();
         auto &mm = core.mm;
         {
             mm.add_memory("camera", sizeof(CameraData), Memory::TYPE::UNIFORM);
@@ -84,10 +90,6 @@ namespace NEGUI2
 
             gpu.device.updateDescriptorSets(write_descriptor_sets, nullptr);
         }
-    }
-
-    Camera::~Camera()
-    {
     }
 
     void Camera::set_extent(const uint32_t &width, const uint32_t &height)

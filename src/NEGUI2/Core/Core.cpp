@@ -5,7 +5,7 @@
 
 namespace NEGUI2 {
     Core::Core() : initialized_(false), gpu(), mm(), screen(),
-    off_screen()
+    off_screen(), three_d()
     {
     }
 
@@ -25,7 +25,7 @@ namespace NEGUI2 {
         tm.init();
         imgui.init();
         shader.init();
-        aabb.init();
+        three_d.init();
     }
 
     Core& Core::get_instance()
@@ -54,10 +54,6 @@ namespace NEGUI2 {
         if(screen.swap_chain_rebuild)
         {
             screen.rebuild();
-            for(auto object : display_objects)
-            {
-                object->rebuild();
-            }
         }
 
         auto& image_acqurired_semaphore = screen.sync_objects[screen.semaphore_index].image_acquired_semaphore;
@@ -93,23 +89,7 @@ namespace NEGUI2 {
             command_buffer.beginRenderPass(begin_info,
                                            vk::SubpassContents::eInline);
             
-            for (auto display_object : display_objects)
-            {
-                display_object->update(command_buffer);
-
-                auto pickable = std::dynamic_pointer_cast<BasePickable>(display_object);
-                if(pickable && pickable->display_aabb())
-                {
-                    auto base_transform = std::dynamic_pointer_cast<BaseTransform>(display_object);
-                    if(base_transform)
-                    { // TODO 継承関係の整理
-                        auto transform = base_transform->get_transform();
-                        aabb.set_transform(transform);
-                        aabb.set_box(pickable->box());
-                        aabb.render(command_buffer);
-                    }
-                }
-            }
+            three_d.update(command_buffer);
             command_buffer.endRenderPass();
         }
 

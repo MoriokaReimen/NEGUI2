@@ -189,7 +189,7 @@ namespace App
                 coord = std::make_shared<NEGUI2::Coordinate>();
                 coord->init();
                 auto &core = NEGUI2::Core::get_instance();
-                core.display_objects.push_back(coord);
+                core.three_d.add(coord);
             }
             static double x = 0.0;
             static double y = 0.0;
@@ -218,8 +218,7 @@ namespace App
             {
                 auto &core = NEGUI2::Core::get_instance();
                 core.wait_idle();
-                core.display_objects.erase(std::remove(std::begin(core.display_objects), std::end(core.display_objects), coord),
-                                           std::cend(core.display_objects));
+                core.three_d.erase(coord);
                 coord = nullptr;
                 show_coord_input_ = false;
             }

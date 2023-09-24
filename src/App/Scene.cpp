@@ -31,66 +31,63 @@ namespace App
 
         auto grid = std::make_shared<NEGUI2::Grid>();
         grid->init();
-        core.display_objects.push_back(grid);
+        core.three_d.add(grid);
 
         auto triangle = std::make_shared<NEGUI2::Triangle>();
         triangle->init();
-        core.display_objects.push_back(triangle);
+        core.three_d.add(triangle);
 
         auto coord = std::make_shared<NEGUI2::Coordinate>();
         coord->init();
         // coord->set_display_aabb();
-        core.display_objects.push_back(coord);
+        core.three_d.add(coord);
 
         auto coord2 = std::make_shared<NEGUI2::Coordinate>();
         coord2->init();
         // coord2->set_display_aabb();
         coord2->set_position(Eigen::Vector3d(10.0, 10.0, 10.0));
-        core.display_objects.push_back(coord2);
+        core.three_d.add(coord2);
 
         auto coord3 = std::make_shared<NEGUI2::Coordinate>();
         coord3->init();
         // coord3->set_display_aabb();
         coord3->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
-        core.display_objects.push_back(coord3);
+        core.three_d.add(coord3);
 
 #if 0
         auto arrow = std::make_shared<NEGUI2::FullShader>();
         arrow->init();
         // arrow->set_display_aabb();
         arrow->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
-        core.display_objects.push_back(arrow);
+        core.three_d.add(arrow);
 #endif
-        camera_.set_position(Eigen::Vector3d(10.0, 10.0, 10.0));
-        camera_.lookat(Eigen::Vector3d::Zero());
-        camera_.upload();
     }
 
     void Scene::update()
     {
         handle_camera_();
 
+        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+            return;
         auto &core = NEGUI2::Core::get_instance();
-        for (auto display_object : core.display_objects)
-        {
-            auto pickable = std::dynamic_pointer_cast<NEGUI2::BasePickable>(display_object);
-            auto mouse = ImGui::GetMousePos();
-            auto pos = registry_->ctx().get<Widget::Context>().scene_position;
-            auto extent = registry_->ctx().get<Widget::Context>().scene_extent;
-            auto uv = Eigen::Vector2d(2.0 * (mouse.x- pos.x())/ extent.x() - 1.0, 2.0 * (mouse.y- pos.y())/ extent.y() - 1.0);
-            
-            auto origin = camera_.uv_to_near_xyz(uv);
-            auto direction = camera_.uv_to_direction(uv);
+        auto mouse = ImGui::GetMousePos();
+        auto pos = registry_->ctx().get<Widget::Context>().scene_position;
+        auto extent = registry_->ctx().get<Widget::Context>().scene_extent;
+        auto uv = Eigen::Vector2d(2.0 * (mouse.x - pos.x()) / extent.x() - 1.0, 2.0 * (mouse.y - pos.y()) / extent.y() - 1.0);
 
-            if (pickable)
+        auto picked = core.three_d.pick(uv);
+        if(picked)
+        {
+            auto before = std::dynamic_pointer_cast<NEGUI2::BasePickable>(target_);
+            if(before)
             {
-                auto dist = pickable->pick(origin, direction);
-                registry_->ctx().get<Context>().position = origin;
-                registry_->ctx().get<Context>().direction = direction;
-                if(0.0 < dist)
-                {
-                    pickable->toggle_display_aabb();
-                }
+                before->set_display_aabb(false);
+            }
+            target_ = picked;
+            auto after = std::dynamic_pointer_cast<NEGUI2::BasePickable>(target_);
+            if(after)
+            {
+                after->set_display_aabb();
             }
         }
     }
@@ -98,13 +95,15 @@ namespace App
     void Scene::handle_camera_()
     {
         auto wideget_context = registry_->ctx().get<Widget::Context>();
-        //TODO CameraのExtentの扱い
-        if(!wideget_context.is_scene_focused) return;
-        
+        // TODO CameraのExtentの扱い
+        if (!wideget_context.is_scene_focused)
+            return;
+
         static Eigen::Vector3d position(10, 10, 10);
-        auto up = camera_.up();
-        auto right = camera_.right();
-        auto front = camera_.front();
+        auto &core = NEGUI2::Core::get_instance();
+        auto up = core.three_d.camera().up();
+        auto right = core.three_d.camera().right();
+        auto front = core.three_d.camera().front();
 
         // TODO Cameraのsetポジションのバグ
 
@@ -132,9 +131,15 @@ namespace App
 
         position += ImGui::GetIO().MouseWheel * front;
 
-        camera_.set_position(position);
-        camera_.lookat(Eigen::Vector3d::Zero());
-        camera_.upload();
+        core.three_d.camera().set_position(position);
+        core.three_d.camera().upload();
+
+        auto transform = std::dynamic_pointer_cast<NEGUI2::BaseTransform>(target_);
+        if (transform)
+        {   
+            auto pos = transform->get_position();
+            core.three_d.camera().lookat(pos);
+        }
     }
 
 }
