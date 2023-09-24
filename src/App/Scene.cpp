@@ -8,6 +8,7 @@
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/ThreeD/BasePickable.hpp"
 #include "NEGUI2/ThreeD/Line.hpp"
+#include "NEGUI2/ThreeD/Point.hpp"
 #include "Widget.hpp"
 
 namespace App
@@ -69,17 +70,27 @@ namespace App
         line->add(Eigen::Vector3f(0,0,10), Eigen::Vector3f(0, 20, 10), Eigen::Vector4f(1.f, 0.f, 1.f, 1.f));
         line->add(Eigen::Vector3f(0,20,10), Eigen::Vector3f(10, 20, 10), Eigen::Vector4f(1.f, 0.f, 1.f, 1.f));
         core.three_d.add(line);
-        
+
+        //TODO destroyの実装
+
+        point_ = std::make_shared<NEGUI2::Point>();
+        point_->init();
+        core.three_d.add(point_);
+
         target_ = coord;
     }
 
     void Scene::update()
     {
         handle_camera_();
+        auto& core = NEGUI2::Core::get_instance();
+        {
+            auto color = Eigen::Vector3f::Random();
+            point_->add(100 * Eigen::Vector3f::Random(), Eigen::Vector4f(color.x(), color.y(), color.z(), 1.f));
+        }
 
         if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
             return;
-        auto &core = NEGUI2::Core::get_instance();
         auto mouse = ImGui::GetMousePos();
         auto pos = registry_->ctx().get<Widget::Context>().scene_position;
         auto extent = registry_->ctx().get<Widget::Context>().scene_extent;

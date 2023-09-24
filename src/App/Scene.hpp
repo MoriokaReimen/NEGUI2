@@ -5,6 +5,7 @@
 #include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
 #include <Eigen/Dense>
 #include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
+#include "NEGUI2/ThreeD/Point.hpp"
 namespace App
 {
     class Scene : public IModule
@@ -17,6 +18,7 @@ namespace App
     private:
         Context context_;
         std::shared_ptr<NEGUI2::BaseDisplayObject> target_;
+        std::shared_ptr<NEGUI2::Point> point_;
     public:
         void handle_camera_();
         public:

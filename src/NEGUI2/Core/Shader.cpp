@@ -137,6 +137,8 @@ namespace NEGUI2
     add_spv_from_file("FULLSHADER.FRAG", "./shader/FullShader.frag.spv");
     add_spv_from_file("LINE.VERT", "./shader/Line.vert.spv");
     add_spv_from_file("LINE.FRAG", "./shader/Line.frag.spv");
+    add_spv_from_file("POINT.VERT", "./shader/Point.vert.spv");
+    add_spv_from_file("POINT.FRAG", "./shader/Point.frag.spv");
   }
 
   void Shader::add_glsl(const std::string &key, const VkShaderStageFlagBits &shader_stage, const std::string &shader_text)

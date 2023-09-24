@@ -1,19 +1,19 @@
-#include "NEGUI2/ThreeD/Line.hpp"
+#include "NEGUI2/ThreeD/Point.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>
 #include <algorithm>
 namespace
 {
-    constexpr size_t MAX_LINE(1000000u);
+    constexpr size_t MAX_POINT(1000000u);
 }
 
 namespace NEGUI2
 {
-    uint32_t Line::instance_count_ = 0u;
-    Line::Line()
+    uint32_t Point::instance_count_ = 0u;
+    Point::Point()
         : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_(),
-          line_data_()
+          point_data_()
     {
         instance_count_++;
         push_constant_.class_id = get_type_id();
@@ -21,40 +21,40 @@ namespace NEGUI2
         push_constant_.model = get_transform().matrix().cast<float>();
     }
 
-    Line::~Line()
+    Point::~Point()
     {
     }
 
-    void Line::init()
+    void Point::init()
     {
         // TODO 複数いんすタンス対応
 
         /* Init Vertex buffer */
         auto &core = Core::get_instance();
-        core.mm.add_memory("LineVertex", sizeof(LineData) * MAX_LINE, Memory::TYPE::VERTEX, false);
+        core.mm.add_memory("PointVertex", sizeof(PointData) * MAX_POINT, Memory::TYPE::VERTEX, false);
 
         /* パイプライン生成 */
         rebuild();
     }
 
-    void Line::destroy()
+    void Point::destroy()
     {
     }
 
-    void Line::update(vk::raii::CommandBuffer &command)
+    void Point::update(vk::raii::CommandBuffer &command)
     {
         push_constant_.model = get_transform().matrix().cast<float>();
 
         auto &core = Core::get_instance();
         command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
-        auto vertex_buffer = core.mm.get_memory("LineVertex");
+        auto vertex_buffer = core.mm.get_memory("PointVertex");
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
-        command.draw(2, line_data_.size(), 0, 0);
+        command.draw(point_data_.size(), 1, 0, 0);
     }
 
-    void Line::rebuild()
+    void Point::rebuild()
     {
         auto &core = Core::get_instance();
         auto extent = core.off_screen.extent;
@@ -64,29 +64,28 @@ namespace NEGUI2
         std::array<vk::PipelineShaderStageCreateInfo, 2> shader_stages;
         /* Vertexシェーダ */
         {
-            shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main").setModule(shader.get("LINE.VERT"));
+            shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main").setModule(shader.get("POINT.VERT"));
         }
 
         /* Fragmentシェーダ */
         {
-            shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main").setModule(shader.get("LINE.FRAG"));
+            shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main").setModule(shader.get("POINT.FRAG"));
         }
         std::array<vk::VertexInputBindingDescription, 1> binding_description;
         binding_description[0].binding = 0;
-        binding_description[0].setBinding(0).setStride(sizeof(LineData)).setInputRate(vk::VertexInputRate::eInstance);
+        binding_description[0].setBinding(0).setStride(sizeof(PointData)).setInputRate(vk::VertexInputRate::eVertex);
 
-        std::array<vk::VertexInputAttributeDescription, 4> attribute_description;
-        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(LineData, start));
-        attribute_description[1].setBinding(0).setLocation(1).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(LineData, end));
-        attribute_description[2].setBinding(0).setLocation(2).setFormat(vk::Format::eR32G32B32A32Sfloat).setOffset(offsetof(LineData, color));
-        attribute_description[3].setBinding(0).setLocation(3).setFormat(vk::Format::eR32Sfloat).setOffset(offsetof(LineData, diameter));
+        std::array<vk::VertexInputAttributeDescription, 3> attribute_description;
+        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(PointData, position));
+        attribute_description[1].setBinding(0).setLocation(1).setFormat(vk::Format::eR32G32B32A32Sfloat).setOffset(offsetof(PointData, color));
+        attribute_description[2].setBinding(0).setLocation(2).setFormat(vk::Format::eR32Sfloat).setOffset(offsetof(PointData, diameter));
 
         vk::PipelineVertexInputStateCreateInfo vertex_input_state;
         vertex_input_state.setVertexBindingDescriptions(binding_description)
             .setVertexAttributeDescriptions(attribute_description);
 
         vk::PipelineInputAssemblyStateCreateInfo input_assembly;
-        input_assembly.setTopology(vk::PrimitiveTopology::eLineList)
+        input_assembly.setTopology(vk::PrimitiveTopology::ePointList)
             .setPrimitiveRestartEnable(vk::False);
 
         vk::PipelineDepthStencilStateCreateInfo depth_stencil;
@@ -169,41 +168,42 @@ namespace NEGUI2
         pipeline_ = device.createGraphicsPipeline(pipeline_cache, pipeline_info);
     }
 
-    uint32_t Line::get_type_id()
+    uint32_t Point::get_type_id()
     {
-        auto &id = typeid(Line);
+        auto &id = typeid(Point);
         return static_cast<uint32_t>(id.hash_code());
     }
 
-    uint32_t Line::get_instance_id()
+    uint32_t Point::get_instance_id()
     {
         return push_constant_.instance_id;
     }
 
-    bool Line::add(const Eigen::Vector3f& start, const Eigen::Vector3f& end, const Eigen::Vector4f& color, const float& diameter)
+    bool Point::add(const Eigen::Vector3f& position, const Eigen::Vector4f& color, const float& diameter)
     {
-        if(line_data_.size() >= MAX_LINE) return false;
+        if(point_data_.size() >= MAX_POINT) return false;
 
-        line_data_.push_back({start, end, color, diameter});
+        point_data_.push_back({position, color, diameter});
         auto &core = Core::get_instance();
-        core.mm.upload_memory("LineVertex", line_data_.data(), sizeof(LineData) * line_data_.size());
+        // TODO更新した部分だけアップ
+        core.mm.upload_memory("PointVertex", point_data_.data(), sizeof(PointData) * point_data_.size());
         return true;
     }
 
-    bool Line::popback()
+    bool Point::popback()
     {
-        if(line_data_.empty()) return false;
-        line_data_.pop_back();
+        if(point_data_.empty()) return false;
+        point_data_.pop_back();
         return true;
     }
 
-    Line::LineData Line::get(size_t index) const
+    Point::PointData Point::get(size_t index) const
     {
-        return line_data_[index];
+        return point_data_[index];
     }
 
-    size_t Line::size() const
+    size_t Point::size() const
     {
-        return line_data_.size();
+        return point_data_.size();
     }
 }

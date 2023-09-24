@@ -1,18 +1,17 @@
-#ifndef _LINE_HPP
-#define _LINE_HPP
+#ifndef _Point_HPP
+#define _Point_HPP
 #include "NEGUI2/ThreeD/BaseDisplayObject.hpp"
 #include "NEGUI2/ThreeD/BaseTransform.hpp"
 #include <Eigen/Dense>
 
 namespace NEGUI2
 {
-    class Line : public BaseDisplayObject, BaseTransform
+    class Point : public BaseDisplayObject, BaseTransform
     {
     public:
-        struct LineData
+        struct PointData
         {
-            Eigen::Vector3f start;
-            Eigen::Vector3f end;
+            Eigen::Vector3f position;
             Eigen::Vector4f color;
             float diameter;
         };
@@ -23,11 +22,11 @@ namespace NEGUI2
         vk::raii::PipelineLayout pipeline_layout_;
         PushConstant push_constant_;
 
-        std::vector<LineData> line_data_;
+        std::vector<PointData> point_data_;
 
     public:
-        Line();
-        ~Line() override;
+        Point();
+        ~Point() override;
 
         void init() override;
         void destroy() override;
@@ -36,10 +35,9 @@ namespace NEGUI2
         uint32_t get_type_id() override;
         uint32_t get_instance_id() override;
 
-        bool add(const Eigen::Vector3f &start, const Eigen::Vector3f &end,
-                 const Eigen::Vector4f &color = Eigen::Vector4f::UnitW(), const float &diameter = 2);
+        bool add(const Eigen::Vector3f &position, const Eigen::Vector4f &color = Eigen::Vector4f::UnitW(), const float &diameter = 2);
         bool popback();
-        LineData get(size_t index) const;
+        PointData get(size_t index) const;
         size_t size() const;
     };
 }
