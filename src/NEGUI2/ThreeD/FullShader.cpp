@@ -111,7 +111,7 @@ namespace NEGUI2
                                .setDstAlphaBlendFactor(vk::BlendFactor::eOne)
                                .setAlphaBlendOp(vk::BlendOp::eMax);
 
-        std::array<float, 4> blend_constant;
+        std::array<float, 4> blend_constant{0};
 
         vk::PipelineColorBlendStateCreateInfo color_blending;
         color_blending.setLogicOpEnable(vk::False)

@@ -1,13 +1,19 @@
-#include "NEGUI2/ThreeD/Coordinate.hpp"
+#include "NEGUI2/ThreeD/Line.hpp"
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>
+#include <algorithm>
+namespace
+{
+    constexpr size_t MAX_LINE(10000u);
+}
 
 namespace NEGUI2
 {
-    uint32_t Coordinate::instance_count_ = 0u;
-    Coordinate::Coordinate()
-        : BaseTransform(), BasePickable(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_()
+    uint32_t Line::instance_count_ = 0u;
+    Line::Line()
+        : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_(),
+          line_data_()
     {
         instance_count_++;
         push_constant_.class_id = get_type_id();
@@ -15,71 +21,40 @@ namespace NEGUI2
         push_constant_.model = get_transform().matrix().cast<float>();
     }
 
-    Coordinate::~Coordinate()
+    Line::~Line()
     {
     }
 
-    void Coordinate::init()
+    void Line::init()
     {
-        /* Init aabb */
-        box_ = Eigen::AlignedBox3d(Eigen::Vector3d(0, 0, 0), Eigen::Vector3d(1.0, 1.0, 1.0));
+        // TODO 複数いんすタンス対応
 
         /* Init Vertex buffer */
-        {
-            vertex_data_[0] = Eigen::Vector3f::Zero();
-            vertex_data_[1] = Eigen::Vector3f::UnitX();
-            vertex_data_[2] = Eigen::Vector3f::Zero();
-            vertex_data_[3] = Eigen::Vector3f::UnitY();
-            vertex_data_[4] = Eigen::Vector3f::Zero();
-            vertex_data_[5] = Eigen::Vector3f::UnitZ();
-
-            auto &core = Core::get_instance();
-            core.mm.add_memory("CoordinateVertex", sizeof(Eigen::Vector3f) * vertex_data_.size(), Memory::TYPE::VERTEX, false);
-            core.mm.upload_memory("CoordinateVertex", vertex_data_.data(), sizeof(Eigen::Vector3f) * vertex_data_.size());
-        }
-
-        /* Init Color Data */
-        {
-            color_data_[0] = Eigen::Vector4f(1.f, 0.f, 0.f, 1.f);
-            color_data_[1] = Eigen::Vector4f(1.f, 0.f, 0.f, 1.f);
-
-            color_data_[2] = Eigen::Vector4f(0.f, 1.f, 0.f, 1.f);
-            color_data_[3] = Eigen::Vector4f(0.f, 1.f, 0.f, 1.f);
-
-            color_data_[4] = Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
-            color_data_[5] = Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
-
-            auto &core = Core::get_instance();
-            core.wait_idle();
-            core.mm.add_memory("CoordinateColor", sizeof(Eigen::Vector4f) * color_data_.size(), Memory::TYPE::VERTEX, false);
-            core.mm.upload_memory("CoordinateColor", color_data_.data(), sizeof(Eigen::Vector4f) * color_data_.size());
-        }
+        auto &core = Core::get_instance();
+        core.mm.add_memory("LineVertex", sizeof(PointData) * MAX_LINE, Memory::TYPE::VERTEX, false);
 
         /* パイプライン生成 */
         rebuild();
     }
 
-    void Coordinate::destroy()
+    void Line::destroy()
     {
     }
 
-    void Coordinate::update(vk::raii::CommandBuffer &command)
+    void Line::update(vk::raii::CommandBuffer &command)
     {
         push_constant_.model = get_transform().matrix().cast<float>();
 
         auto &core = Core::get_instance();
-
         command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
-        auto vertex_buffer = core.mm.get_memory("CoordinateVertex");
-        auto color_buffer = core.mm.get_memory("CoordinateColor");
+        auto vertex_buffer = core.mm.get_memory("LineVertex");
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
-        command.bindVertexBuffers(0, {vertex_buffer.buffer, color_buffer.buffer}, {0, 0});
+        command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
-
-        command.draw(vertex_data_.size(), 1, 0, 0);
+        command.draw(2, line_data_.size(), 0, 0);
     }
 
-    void Coordinate::rebuild()
+    void Line::rebuild()
     {
         auto &core = Core::get_instance();
         auto extent = core.off_screen.extent;
@@ -89,22 +64,22 @@ namespace NEGUI2
         std::array<vk::PipelineShaderStageCreateInfo, 2> shader_stages;
         /* Vertexシェーダ */
         {
-            shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main").setModule(shader.get("BASE.VERT"));
+            shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main").setModule(shader.get("LINE.VERT"));
         }
 
         /* Fragmentシェーダ */
         {
-            shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main").setModule(shader.get("BASE.FRAG"));
+            shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main").setModule(shader.get("LINE.FRAG"));
         }
-        std::array<vk::VertexInputBindingDescription, 2> binding_description;
+        std::array<vk::VertexInputBindingDescription, 1> binding_description;
         binding_description[0].binding = 0;
-        binding_description[0].setBinding(0).setStride(sizeof(Eigen::Vector3f)).setInputRate(vk::VertexInputRate::eVertex);
-        binding_description[1].binding = 1;
-        binding_description[1].setBinding(1).setStride(sizeof(Eigen::Vector4f)).setInputRate(vk::VertexInputRate::eVertex);
+        binding_description[0].setBinding(0).setStride(sizeof(PointData)).setInputRate(vk::VertexInputRate::eInstance);
 
-        std::array<vk::VertexInputAttributeDescription, 2> attribute_description;
-        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32B32Sfloat);
-        attribute_description[1].setBinding(1).setLocation(1).setFormat(vk::Format::eR32G32B32A32Sfloat);
+        std::array<vk::VertexInputAttributeDescription, 4> attribute_description;
+        attribute_description[0].setBinding(0).setLocation(0).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(PointData, start));
+        attribute_description[1].setBinding(0).setLocation(1).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(PointData, end));
+        attribute_description[2].setBinding(0).setLocation(2).setFormat(vk::Format::eR32G32B32A32Sfloat).setOffset(offsetof(PointData, color));
+        attribute_description[3].setBinding(0).setLocation(3).setFormat(vk::Format::eR32Sfloat).setOffset(offsetof(PointData, diameter));
 
         vk::PipelineVertexInputStateCreateInfo vertex_input_state;
         vertex_input_state.setVertexBindingDescriptions(binding_description)
@@ -145,9 +120,16 @@ namespace NEGUI2
             .setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
         std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment;
-        colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA).setBlendEnable(vk::False);
+        colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+                               .setBlendEnable(vk::False)
+                               .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+                               .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+                               .setColorBlendOp(vk::BlendOp::eAdd)
+                               .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+                               .setDstAlphaBlendFactor(vk::BlendFactor::eOne)
+                               .setAlphaBlendOp(vk::BlendOp::eMax);
 
-        std::array<float, 4> blend_constant;
+        std::array<float, 4> blend_constant{0};
 
         vk::PipelineColorBlendStateCreateInfo color_blending;
         color_blending.setLogicOpEnable(vk::False)
@@ -163,7 +145,6 @@ namespace NEGUI2
         vk::PipelineLayoutCreateInfo pipeline_layout;
         pipeline_layout.setSetLayouts(*core.gpu.descriptor_set_layout)
             .setPushConstantRanges(push_constant);
-        // TODO push constnatの実装
 
         auto &device = core.gpu.device;
         pipeline_layout_ = device.createPipelineLayout(pipeline_layout);
@@ -188,33 +169,41 @@ namespace NEGUI2
         pipeline_ = device.createGraphicsPipeline(pipeline_cache, pipeline_info);
     }
 
-    uint32_t Coordinate::get_type_id()
+    uint32_t Line::get_type_id()
     {
-        auto &id = typeid(Coordinate);
+        auto &id = typeid(Line);
         return static_cast<uint32_t>(id.hash_code());
     }
 
-    uint32_t Coordinate::get_instance_id()
+    uint32_t Line::get_instance_id()
     {
         return push_constant_.instance_id;
     }
 
-    double Coordinate::pick(const Eigen::Vector3d &origin, const Eigen::Vector3d &direction)
+    bool Line::add(const Eigen::Vector3f& start, const Eigen::Vector3f& end, const Eigen::Vector4f& color, const float& diameter)
     {
-        const Eigen::Vector3d position = get_position();
-        auto diff = position - origin;
-        
-        auto dot = diff.dot(direction);
-        if(dot < 0.0) return -1.0;
+        if(line_data_.size() >= MAX_LINE) return false;
 
-        auto L = dot * direction;
-        auto dist = L.cross(diff).norm() / L.norm();
-        auto ret = diff.squaredNorm();
-        if (dist > 1.0)
-        {
-            ret = -1.0;
-        }
+        line_data_.push_back({start, end, color, diameter});
+        auto &core = Core::get_instance();
+        core.mm.upload_memory("LineVertex", line_data_.data(), sizeof(PointData) * line_data_.size());
+        return true;
+    }
 
-        return ret;
+    bool Line::popback()
+    {
+        if(line_data_.empty()) return false;
+        line_data_.pop_back();
+        return true;
+    }
+
+    Line::PointData Line::get(size_t index) const
+    {
+        return line_data_[index];
+    }
+
+    size_t Line::size() const
+    {
+        return line_data_.size();
     }
 }

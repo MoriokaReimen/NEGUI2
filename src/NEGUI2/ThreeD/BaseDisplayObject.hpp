@@ -25,7 +25,7 @@ namespace NEGUI2
         virtual uint32_t get_type_id() = 0;
         virtual uint32_t get_instance_id() = 0;
         virtual bool is_enable() const;
-        virtual void set_enabel(const bool enable = true);
+        virtual void set_enable(const bool enable = true);
     };
 }
 

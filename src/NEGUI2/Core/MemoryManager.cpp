@@ -176,7 +176,7 @@ namespace NEGUI2
         }
         return ret;
     }
-
+// TODO オフセット付きアップロード
     bool MemoryManager::upload_memory(const std::string &key, const void *data, const size_t size)
     {
         if (memories_.count(key) == 0 || size == 0)

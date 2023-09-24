@@ -7,6 +7,7 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/ThreeD/BasePickable.hpp"
+#include "NEGUI2/ThreeD/Line.hpp"
 #include "Widget.hpp"
 
 namespace App
@@ -61,6 +62,13 @@ namespace App
         arrow->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
         core.three_d.add(arrow);
 #endif
+
+        auto line = std::make_shared<NEGUI2::Line>();
+        line->init();
+        line->add(Eigen::Vector3f(0,0,0), Eigen::Vector3f(0, 0, 10), Eigen::Vector4f(1.f, 0.f, 1.f, 1.f));
+        line->add(Eigen::Vector3f(0,0,10), Eigen::Vector3f(0, 20, 10), Eigen::Vector4f(1.f, 0.f, 1.f, 1.f));
+        line->add(Eigen::Vector3f(0,20,10), Eigen::Vector3f(10, 20, 10), Eigen::Vector4f(1.f, 0.f, 1.f, 1.f));
+        core.three_d.add(line);
     }
 
     void Scene::update()

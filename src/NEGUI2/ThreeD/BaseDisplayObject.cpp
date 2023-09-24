@@ -16,7 +16,7 @@ namespace NEGUI2
         return enable_;
     }
     
-    void BaseDisplayObject::set_enabel(const bool enable)
+    void BaseDisplayObject::set_enable(const bool enable)
     {
         enable_ = enable;
     }
