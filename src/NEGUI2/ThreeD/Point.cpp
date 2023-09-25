@@ -3,6 +3,7 @@
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>
 #include <algorithm>
+#include <spdlog/fmt/bundled/format.h>
 namespace
 {
     constexpr size_t MAX_POINT(1000000u);
@@ -31,7 +32,8 @@ namespace NEGUI2
 
         /* Init Vertex buffer */
         auto &core = Core::get_instance();
-        core.mm.add_memory("PointVertex", sizeof(PointData) * MAX_POINT, Memory::TYPE::VERTEX, false);
+        std::string memory_name = fmt::format("PointVertex{}", push_constant_.instance_id);
+        core.mm.add_memory(memory_name, sizeof(PointData) * MAX_POINT, Memory::TYPE::VERTEX, false);
 
         /* パイプライン生成 */
         rebuild();
@@ -47,7 +49,8 @@ namespace NEGUI2
 
         auto &core = Core::get_instance();
         command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
-        auto vertex_buffer = core.mm.get_memory("PointVertex");
+        std::string memory_name = fmt::format("PointVertex{}", push_constant_.instance_id);
+        auto vertex_buffer = core.mm.get_memory(memory_name);
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
@@ -186,7 +189,8 @@ namespace NEGUI2
         point_data_.push_back({position, color, diameter});
         auto &core = Core::get_instance();
         // TODO更新した部分だけアップ
-        core.mm.upload_memory("PointVertex", point_data_.data(), sizeof(PointData) * point_data_.size());
+        std::string memory_name = fmt::format("PointVertex{}", push_constant_.instance_id);
+        core.mm.upload_memory(memory_name, point_data_.data(), sizeof(PointData) * point_data_.size());
         return true;
     }
 

@@ -3,6 +3,7 @@
 #include "NEGUI2/Core/Shader.hpp"
 #include <typeinfo>
 #include <algorithm>
+#include <spdlog/fmt/bundled/format.h>
 namespace
 {
     constexpr size_t MAX_LINE(1000000u);
@@ -27,11 +28,10 @@ namespace NEGUI2
 
     void Line::init()
     {
-        // TODO 複数いんすタンス対応
-
         /* Init Vertex buffer */
         auto &core = Core::get_instance();
-        core.mm.add_memory("LineVertex", sizeof(LineData) * MAX_LINE, Memory::TYPE::VERTEX, false);
+        std::string memory_name = fmt::format("LineVertex{}", push_constant_.instance_id);
+        core.mm.add_memory(memory_name, sizeof(LineData) * MAX_LINE, Memory::TYPE::VERTEX, false);
 
         /* パイプライン生成 */
         rebuild();
@@ -47,7 +47,8 @@ namespace NEGUI2
 
         auto &core = Core::get_instance();
         command.bindPipeline(vk::PipelineBindPoint::eGraphics, *pipeline_);
-        auto vertex_buffer = core.mm.get_memory("LineVertex");
+        std::string memory_name = fmt::format("LineVertex{}", push_constant_.instance_id);
+        auto vertex_buffer = core.mm.get_memory(memory_name);
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
@@ -186,7 +187,8 @@ namespace NEGUI2
 
         line_data_.push_back({start, end, color, diameter});
         auto &core = Core::get_instance();
-        core.mm.upload_memory("LineVertex", line_data_.data(), sizeof(LineData) * line_data_.size());
+        std::string memory_name = fmt::format("LineVertex{}", push_constant_.instance_id);
+        core.mm.upload_memory(memory_name, line_data_.data(), sizeof(LineData) * line_data_.size());
         return true;
     }
 
