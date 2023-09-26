@@ -84,12 +84,8 @@ namespace App
     {
         handle_camera_();
         auto& core = NEGUI2::Core::get_instance();
-        {
-            auto color = Eigen::Vector3f::Random();
-            point_->add(100 * Eigen::Vector3f::Random(), Eigen::Vector4f(color.x(), color.y(), color.z(), 1.f));
-        }
 
-        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left, false))
             return;
         auto mouse = ImGui::GetMousePos();
         auto pos = registry_->ctx().get<Widget::Context>().scene_position;
