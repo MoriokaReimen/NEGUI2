@@ -37,7 +37,7 @@ namespace NEGUI2
         uint32_t get_instance_id() override;
 
         bool add(const Eigen::Vector3f &start, const Eigen::Vector3f &end,
-                 const Eigen::Vector4f &color = Eigen::Vector4f::UnitW(), const float &diameter = 2);
+                 const Eigen::Vector4f &color = Eigen::Vector4f::UnitW(), const float &diameter = 0.25);
         bool popback();
         LineData get(size_t index) const;
         size_t size() const;

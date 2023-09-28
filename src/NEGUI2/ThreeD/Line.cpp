@@ -52,7 +52,7 @@ namespace NEGUI2
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
-        command.draw(2, line_data_.size(), 0, 0);
+        command.draw(4, line_data_.size(), 0, 0);
     }
 
     void Line::rebuild()
@@ -87,7 +87,7 @@ namespace NEGUI2
             .setVertexAttributeDescriptions(attribute_description);
 
         vk::PipelineInputAssemblyStateCreateInfo input_assembly;
-        input_assembly.setTopology(vk::PrimitiveTopology::eLineList)
+        input_assembly.setTopology(vk::PrimitiveTopology::eTriangleFan)
             .setPrimitiveRestartEnable(vk::False);
 
         vk::PipelineDepthStencilStateCreateInfo depth_stencil;
@@ -112,7 +112,7 @@ namespace NEGUI2
             .setRasterizerDiscardEnable(vk::False)
             .setPolygonMode(vk::PolygonMode::eFill)
             .setLineWidth(1.f)
-            .setCullMode(vk::CullModeFlagBits::eBack)
+            .setCullMode(vk::CullModeFlagBits::eNone)
             .setFrontFace(vk::FrontFace::eCounterClockwise)
             .setDepthBiasEnable(vk::False);
 
@@ -122,7 +122,7 @@ namespace NEGUI2
 
         std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment;
         colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
-                               .setBlendEnable(vk::False)
+                               .setBlendEnable(vk::True)
                                .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
                                .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
                                .setColorBlendOp(vk::BlendOp::eAdd)

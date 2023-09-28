@@ -163,7 +163,6 @@ namespace App
             ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
-            ImGui::Text("%d visible windows, %d active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations);
             ImGui::Text("%lf, %lf", scene_size.x, scene_size.y);
             ImGui::Text("%lf, %lf", scene_position.x, scene_position.y);
 
