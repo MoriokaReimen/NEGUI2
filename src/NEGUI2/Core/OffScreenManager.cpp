@@ -113,7 +113,6 @@ namespace NEGUI2
         frame.depth_buffer_view = device_manager.device.createImageView(depth_view_create_info);
 
         /* フレームバッファ作成 */
-
         vk::FramebufferCreateInfo info;
         info.renderPass = *render_pass;
         std::array<vk::ImageView, 2> target_view{*frame.color_buffer_view, *frame.depth_buffer_view};

@@ -52,12 +52,14 @@ namespace NEGUI2
         Memory &get_memory(const std::string &key);
         bool add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type, bool rebuild = true);
         bool remove_memory(const std::string &key);
-        bool upload_memory(const std::string &key, const void *data, const size_t size);
+        bool upload_memory(const std::string &key, const void *data, const size_t size, const size_t offset = 0);
+        bool download_memory(const std::string& key, void* data, const size_t size, const size_t offset = 0);
 
         Image &get_image(const std::string &key);
         bool add_image(const std::string &key, const int& width, const int& height, const Image::TYPE &type, bool rebuild = true);
         bool remove_image(const std::string &key);
-        bool upload_image(const std::string& key, const void *data, const uint32_t& width, const uint32_t& height);
+        bool upload_image(const std::string& key, const void *data, const uint32_t& width, const uint32_t& height,  const size_t offset = 0);
+        bool download_image(const std::string& key, void* data, const uint32_t& width, const uint32_t& height, const size_t offset = 0);
     };
 }
 
