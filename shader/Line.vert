@@ -9,7 +9,10 @@ layout(std140, binding = 0) uniform Mouse
 
 layout(std140, binding = 1) uniform Camera
 {
-   mat4 transform; 
+   mat4 transform;
+   mat4 projection;
+   mat4 view;
+   vec2 resolution;
 } camera;
 
 layout (push_constant) uniform PushBlock
@@ -46,9 +49,8 @@ vec3 vertices[24] = vec3[](
 
 void main() {
     vec4 inPosition;
-    vec3 dir = end - start;
-    mat4 inv = inverse(camera.transform);
-    vec3 up = normalize(cross(dir, inv[2].xyz));
+    vec3 dir = max(end - start, start - end);
+    vec3 up = cross(dir, camera.view[2].xyz);
 
     if(gl_VertexIndex % 4 == 1)
     {

@@ -11,8 +11,9 @@ layout(std140, binding = 0) uniform Mouse
 layout(std140, binding = 1) uniform Camera
 {
    mat4 transform;
+   mat4 projection;
+   mat4 view;
    vec2 resolution;
-   uint time_ms;
 } camera;
 
 layout (push_constant) uniform PushBlock

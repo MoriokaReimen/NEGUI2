@@ -296,6 +296,7 @@ namespace NEGUI2
             device = physical_device.createDevice(create_info);
         }
     }
+
     void DeviceManager::init_queue_()
     {
         graphics_queue = device.getQueue(graphics_queue_index, 0);

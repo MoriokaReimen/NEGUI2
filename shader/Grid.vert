@@ -10,7 +10,10 @@ layout(std140, binding = 0) uniform Mouse
 
 layout(std140, binding = 1) uniform Camera
 {
-   mat4 transform; 
+   mat4 transform;
+   mat4 projection;
+   mat4 view;
+   vec2 resolution;
 } camera;
 
 layout (push_constant) uniform PushBlock
@@ -39,10 +42,10 @@ vec3 UnprojectPoint(float x, float y, float z, mat4 transform) {
 // normal vertice projection
 void main() {
     vec3 p = gridPlane[gl_VertexIndex].xyz;
-    nearPoint = UnprojectPoint(p.x, p.y, 0.0, camera.transform).xyz; // unprojecting on the near plane
-    farPoint = UnprojectPoint(p.x, p.y, 1.0, camera.transform).xyz; // unprojecting on the far plane
+    pv = camera.projection * inverse(camera.view);
+    nearPoint = UnprojectPoint(p.x, p.y, 0.0, pv).xyz; // unprojecting on the near plane
+    farPoint = UnprojectPoint(p.x, p.y, 1.0, pv).xyz; // unprojecting on the far plane
     gl_Position = vec4(p, 1.0); // using directly the clipped coordinates
-    pv = camera.transform;
 
 }
 

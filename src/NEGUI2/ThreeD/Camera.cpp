@@ -45,6 +45,8 @@ namespace
     struct CameraData
     {
         Eigen::Matrix4f transform;
+        Eigen::Matrix4f projection;
+        Eigen::Matrix4f view;
         Eigen::Vector2f resolution;
         uint32_t time_ms;
     };
@@ -122,6 +124,8 @@ namespace NEGUI2
             auto memory = mm.get_memory("camera");
             auto transform = projection_ * transform_.matrix().inverse();
             camera_data.transform = transform.matrix().cast<float>();
+            camera_data.projection = projection_.cast<float>();
+            camera_data.view = transform_.matrix().cast<float>();
             camera_data.resolution = Eigen::Vector2f(width_, height_);
             camera_data.time_ms = ::timeSinceEpochMillisec();
 
