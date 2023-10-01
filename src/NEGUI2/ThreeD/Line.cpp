@@ -62,7 +62,7 @@ namespace NEGUI2
         auto &shader = core.shader;
 
         /* Init pipeline */
-        std::array<vk::PipelineShaderStageCreateInfo, 2> shader_stages;
+        std::array<vk::PipelineShaderStageCreateInfo, 2> shader_stages{};
         /* Vertexシェーダ */
         {
             shader_stages[0].setStage(vk::ShaderStageFlagBits::eVertex).setPName("main").setModule(shader.get("LINE.VERT"));
@@ -72,7 +72,7 @@ namespace NEGUI2
         {
             shader_stages[1].setStage(vk::ShaderStageFlagBits::eFragment).setPName("main").setModule(shader.get("LINE.FRAG"));
         }
-        std::array<vk::VertexInputBindingDescription, 1> binding_description;
+        std::array<vk::VertexInputBindingDescription, 1> binding_description{};
         binding_description[0].binding = 0;
         binding_description[0].setBinding(0).setStride(sizeof(LineData)).setInputRate(vk::VertexInputRate::eInstance);
 
@@ -82,7 +82,7 @@ namespace NEGUI2
         attribute_description[2].setBinding(0).setLocation(2).setFormat(vk::Format::eR32G32B32A32Sfloat).setOffset(offsetof(LineData, color));
         attribute_description[3].setBinding(0).setLocation(3).setFormat(vk::Format::eR32Sfloat).setOffset(offsetof(LineData, diameter));
 
-        vk::PipelineVertexInputStateCreateInfo vertex_input_state;
+        vk::PipelineVertexInputStateCreateInfo vertex_input_state{};
         vertex_input_state.setVertexBindingDescriptions(binding_description)
             .setVertexAttributeDescriptions(attribute_description);
 
@@ -98,10 +98,10 @@ namespace NEGUI2
             .setMaxDepthBounds(1.f)
             .setMinDepthBounds(0.f);
 
-        std::array<vk::Viewport, 1> viewport;
+        std::array<vk::Viewport, 1> viewport{};
         viewport[0].setX(0.f).setY(0.f).setWidth(extent.width).setHeight(extent.height).setMinDepth(0.f).setMaxDepth(1.f);
 
-        std::array<vk::Rect2D, 1> scissor;
+        std::array<vk::Rect2D, 1> scissor{};
         scissor[0].setOffset({0u, 0u}).setExtent(extent);
 
         vk::PipelineViewportStateCreateInfo viewport_state;
@@ -120,7 +120,7 @@ namespace NEGUI2
         multisampling.setSampleShadingEnable(vk::False)
             .setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
-        std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment;
+        std::array<vk::PipelineColorBlendAttachmentState, 2> colorBlendAttachment;
         colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
                                .setBlendEnable(vk::True)
                                .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
@@ -129,6 +129,8 @@ namespace NEGUI2
                                .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
                                .setDstAlphaBlendFactor(vk::BlendFactor::eOne)
                                .setAlphaBlendOp(vk::BlendOp::eMax);
+        colorBlendAttachment[1].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+                               .setBlendEnable(vk::False);
 
         std::array<float, 4> blend_constant{0};
 

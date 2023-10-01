@@ -292,6 +292,7 @@ namespace NEGUI2
             features.setLogicOp(vk::True);
             features.setDepthBounds(vk::True);
             features.setDepthClamp(vk::True);
+            features.setIndependentBlend(vk::True);
             create_info.setPEnabledFeatures(&features);
             device = physical_device.createDevice(create_info);
         }

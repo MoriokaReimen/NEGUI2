@@ -33,6 +33,7 @@ namespace NEGUI2
             COLOR = 1,
             DEPTH = 2,
             TEXTURE = 3,
+            PICK = 4,
         };
         TYPE type;
     };

@@ -22,6 +22,7 @@ namespace NEGUI2
         {
             clear_value[0].setColor({200.0f / 256.0f, 200.0f / 256.0f, 200.0f / 256.0f, 1.0f});
             clear_value[1].setDepthStencil({1.f, 1u});
+            clear_value[2].setColor({0.f, 0.f, 0.f, 0.f});
         }
         rebuild();
     }
@@ -34,21 +35,29 @@ namespace NEGUI2
         /* イメージ取得 */
         vk::Image color_buffers;
         vk::Image depth_buffers;
+        vk::Image pick_buffers;
 
         // TODO widthとheightをextentに置き換え
+        /* イメージ生成 */
         memory_manager.add_image("OffScreenColor0", extent.width, extent.height, NEGUI2::Image::TYPE::COLOR);
         memory_manager.add_image("OffScreenDepth0", extent.width, extent.height, NEGUI2::Image::TYPE::DEPTH);
+        memory_manager.add_image("OffScreenPick0", extent.width, extent.height, NEGUI2::Image::TYPE::PICK);
+
         color_buffers = memory_manager.get_image("OffScreenColor0").image;
         depth_buffers = memory_manager.get_image("OffScreenDepth0").image;
+        pick_buffers = memory_manager.get_image("OffScreenPick0").image;
 
         frame.color_buffer = color_buffers;
         frame.depth_buffer = depth_buffers;
+        frame.pick_buffer = pick_buffers;
 
         color_format = memory_manager.get_image("OffScreenColor0").format;
         depth_format = memory_manager.get_image("OffScreenDepth0").format;
+        pick_format = memory_manager.get_image("OffScreenPick0").format;
+
         /* Create RenderPass */
         {
-            std::array<vk::AttachmentDescription, 2> attachmentDescriptions;
+            std::array<vk::AttachmentDescription, 3> attachmentDescriptions;
             attachmentDescriptions[0] = vk::AttachmentDescription({},
                                                                   color_format,
                                                                   vk::SampleCountFlagBits::e1,
@@ -67,10 +76,23 @@ namespace NEGUI2
                                                                   vk::AttachmentStoreOp::eDontCare,
                                                                   vk::ImageLayout::eUndefined,
                                                                   vk::ImageLayout::eDepthStencilAttachmentOptimal);
+            attachmentDescriptions[2] = vk::AttachmentDescription({},
+                                                                  pick_format,
+                                                                  vk::SampleCountFlagBits::e1,
+                                                                  vk::AttachmentLoadOp::eClear,
+                                                                  vk::AttachmentStoreOp::eDontCare,
+                                                                  vk::AttachmentLoadOp::eDontCare,
+                                                                  vk::AttachmentStoreOp::eDontCare,
+                                                                  vk::ImageLayout::eUndefined,
+                                                                  vk::ImageLayout::eGeneral);
 
             vk::AttachmentReference colorReference(0, vk::ImageLayout::eGeneral);
+            vk::AttachmentReference pickReference(2, vk::ImageLayout::eGeneral);
+            std::array<vk::AttachmentReference, 2> references;
+            references[0] = vk::AttachmentReference(0, vk::ImageLayout::eGeneral);
+            references[1] = vk::AttachmentReference(2, vk::ImageLayout::eGeneral);
             vk::AttachmentReference depthReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-            vk::SubpassDescription subpass({}, vk::PipelineBindPoint::eGraphics, {}, colorReference, {}, &depthReference);
+            vk::SubpassDescription subpass({}, vk::PipelineBindPoint::eGraphics, {}, references, {}, &depthReference);
 
             vk::RenderPassCreateInfo renderPassCreateInfo({}, attachmentDescriptions, subpass);
             render_pass = device_manager.device.createRenderPass(renderPassCreateInfo);
@@ -112,10 +134,17 @@ namespace NEGUI2
         depth_view_create_info.subresourceRange = depth_image_range;
         frame.depth_buffer_view = device_manager.device.createImageView(depth_view_create_info);
 
+        /* ピック */
+        vk::ImageViewCreateInfo pick_view_create_info({}, {}, vk::ImageViewType::e2D, pick_format, {}, {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
+        pick_view_create_info.image = frame.pick_buffer;
+        vk::ImageSubresourceRange pick_image_range{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1};
+        pick_view_create_info.subresourceRange = pick_image_range;
+        frame.pick_buffer_view = device_manager.device.createImageView(pick_view_create_info);
+
         /* フレームバッファ作成 */
         vk::FramebufferCreateInfo info;
         info.renderPass = *render_pass;
-        std::array<vk::ImageView, 2> target_view{*frame.color_buffer_view, *frame.depth_buffer_view};
+        std::array<vk::ImageView, 3> target_view{*frame.color_buffer_view, *frame.depth_buffer_view, *frame.pick_buffer_view};
         info.setAttachments(target_view);
         info.width = extent.width;
         info.height = extent.height;

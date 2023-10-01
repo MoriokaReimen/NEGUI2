@@ -16,9 +16,10 @@ namespace NEGUI2
         vk::Extent2D extent;
         vk::raii::RenderPass render_pass;
         vk::raii::Sampler sampler;
-        std::array<vk::ClearValue, 2> clear_value;
+        std::array<vk::ClearValue, 3> clear_value;
         vk::Format color_format;
         vk::Format depth_format;
+        vk::Format pick_format;
         bool swap_chain_rebuild;
         FrameData frame;
         void rebuild();

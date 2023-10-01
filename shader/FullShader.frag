@@ -8,6 +8,7 @@ layout(std140, binding = 1) uniform Camera
 } camera;
 layout(origin_upper_left) in vec4 gl_FragCoord;
 layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 outID;
 
 float arrow(vec3 position, vec3 start, vec3 end, float baseRadius, float tipRadius, float tipHeight)
 {
@@ -181,4 +182,5 @@ void main()
             } else {
                 fragColor = vec4(0.0);
             }
+    outID = vec4(1.0, 0.0, 0.0, 1.0);
 }

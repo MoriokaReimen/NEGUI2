@@ -144,8 +144,10 @@ namespace NEGUI2
         multisampling.setSampleShadingEnable(vk::False)
             .setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
-        std::array<vk::PipelineColorBlendAttachmentState, 1> colorBlendAttachment;
+        std::array<vk::PipelineColorBlendAttachmentState, 2> colorBlendAttachment;
         colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA).setBlendEnable(vk::False);
+        colorBlendAttachment[1].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+                               .setBlendEnable(vk::False);
 
         std::array<float, 4> blend_constant;
 

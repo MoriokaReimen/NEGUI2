@@ -288,7 +288,7 @@ namespace NEGUI2
         case Image::TYPE::COLOR:
         {
             image_create_info.setImageType(vk::ImageType::e2D)
-                .setFormat(vk::Format::eR8G8B8A8Unorm)
+                .setFormat(vk::Format::eR8G8B8A8Srgb)
                 .setExtent({static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1u})
                 .setMipLevels(1)
                 .setArrayLayers(1)
@@ -331,7 +331,15 @@ namespace NEGUI2
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
-
+        case Image::TYPE::PICK:
+        {
+            image_create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR8G8B8A8Srgb)
+                             .setExtent({static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1})
+                             .setMipLevels(1).setArrayLayers(1).setSamples(vk::SampleCountFlagBits::e1)
+                             .setTiling(vk::ImageTiling::eOptimal).setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        }
+        break;
         default:
             spdlog::error("Invalid image type");
             break;

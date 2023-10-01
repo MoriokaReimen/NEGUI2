@@ -9,8 +9,10 @@ namespace NEGUI2
         vk::raii::Fence fence = nullptr;
         vk::Image color_buffer = nullptr;
         vk::Image depth_buffer = nullptr;
+        vk::Image pick_buffer = nullptr;
         vk::raii::ImageView color_buffer_view = nullptr;
         vk::raii::ImageView depth_buffer_view = nullptr;
+        vk::raii::ImageView pick_buffer_view = nullptr;
         vk::raii::Framebuffer frame_buffer = nullptr;
     };
 
