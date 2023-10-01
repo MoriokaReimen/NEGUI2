@@ -269,7 +269,13 @@ namespace NEGUI2
             spdlog::info("Initialize Device");
             std::vector<const char *> device_extensions;
             device_extensions.push_back("VK_KHR_swapchain");
-
+#if 0
+            device_extensions.push_back("VK_KHR_dedicated_allocation");
+            device_extensions.push_back("VK_KHR_buffer_device_address");
+            device_extensions.push_back("VK_EXT_memory_budget");
+            device_extensions.push_back("VK_EXT_memory_priority");
+            device_extensions.push_back("VK_AMD_device_coherent_memory");
+#endif
             // Enumerate physical device extension
             auto properties = physical_device.enumerateDeviceExtensionProperties();
 

@@ -116,7 +116,7 @@ namespace NEGUI2
 
         vk::BufferCreateInfo buffer_info;
         vk::BufferViewCreateInfo view_info;
-        VmaAllocationCreateInfo allocInfo{};
+        VmaAllocationCreateInfo alloc_create_info{};
 
         switch (type)
         {
@@ -125,7 +125,7 @@ namespace NEGUI2
             buffer_info.setSize(size)
                 .setUsage(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer)
                 .setSharingMode(vk::SharingMode::eExclusive);
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         case Memory::TYPE::INDEX:
@@ -133,7 +133,7 @@ namespace NEGUI2
             buffer_info.setSize(size)
                 .setUsage(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer)
                 .setSharingMode(vk::SharingMode::eExclusive);
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         case Memory::TYPE::UNIFORM:
@@ -142,8 +142,8 @@ namespace NEGUI2
                 .setUsage(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eUniformBuffer)
                 .setSharingMode(vk::SharingMode::eExclusive);
 
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                               VMA_ALLOCATION_CREATE_MAPPED_BIT;
         }
         break;
@@ -155,7 +155,7 @@ namespace NEGUI2
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info;
 
-        auto result = vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo *>(&buffer_info), &allocInfo, &buffer, &alloc, &alloc_info);
+        auto result = vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo *>(&buffer_info), &alloc_create_info, &buffer, &alloc, &alloc_info);
         auto &device = Core::get_instance().gpu;
 
         memories_.insert({key, Memory{vk::Buffer(buffer), alloc, alloc_info}});
@@ -193,13 +193,13 @@ namespace NEGUI2
                 .setUsage(vk::BufferUsageFlagBits::eTransferSrc)
                 .setSharingMode(vk::SharingMode::eExclusive);
 
-            VmaAllocationCreateInfo allocInfo{};
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+            VmaAllocationCreateInfo alloc_create_info{};
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                               VMA_ALLOCATION_CREATE_MAPPED_BIT;
             VkBuffer buffer;
             VmaAllocation allocation;
-            vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo *>(&buffer_info), &allocInfo, &stage_buffer, &stage_allocation, &alloc_info);
+            vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo *>(&buffer_info), &alloc_create_info, &stage_buffer, &stage_allocation, &alloc_info);
         }
 
         /* データコピー */
@@ -237,13 +237,13 @@ namespace NEGUI2
                 .setUsage(vk::BufferUsageFlagBits::eTransferDst)
                 .setSharingMode(vk::SharingMode::eExclusive);
 
-            VmaAllocationCreateInfo allocInfo{};
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+            VmaAllocationCreateInfo alloc_create_info{};
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                               VMA_ALLOCATION_CREATE_MAPPED_BIT;
             VkBuffer buffer;
             VmaAllocation allocation;
-            vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo *>(&buffer_info), &allocInfo, &stage_buffer, &stage_allocation, &alloc_info);
+            vmaCreateBuffer(allocator_, reinterpret_cast<const VkBufferCreateInfo *>(&buffer_info), &alloc_create_info, &stage_buffer, &stage_allocation, &alloc_info);
         }
 
         /* データコピー */
@@ -281,7 +281,7 @@ namespace NEGUI2
         }
 
         vk::ImageCreateInfo image_create_info;
-        VmaAllocationCreateInfo allocInfo{};
+        VmaAllocationCreateInfo alloc_create_info{};
 
         switch (type)
         {
@@ -295,7 +295,7 @@ namespace NEGUI2
                 .setSamples(vk::SampleCountFlagBits::e1)
                 .setTiling(vk::ImageTiling::eOptimal)
                 .setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         case Image::TYPE::DEPTH:
@@ -311,7 +311,7 @@ namespace NEGUI2
             image_create_info.samples = vk::SampleCountFlagBits::e1;
             image_create_info.tiling = vk::ImageTiling::eOptimal;
             image_create_info.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         case Image::TYPE::TEXTURE:
@@ -328,13 +328,16 @@ namespace NEGUI2
             image_create_info.tiling = vk::ImageTiling::eOptimal;
             image_create_info.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
             image_create_info.sharingMode = vk::SharingMode::eExclusive;
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         case Image::TYPE::PICK:
         {
-            image_create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR8G8B8A8Srgb).setExtent({static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1}).setMipLevels(1).setArrayLayers(1).setSamples(vk::SampleCountFlagBits::e1).setTiling(vk::ImageTiling::eOptimal).setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            image_create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR32G32B32A32Sint)
+                        .setExtent({static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1}).setMipLevels(1).setArrayLayers(1)
+                        .setSamples(vk::SampleCountFlagBits::e1).setTiling(vk::ImageTiling::eOptimal)
+                        .setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc);
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
         default:
@@ -344,7 +347,7 @@ namespace NEGUI2
         VkImage image;
         VmaAllocation alloc;
         VmaAllocationInfo alloc_info; // TODO 改名
-        vmaCreateImage(allocator_, reinterpret_cast<const VkImageCreateInfo *>(&image_create_info), &allocInfo, &image, &alloc, &alloc_info);
+        vmaCreateImage(allocator_, reinterpret_cast<const VkImageCreateInfo *>(&image_create_info), &alloc_create_info, &image, &alloc, &alloc_info);
         auto device = *Core::get_instance().gpu.device;
         images_.insert({key, Image{vk::Image(image), image_create_info.format, alloc, alloc_info, type}});
 
@@ -386,13 +389,13 @@ namespace NEGUI2
             bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
             bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-            VmaAllocationCreateInfo allocInfo{};
-            allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            allocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+            VmaAllocationCreateInfo alloc_create_info{};
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                               VMA_ALLOCATION_CREATE_MAPPED_BIT;
             VkBuffer buffer;
             VmaAllocation allocation;
-            vmaCreateBuffer(allocator_, &bufferInfo, &allocInfo, &stage_buffer, &stage_allocation, &alloc_info);
+            vmaCreateBuffer(allocator_, &bufferInfo, &alloc_create_info, &stage_buffer, &stage_allocation, &alloc_info);
         }
 
         /* ステージにデータコピー */
@@ -489,13 +492,13 @@ namespace NEGUI2
 
         /* 受取さきイメージ生成 */
         vk::Image receiver;
-        VmaAllocation receiver_allocation;
-        VmaAllocationInfo receiver_alloc_info;
+        VmaAllocation receiver_allocation{};
+        VmaAllocationInfo receiver_alloc_info{};
         {
             vk::ImageCreateInfo create_info;
             vk::Extent3D extent{width, height, 1u};
             create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR8G8B8A8Uint).setExtent(extent).setArrayLayers(1).setMipLevels(1).setInitialLayout(vk::ImageLayout::eUndefined).setSamples(vk::SampleCountFlagBits::e1).setTiling(vk::ImageTiling::eLinear).setUsage(vk::ImageUsageFlagBits::eTransferDst);
-            VmaAllocationCreateInfo alloc_create_info;
+            VmaAllocationCreateInfo alloc_create_info{};
             alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
             alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                                       VMA_ALLOCATION_CREATE_MAPPED_BIT;
@@ -649,26 +652,40 @@ namespace NEGUI2
         {
             return ret;
         }
+        
+        Core::get_instance().gpu.device.waitIdle();
 
         /* イメージ取得 */
         auto target = images_.at(key);
 
         /* 受取さきイメージ生成 */
         vk::Image receiver;
-        VmaAllocation receiver_allocation;
-        VmaAllocationInfo receiver_alloc_info;
+        VmaAllocation receiver_allocation{};
+        VmaAllocationInfo receiver_alloc_info{};
         {
             vk::ImageCreateInfo create_info;
-            vk::Extent3D extent{10, 10, 1u};
-            create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR32G32B32A32Sint).setExtent(extent)
-                       .setArrayLayers(1).setMipLevels(1).setInitialLayout(vk::ImageLayout::eUndefined)
-                       .setUsage(vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eColorAttachment);
-            VmaAllocationCreateInfo alloc_create_info;
+            vk::Extent3D extent{1, 1, 1u};
+
+            create_info.setImageType(vk::ImageType::e2D)
+                .setFormat(vk::Format::eR32G32B32A32Sint).setInitialLayout(vk::ImageLayout::eUndefined)
+                .setExtent(extent)
+                .setMipLevels(1)
+                .setArrayLayers(1)
+                .setSamples(vk::SampleCountFlagBits::e1)
+                .setTiling(vk::ImageTiling::eLinear)
+                .setUsage(vk::ImageUsageFlagBits::eTransferDst);
+            VmaAllocationCreateInfo alloc_create_info{};
             alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
-            alloc_create_info.requiredFlags =  VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
- 
-            vmaCreateImage(allocator_, reinterpret_cast<VkImageCreateInfo *>(&create_info), &alloc_create_info,
+            alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+            auto result = vmaCreateImage(allocator_, reinterpret_cast<VkImageCreateInfo *>(&create_info), &alloc_create_info,
                            reinterpret_cast<VkImage *>(&receiver), &receiver_allocation, &receiver_alloc_info);
+            int i = 0;
+            if(receiver == nullptr)
+            {
+                i++;
+                result = result;
+            }
         }
 
         /* コピー実行 */
@@ -732,10 +749,10 @@ namespace NEGUI2
                     /* コピー実行 */
                     {
                         vk::ImageCopy copy_region;
-                        copy_region.setSrcSubresource({vk::ImageAspectFlagBits::eColor, 1})
-                                   .setDstSubresource({vk::ImageAspectFlagBits::eColor, 1})
+                        copy_region.setSrcSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
+                                   .setDstSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
                                    .setExtent({1, 1, 1})
-                                   .setSrcOffset({static_cast<int32_t>(width), static_cast<int32_t>(height), 1u});
+                                   .setSrcOffset({static_cast<int32_t>(width), static_cast<int32_t>(height), 0u});
                         command_buffer.copyImage(target.image, vk::ImageLayout::eTransferSrcOptimal,
                                                  receiver, vk::ImageLayout::eTransferDstOptimal,
                                                  {copy_region});
@@ -769,8 +786,11 @@ namespace NEGUI2
 
                     /* コピー実行 */
                     {
+                        std::vector<int32_t> hoge;
+                        hoge.resize(100);
+                        std::memcpy(ret.data(), receiver_alloc_info.pMappedData, 4 * sizeof(uint32_t));
+                        std::memcpy(hoge.data(), receiver_alloc_info.pMappedData, 100 * sizeof(uint32_t));
                         vmaFlushAllocation(allocator_, receiver_allocation, 0, VK_WHOLE_SIZE);
-                       //  std::memcpy(ret.data(), receiver_alloc_info.pMappedData, 4 * sizeof(uint32_t));
                     }
 
                  return vk::Result::eSuccess; };
@@ -779,6 +799,7 @@ namespace NEGUI2
         }
 
         vmaDestroyImage(allocator_, receiver, receiver_allocation);
+        spdlog::info("X:{} Y:{} Z:{}", ret.x(), ret.y(), ret.z());
         return ret;
     }
 }

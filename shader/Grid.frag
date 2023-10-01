@@ -5,7 +5,7 @@ layout(location = 2) in vec3 farPoint;
 layout(location = 3) in mat4 pv;
 
 layout(location = 0) out vec4 outColor;
-layout(location = 1) out vec4 outID;
+layout(location = 1) out ivec4 outID;
 
 vec4 grid(vec3 fragPos3D, float scale, bool drawAxis) {
     vec2 coord = fragPos3D.xy * scale;
@@ -57,5 +57,5 @@ void main() {
     outColor = (grid(fragPos3D, 1, true) + grid(fragPos3D, 0.1, true))* float(t > 0); // adding multiple resolution for the grid
     
     outColor.a *= fading * float(gl_FragDepth > 0.0);
-    outID = vec4(1.0, 0.0, 0.0, 1.0);
+    outID = ivec4(55, 55, 55, 1);
 }
