@@ -52,7 +52,7 @@ namespace NEGUI2
         command.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, *pipeline_layout_, 0, {*core.gpu.descriptor_set}, nullptr);
         command.bindVertexBuffers(0, {vertex_buffer.buffer}, {0});
         command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
-        command.draw(4, line_data_.size(), 0, 0);
+        command.draw(2, line_data_.size(), 0, 0);
     }
 
     void Line::rebuild()
@@ -87,7 +87,7 @@ namespace NEGUI2
             .setVertexAttributeDescriptions(attribute_description);
 
         vk::PipelineInputAssemblyStateCreateInfo input_assembly;
-        input_assembly.setTopology(vk::PrimitiveTopology::eTriangleFan)
+        input_assembly.setTopology(vk::PrimitiveTopology::eLineList)
             .setPrimitiveRestartEnable(vk::False);
 
         vk::PipelineDepthStencilStateCreateInfo depth_stencil;

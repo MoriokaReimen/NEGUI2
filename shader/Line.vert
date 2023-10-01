@@ -28,44 +28,14 @@ layout(location = 2) in vec4 color;
 layout(location = 3) in float diameter;
 
 layout(location = 0) out vec4 outColor;
-layout(location = 1) out vec3 outPosition;
-layout(location = 2) out vec3 outStart;
-layout(location = 3) out vec3 outEnd;
-
-vec3 vertices[24] = vec3[](
-    vec3(-0.5, -0.5, -0.5), vec3( 0.5, -0.5, -0.5),
-    vec3(-0.5, -0.5, -0.5), vec3(-0.5,  0.5, -0.5),
-    vec3( 0.5,  0.5, -0.5), vec3( 0.5, -0.5, -0.5),
-    vec3( 0.5,  0.5, -0.5), vec3(-0.5,  0.5, -0.5),
-    vec3(-0.5, -0.5, -0.5), vec3(-0.5, -0.5,  0.5),
-    vec3( 0.5,  0.5, -0.5), vec3( 0.5,  0.5,  0.5),
-    vec3(-0.5,  0.5, -0.5), vec3(-0.5,  0.5,  0.5),
-    vec3( 0.5, -0.5, -0.5), vec3( 0.5, -0.5,  0.5),
-    vec3(-0.5, -0.5, 0.5), vec3( 0.5, -0.5, 0.5),
-    vec3(-0.5, -0.5, 0.5), vec3(-0.5,  0.5, 0.5),
-    vec3( 0.5,  0.5, 0.5), vec3( 0.5, -0.5, 0.5),
-    vec3( 0.5,  0.5, 0.5), vec3(-0.5,  0.5, 0.5)
-);
 
 void main() {
-    vec4 inPosition;
-    vec3 dir = max(end - start, start - end);
-    vec3 up = cross(dir, camera.view[2].xyz);
-
-    if(gl_VertexIndex % 4 == 1)
+    vec3 inPosition = start;
+    if(gl_VertexIndex % 2 == 1)
     {
-        inPosition = vec4(start - 0.5 * diameter * up, 1.0);
-    } else if(gl_VertexIndex % 4 == 2) {
-        inPosition = vec4(end - 0.5 * diameter * up, 1.0);
-    } else if(gl_VertexIndex % 4 == 3) {
-        inPosition = vec4(end + 0.5 * diameter * up, 1.0);
-    } else if(gl_VertexIndex % 4 == 0) {
-        inPosition = vec4(start + 0.5 * diameter * up, 1.0);
+        inPosition = end;
     }
 
-    gl_Position = camera.transform * inPosition;
+    gl_Position = camera.transform * vec4(inPosition, 1.0);
     outColor = color;
-    outPosition = inPosition.xyz / inPosition.w;
-    outStart = start;
-    outEnd = end;
 }
