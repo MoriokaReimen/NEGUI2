@@ -1,7 +1,7 @@
 #include "NEGUI2/ThreeD/ThreeD.hpp"
 #include "NEGUI2/ThreeD/BasePickable.hpp"
 #include <limits>
-
+#include "NEGUI2/Core/Core.hpp"
 namespace NEGUI2
 {
 
@@ -39,7 +39,11 @@ namespace NEGUI2
     }
 
     std::shared_ptr<BaseDisplayObject> ThreeD::pick(const Eigen::Vector2d &uv)
-    {
+    {// TODO Off Screenの場所移動
+        uint32_t pixel_x = (uv.x() + 1.0) / 2.0 * 1980;
+        uint32_t pixel_y = (uv.x() + 1.0) / 2.0 * 1080;
+        auto &memory_manager = Core::get_instance().mm;
+        Eigen::Vector4i ret = memory_manager.read_pixel("OffScreenPick0", pixel_x, pixel_y);
 
         auto origin = camera_.uv_to_near_xyz(uv);
         auto direction = camera_.uv_to_direction(uv);

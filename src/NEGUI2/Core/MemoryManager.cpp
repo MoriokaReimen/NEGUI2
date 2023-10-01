@@ -317,7 +317,7 @@ namespace NEGUI2
         case Image::TYPE::TEXTURE:
         {
             image_create_info.imageType = vk::ImageType::e2D;
-            image_create_info.format = vk::Format::eR8G8B8A8Srgb;
+            image_create_info.format = vk::Format::eR32G32B32A32Sint;
             image_create_info.extent.width = static_cast<uint32_t>(width);
             image_create_info.extent.height = static_cast<uint32_t>(height);
             image_create_info.extent.depth = 1;
@@ -333,10 +333,7 @@ namespace NEGUI2
         break;
         case Image::TYPE::PICK:
         {
-            image_create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR8G8B8A8Srgb)
-                             .setExtent({static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1})
-                             .setMipLevels(1).setArrayLayers(1).setSamples(vk::SampleCountFlagBits::e1)
-                             .setTiling(vk::ImageTiling::eOptimal).setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
+            image_create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR8G8B8A8Srgb).setExtent({static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1}).setMipLevels(1).setArrayLayers(1).setSamples(vk::SampleCountFlagBits::e1).setTiling(vk::ImageTiling::eOptimal).setUsage(vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
             allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
         }
         break;
@@ -497,9 +494,7 @@ namespace NEGUI2
         {
             vk::ImageCreateInfo create_info;
             vk::Extent3D extent{width, height, 1u};
-            create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR8G8B8A8Uint).setExtent(extent).setArrayLayers(1)
-                       .setMipLevels(1).setInitialLayout(vk::ImageLayout::eUndefined).setSamples(vk::SampleCountFlagBits::e1)
-                       .setTiling(vk::ImageTiling::eLinear).setUsage(vk::ImageUsageFlagBits::eTransferDst);
+            create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR8G8B8A8Uint).setExtent(extent).setArrayLayers(1).setMipLevels(1).setInitialLayout(vk::ImageLayout::eUndefined).setSamples(vk::SampleCountFlagBits::e1).setTiling(vk::ImageTiling::eLinear).setUsage(vk::ImageUsageFlagBits::eTransferDst);
             VmaAllocationCreateInfo alloc_create_info;
             alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
             alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
@@ -612,7 +607,7 @@ namespace NEGUI2
                         std::memcpy(data, receiver_alloc_info.pMappedData, image_size);
                     }
 
-                    /* 送信元イメージのレイアウトを戻す */
+                /* 送信元イメージのレイアウトを戻す */
 #if 0
                     {
                         vk::ImageSubresourceRange subresource;
@@ -644,5 +639,146 @@ namespace NEGUI2
 
         vmaDestroyImage(allocator_, receiver, receiver_allocation);
         return true;
+    }
+
+    Eigen::Vector4i MemoryManager::read_pixel(const std::string &key, const uint32_t &width, const uint32_t &height)
+    {
+        Eigen::Vector4i ret;
+
+        if (images_.count(key) == 0 || width * height == 0)
+        {
+            return ret;
+        }
+
+        /* イメージ取得 */
+        auto target = images_.at(key);
+
+        /* 受取さきイメージ生成 */
+        vk::Image receiver;
+        VmaAllocation receiver_allocation;
+        VmaAllocationInfo receiver_alloc_info;
+        {
+            vk::ImageCreateInfo create_info;
+            vk::Extent3D extent{10, 10, 1u};
+            create_info.setImageType(vk::ImageType::e2D).setFormat(vk::Format::eR32G32B32A32Sint).setExtent(extent)
+                       .setArrayLayers(1).setMipLevels(1).setInitialLayout(vk::ImageLayout::eUndefined)
+                       .setUsage(vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eColorAttachment);
+            VmaAllocationCreateInfo alloc_create_info;
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.requiredFlags =  VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+ 
+            vmaCreateImage(allocator_, reinterpret_cast<VkImageCreateInfo *>(&create_info), &alloc_create_info,
+                           reinterpret_cast<VkImage *>(&receiver), &receiver_allocation, &receiver_alloc_info);
+        }
+
+        /* コピー実行 */
+        {
+            auto func = [&](vk::raii::CommandBuffer &command_buffer)
+            {
+                    /* 受取先データ変換 */
+                    {
+                        vk::ImageSubresourceRange subresource;
+                        subresource.setAspectMask(vk::ImageAspectFlagBits::eColor)
+                                   .setBaseMipLevel(0)
+                                   .setLevelCount(1)
+                                   .setBaseArrayLayer(0)
+                                   .setLayerCount(1);
+
+                        vk::ImageMemoryBarrier transfer_barrier;
+                        transfer_barrier.setOldLayout(vk::ImageLayout::eUndefined)
+                                        .setNewLayout(vk::ImageLayout::eTransferDstOptimal)
+                                        .setSrcQueueFamilyIndex(vk::QueueFamilyIgnored)
+                                        .setDstQueueFamilyIndex(vk::QueueFamilyIgnored)
+                                        .setImage(receiver)
+                                        .setSubresourceRange(subresource)
+                                        .setSrcAccessMask(vk::AccessFlagBits::eTransferRead)
+                                        .setDstAccessMask(vk::AccessFlagBits::eTransferRead);
+                        
+                        command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                                                       vk::PipelineStageFlagBits::eTransfer,
+                                                       {},
+                                                       {},
+                                                       {},
+                                                       {transfer_barrier});
+                    }
+
+                    /* 元イメージデータ変換 */
+                    {
+                        vk::ImageSubresourceRange subresource;
+                        subresource.setAspectMask(vk::ImageAspectFlagBits::eColor)
+                                   .setBaseMipLevel(0)
+                                   .setLevelCount(1)
+                                   .setBaseArrayLayer(0)
+                                   .setLayerCount(1);
+
+                        vk::ImageMemoryBarrier transfer_barrier;
+                        transfer_barrier.setOldLayout(vk::ImageLayout::eUndefined)
+                                        .setNewLayout(vk::ImageLayout::eTransferSrcOptimal)
+                                        .setSrcQueueFamilyIndex(vk::QueueFamilyIgnored)
+                                        .setDstQueueFamilyIndex(vk::QueueFamilyIgnored)
+                                        .setImage(target.image)
+                                        .setSubresourceRange(subresource)
+                                        .setSrcAccessMask(vk::AccessFlagBits::eTransferRead)
+                                        .setDstAccessMask(vk::AccessFlagBits::eTransferRead);
+                        
+                        command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                                                       vk::PipelineStageFlagBits::eTransfer,
+                                                       {},
+                                                       {},
+                                                       {},
+                                                       {transfer_barrier});
+                    }
+
+                    /* コピー実行 */
+                    {
+                        vk::ImageCopy copy_region;
+                        copy_region.setSrcSubresource({vk::ImageAspectFlagBits::eColor, 1})
+                                   .setDstSubresource({vk::ImageAspectFlagBits::eColor, 1})
+                                   .setExtent({1, 1, 1})
+                                   .setSrcOffset({static_cast<int32_t>(width), static_cast<int32_t>(height), 1u});
+                        command_buffer.copyImage(target.image, vk::ImageLayout::eTransferSrcOptimal,
+                                                 receiver, vk::ImageLayout::eTransferDstOptimal,
+                                                 {copy_region});
+
+                    }
+
+                    /* 受取先データ変換 */
+                    {
+                        vk::ImageSubresourceRange subresource;
+                        subresource.setAspectMask(vk::ImageAspectFlagBits::eColor)
+                                   .setBaseMipLevel(0)
+                                   .setLevelCount(1)
+                                   .setBaseArrayLayer(0)
+                                   .setLayerCount(1);
+
+                        vk::ImageMemoryBarrier transfer_barrier;
+                        transfer_barrier.setOldLayout(vk::ImageLayout::eUndefined)
+                                        .setNewLayout(vk::ImageLayout::eGeneral)
+                                        .setSrcQueueFamilyIndex(vk::QueueFamilyIgnored)
+                                        .setDstQueueFamilyIndex(vk::QueueFamilyIgnored)
+                                        .setImage(receiver)
+                                        .setSubresourceRange(subresource);
+                        
+                        command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+                                                       vk::PipelineStageFlagBits::eTransfer,
+                                                       {},
+                                                       {},
+                                                       {},
+                                                       {transfer_barrier});
+                    }
+
+                    /* コピー実行 */
+                    {
+                        vmaFlushAllocation(allocator_, receiver_allocation, 0, VK_WHOLE_SIZE);
+                       //  std::memcpy(ret.data(), receiver_alloc_info.pMappedData, 4 * sizeof(uint32_t));
+                    }
+
+                 return vk::Result::eSuccess; };
+            Core::get_instance().gpu.one_shot(func);
+            Core::get_instance().gpu.device.waitIdle();
+        }
+
+        vmaDestroyImage(allocator_, receiver, receiver_allocation);
+        return ret;
     }
 }

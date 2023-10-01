@@ -7,5 +7,5 @@ layout(location = 1) out vec4 outID;
 
 void main() {
     outColor = in_color;
-    outID = vec4(1.0, 0.0, 0.0, 1.0);
+    outID = vec4(55.0, 55.0, 55.0, 1.0);
 }

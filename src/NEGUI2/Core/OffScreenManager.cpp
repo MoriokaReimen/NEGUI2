@@ -151,4 +151,12 @@ namespace NEGUI2
         info.layers = 1;
         frame.frame_buffer = device_manager.device.createFramebuffer(info);
     }
+
+    Eigen::Vector4i OffScreenManager::pick(const uint32_t &x, const uint32_t &y)
+    {
+        auto &memory_manager = Core::get_instance().mm;
+        Eigen::Vector4i ret = memory_manager.read_pixel("OffScreenPick0", x, y);
+
+        return ret;
+    }
 }
