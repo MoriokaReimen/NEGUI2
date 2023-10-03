@@ -31,9 +31,9 @@ namespace App
     {
         auto &core = NEGUI2::Core::get_instance();
 
-        auto grid = std::make_shared<NEGUI2::Grid>();
-        grid->init();
-        core.three_d.add(grid);
+        // auto grid = std::make_shared<NEGUI2::Grid>();
+        // grid->init();
+        // core.three_d.add(grid);
 
         auto triangle = std::make_shared<NEGUI2::Triangle>();
         triangle->init();
@@ -85,14 +85,14 @@ namespace App
         handle_camera_();
         auto& core = NEGUI2::Core::get_instance();
 
-        if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left, false))
-            return;
         auto mouse = ImGui::GetMousePos();
         auto pos = registry_->ctx().get<Widget::Context>().scene_position;
         auto extent = registry_->ctx().get<Widget::Context>().scene_extent;
         auto uv = Eigen::Vector2d(2.0 * (mouse.x - pos.x()) / extent.x() - 1.0, 2.0 * (mouse.y - pos.y()) / extent.y() - 1.0);
 
         auto picked = core.three_d.pick(uv);
+        if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left, false))
+            return;
         if(picked)
         {
             auto before = std::dynamic_pointer_cast<NEGUI2::BasePickable>(target_);

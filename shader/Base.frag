@@ -7,5 +7,5 @@ layout(location = 1) out ivec4 outID;
 
 void main() {
     outColor = in_color;
-    outID = ivec4(73, 74, 75, 1);
+    outID = ivec4(55, 100, 126, 1);
 }
