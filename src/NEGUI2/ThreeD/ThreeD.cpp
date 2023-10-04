@@ -40,11 +40,17 @@ namespace NEGUI2
 
     std::shared_ptr<BaseDisplayObject> ThreeD::pick(const Eigen::Vector2d &uv)
     {
-        uint32_t pixel_x = (uv.x() + 1.0) / 2.0 * 1980;
-        uint32_t pixel_y = (uv.y() + 1.0) / 2.0 * 1080;
-        auto &memory_manager = Core::get_instance().mm;
-        Eigen::Vector4i ret = memory_manager.read_pixel("OffScreenPick0", pixel_x, pixel_y);
+        uint32_t pixel_x;
+        uint32_t pixel_y;
+        {
+            auto extent = Core::get_instance().off_screen.extent;
+            pixel_x = std::round((uv.x() + 1.0) / 2.0 * static_cast<double>(extent.width));
+            pixel_y = std::round((uv.y() + 1.0) / 2.0 * static_cast<double>(extent.height));
+            pixel_x = std::clamp(pixel_x, 0u, static_cast<uint32_t>(extent.width));
+            pixel_y = std::clamp(pixel_y, 0u, static_cast<uint32_t>(extent.height));
+        }
 
+        auto &memory_manager = Core::get_instance().mm;
         auto origin = camera_.uv_to_near_xyz(uv);
         auto direction = camera_.uv_to_direction(uv);
 

@@ -24,7 +24,6 @@ namespace NEGUI2
         bool swap_chain_rebuild;
         FrameData frame;
         void rebuild();
-        Eigen::Vector4i pick(const uint32_t& x, const uint32_t& y);
     };
 }
 #endif

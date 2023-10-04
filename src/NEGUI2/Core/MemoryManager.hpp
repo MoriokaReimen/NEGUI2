@@ -61,8 +61,6 @@ namespace NEGUI2
         bool add_image(const std::string &key, const int& width, const int& height, const Image::TYPE &type, bool rebuild = true);
         bool remove_image(const std::string &key);
         bool upload_image(const std::string& key, const void *data, const uint32_t& width, const uint32_t& height,  const size_t offset = 0);
-        bool download_image(const std::string& key, void* data, const uint32_t& width, const uint32_t& height, const size_t offset = 0);
-        Eigen::Vector4i read_pixel(const std::string& key, const uint32_t& width, const uint32_t& height);
     };
 }
 

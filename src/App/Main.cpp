@@ -18,9 +18,9 @@ int main(int argc, char** argv)
 
     while(!core.should_close())
     {
+        core.update();
         scene.update();
         widget.update();
-        core.update();
     }
     core.wait_idle();
     return EXIT_SUCCESS;
