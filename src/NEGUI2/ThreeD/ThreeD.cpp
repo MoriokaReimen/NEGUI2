@@ -2,6 +2,15 @@
 #include "NEGUI2/ThreeD/BasePickable.hpp"
 #include <limits>
 #include "NEGUI2/Core/Core.hpp"
+#include <spdlog/spdlog.h>
+namespace {
+struct PickData {
+    int32_t instance;
+    int32_t type;
+    int32_t vertex;
+    float depth;
+};
+}
 namespace NEGUI2
 {
 
@@ -18,10 +27,39 @@ namespace NEGUI2
     {
         camera_.init();
         aabb_.init();
+
+        auto &core = Core::get_instance();
+        auto &mm = core.mm;
+        {
+            mm.add_memory("pick_data", sizeof(PickData), Memory::TYPE::SSBO);
+        }
+
+        auto &gpu = core.gpu;
+        {
+            std::array<vk::DescriptorBufferInfo, 1> buffer_infos;
+            auto mouse_memory = mm.get_memory("pick_data");
+            buffer_infos[0].setBuffer(mouse_memory.buffer).setOffset(0u).setRange(vk::WholeSize);
+
+            std::array<vk::WriteDescriptorSet, 1> write_descriptor_sets;
+            write_descriptor_sets[0].setDstSet(*gpu.descriptor_set).setDstBinding(2).setDstArrayElement(0)
+                                    .setDescriptorCount(1).setDescriptorType(vk::DescriptorType::eStorageBuffer)
+                                    .setBufferInfo(buffer_infos[0]);
+
+            gpu.device.updateDescriptorSets(write_descriptor_sets, nullptr);
+        }
+
     }
 
     void ThreeD::update(vk::raii::CommandBuffer &command_buffer)
     {
+        /* Clear Memory */
+        {
+            auto &memory_manager = Core::get_instance().mm;
+            auto pick_mem = memory_manager.get_memory("pick_data");
+            std::memset(pick_mem.alloc_info.pMappedData, 0, sizeof(::PickData));
+        }
+
+        /* Render objects */
         for (auto display_object : display_objects_)
         {
             display_object->update(command_buffer);
@@ -39,18 +77,14 @@ namespace NEGUI2
     }
 
     std::shared_ptr<BaseDisplayObject> ThreeD::pick(const Eigen::Vector2d &uv)
-    {
-        uint32_t pixel_x;
-        uint32_t pixel_y;
-        {
-            auto extent = Core::get_instance().off_screen.extent;
-            pixel_x = std::round((uv.x() + 1.0) / 2.0 * static_cast<double>(extent.width));
-            pixel_y = std::round((uv.y() + 1.0) / 2.0 * static_cast<double>(extent.height));
-            pixel_x = std::clamp(pixel_x, 0u, static_cast<uint32_t>(extent.width));
-            pixel_y = std::clamp(pixel_y, 0u, static_cast<uint32_t>(extent.height));
-        }
-
+    {    
+        Core::get_instance().gpu.device.waitIdle();
         auto &memory_manager = Core::get_instance().mm;
+        auto pick_mem = memory_manager.get_memory("pick_data");
+        ::PickData data{0};
+        std::memcpy(&data, pick_mem.alloc_info.pMappedData, sizeof(::PickData));  
+        spdlog::info("{} {} {} {}", data.instance, data.type, data.vertex, data.depth);      
+        
         auto origin = camera_.uv_to_near_xyz(uv);
         auto direction = camera_.uv_to_direction(uv);
 

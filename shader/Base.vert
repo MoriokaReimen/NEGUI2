@@ -26,8 +26,15 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec4 color;
 
 layout(location = 0) out vec4 out_color;
+layout(location = 1) out int class_id;
+layout(location = 2) out int instance_id;
+layout(location = 3) out int vertex_id;
 
 void main() {
     gl_Position = camera.transform * push_constant.model_mat * vec4(inPosition, 1.0);
     out_color = color;
+
+    class_id = int(push_constant.class_id);
+    instance_id = int(push_constant.instance_id);
+    vertex_id = int(gl_VertexIndex);
 }

@@ -100,8 +100,10 @@ namespace NEGUI2
     }
 
     Memory &MemoryManager::get_memory(const std::string &key)
-    {
-        return memories_.at(key);
+    {   
+        auto& mem = memories_.at(key);
+        vmaFlushAllocation(allocator_, mem.alloc, 0, VK_WHOLE_SIZE);
+        return mem;
     }
 
     bool MemoryManager::add_memory(const std::string &key, const size_t &size, const Memory::TYPE &type, bool rebuild)
@@ -147,6 +149,19 @@ namespace NEGUI2
                               VMA_ALLOCATION_CREATE_MAPPED_BIT;
         }
         break;
+        case Memory::TYPE::SSBO:
+        {
+            buffer_info.setSize(size)
+                .setUsage(vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eStorageBuffer)
+                .setSharingMode(vk::SharingMode::eExclusive);
+
+            alloc_create_info.usage = VMA_MEMORY_USAGE_AUTO;
+            alloc_create_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                              VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        }
+        break;
+
+
         default:
             return false;
             break;

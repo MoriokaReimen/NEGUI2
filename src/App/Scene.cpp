@@ -10,6 +10,7 @@
 #include "NEGUI2/ThreeD/Line.hpp"
 #include "NEGUI2/ThreeD/Point.hpp"
 #include "Widget.hpp"
+#include <cmath>
 
 namespace App
 {
@@ -89,10 +90,21 @@ namespace App
         auto pos = registry_->ctx().get<Widget::Context>().scene_position;
         auto extent = registry_->ctx().get<Widget::Context>().scene_extent;
         auto uv = Eigen::Vector2d(2.0 * (mouse.x - pos.x()) / extent.x() - 1.0, 2.0 * (mouse.y - pos.y()) / extent.y() - 1.0);
+        {
+            uint32_t pixel_x;
+            uint32_t pixel_y;
+            auto extent = core.off_screen.extent;
+            pixel_x = std::round((uv.x() + 1.0) / 2.0 * static_cast<double>(extent.width));
+            pixel_y = std::round((uv.y() + 1.0) / 2.0 * static_cast<double>(extent.height));
+            pixel_x = std::clamp(pixel_x, 0u, static_cast<uint32_t>(extent.width));
+            pixel_y = std::clamp(pixel_y, 0u, static_cast<uint32_t>(extent.height));
+            core.three_d.camera().set_mouse(pixel_x, pixel_y);
+        }
 
-        auto picked = core.three_d.pick(uv);
         if (!ImGui::IsMouseClicked(ImGuiMouseButton_Left, false))
             return;
+
+        auto picked = core.three_d.pick(uv);
         if(picked)
         {
             auto before = std::dynamic_pointer_cast<NEGUI2::BasePickable>(target_);

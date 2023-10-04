@@ -18,7 +18,8 @@ namespace NEGUI2
         {
             VERTEX = 1,
             INDEX = 2,
-            UNIFORM = 3
+            UNIFORM = 3,
+            SSBO = 4
         };
         TYPE type;
     };

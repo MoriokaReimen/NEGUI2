@@ -269,14 +269,8 @@ namespace NEGUI2
             spdlog::info("Initialize Device");
             std::vector<const char *> device_extensions;
             device_extensions.push_back("VK_KHR_swapchain");
-#if 0
-            device_extensions.push_back("VK_KHR_dedicated_allocation");
-            device_extensions.push_back("VK_KHR_buffer_device_address");
-            device_extensions.push_back("VK_EXT_memory_budget");
-            device_extensions.push_back("VK_EXT_memory_priority");
-            device_extensions.push_back("VK_AMD_device_coherent_memory");
-#endif
-            // Enumerate physical device extension
+
+            /* Enumerate physical device extension */
             auto properties = physical_device.enumerateDeviceExtensionProperties();
 
             /* Queueのデータ設定 */
@@ -299,6 +293,7 @@ namespace NEGUI2
             features.setDepthBounds(vk::True);
             features.setDepthClamp(vk::True);
             features.setIndependentBlend(vk::True);
+            features.setFragmentStoresAndAtomics(vk::True);
             create_info.setPEnabledFeatures(&features);
             device = physical_device.createDevice(create_info);
         }
@@ -334,9 +329,10 @@ namespace NEGUI2
         descriptor_pool = device.createDescriptorPool(pool_info);
 
         vk::DescriptorSetLayoutCreateInfo create_info;
-        std::array<vk::DescriptorSetLayoutBinding, 2> bindings;
+        std::array<vk::DescriptorSetLayoutBinding, 3> bindings;
         bindings[0] = vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
         bindings[1] = vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+        bindings[2] = vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
         create_info.setBindings(bindings);
         descriptor_set_layout = device.createDescriptorSetLayout(create_info);
 
@@ -345,8 +341,6 @@ namespace NEGUI2
                   .setSetLayouts(*descriptor_set_layout);
         auto descriptors = device.allocateDescriptorSets(alloc_info);
         descriptor_set = std::move(descriptors[0]);
-
-        // descriptor_set = std::move(descriptors[2]);
     }
 
     void DeviceManager::init_command_pool_()
