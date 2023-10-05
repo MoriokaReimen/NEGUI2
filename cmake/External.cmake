@@ -210,6 +210,27 @@ if(NOT stb_POPULATED)
 endif()
 
 # #################################################
+# assimp
+# #################################################
+FetchContent_Declare(
+  assimp
+  GIT_REPOSITORY  https://github.com/assimp/assimp.git
+  GIT_TAG         v5.3.1
+)
+FetchContent_MakeAvailable(assimp)
+
+
+# #################################################
+# pfd
+# #################################################
+FetchContent_Declare(
+  pfd
+  GIT_REPOSITORY  https://github.com/samhocevar/portable-file-dialogs.git
+  GIT_TAG         main
+)
+FetchContent_MakeAvailable(pfd)
+
+# #################################################
 # entt
 # #################################################
 FetchContent_Declare(
