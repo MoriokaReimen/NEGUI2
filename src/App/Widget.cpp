@@ -3,9 +3,11 @@
 #include <fstream>
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/ThreeD/Coordinate.hpp"
+#include "NEGUI2/ThreeD/Mesh.hpp"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_internal.h>
+#include <portable-file-dialogs.h>
 namespace
 {
     void setup_dock()
@@ -133,7 +135,20 @@ namespace App
             show_coord_input_ = true;
         }
         ImGui::SameLine();
-        ImGui::Button("Measurement\nSetup", {size.y * 0.09f, size.y * 0.09f});
+        if(ImGui::Button("Load Model", {size.y * 0.09f, size.y * 0.09f}))
+        {
+            // File open
+            auto f = pfd::open_file("Choose files to read", "",
+                                    {"STL Files (.stl .STL)", "*.stl *.STL"},
+                                    pfd::opt::multiselect);
+            for(auto& path : f.result())
+            {
+                auto mesh = std::make_shared<NEGUI2::Mesh>();
+                mesh->load(path);
+                auto &core = NEGUI2::Core::get_instance();
+                core.three_d.add(mesh);
+            }
+        }
         ImGui::SameLine();
         ImGui::Button("Execute\nMeasurement", {size.y * 0.09f, size.y * 0.09f});
         ImGui::SameLine();

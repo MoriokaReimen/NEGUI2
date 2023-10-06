@@ -20,7 +20,7 @@ add_library(NEGUI2 ${NEGUI2_SRC})
 target_include_directories(NEGUI2 PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src)
 target_link_libraries(NEGUI2 PUBLIC glfw spdlog::spdlog Vulkan::Vulkan Vulkan::Headers imgui::imgui
                                     imgui::implot imgui::imguizmo imgui::colortextedit Eigen3::Eigen stb::stb
-                                    glslang glslang-default-resource-limits SPIRV VulkanMemoryAllocator)
+                                    glslang glslang-default-resource-limits SPIRV VulkanMemoryAllocator assimp::assimp)
 
 file(GLOB_RECURSE GLSL_SRC ${CMAKE_CURRENT_LIST_DIR}/shader/*.frag ${CMAKE_CURRENT_LIST_DIR}/shader/*.vert)
 target_glsl_shaders(NEGUI2 PUBLIC ${GLSL_SRC})
@@ -33,7 +33,7 @@ target_runtime_resource(NEGUI2 PUBLIC ${NEGUI_RUNTIME})
 ##################################################
 file(GLOB APP_SRC ${CMAKE_CURRENT_LIST_DIR}/src/App/*.cpp)
 add_executable(App ${APP_SRC})
-target_link_libraries(App PRIVATE NEGUI2 EnTT::EnTT)
+target_link_libraries(App PRIVATE NEGUI2 EnTT::EnTT portable_file_dialogs)
 target_include_directories(App PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/App)
 
 ##################################################

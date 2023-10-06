@@ -9,6 +9,7 @@
 #include "NEGUI2/ThreeD/BasePickable.hpp"
 #include "NEGUI2/ThreeD/Line.hpp"
 #include "NEGUI2/ThreeD/Point.hpp"
+#include "NEGUI2/ThreeD/Mesh.hpp"
 #include "Widget.hpp"
 #include <cmath>
 
@@ -32,9 +33,9 @@ namespace App
     {
         auto &core = NEGUI2::Core::get_instance();
 
-        // auto grid = std::make_shared<NEGUI2::Grid>();
-        // grid->init();
-        // core.three_d.add(grid);
+        auto grid = std::make_shared<NEGUI2::Grid>();
+        grid->init();
+        core.three_d.add(grid);
 
         auto triangle = std::make_shared<NEGUI2::Triangle>();
         triangle->init();
@@ -42,7 +43,6 @@ namespace App
 
         auto coord = std::make_shared<NEGUI2::Coordinate>();
         coord->init();
-        // coord->set_display_aabb();
         core.three_d.add(coord);
 
         auto coord2 = std::make_shared<NEGUI2::Coordinate>();
@@ -56,7 +56,6 @@ namespace App
         // coord3->set_display_aabb();
         coord3->set_position(Eigen::Vector3d(-10.0, -10.0, 10.0));
         core.three_d.add(coord3);
-
 #if 0
         auto arrow = std::make_shared<NEGUI2::FullShader>();
         arrow->init();

@@ -3,6 +3,8 @@
 #include "IModule.hpp"
 #include <vulkan/vulkan.h>
 #include <Eigen/Dense>
+#include <vector>
+#include <string>
 namespace App
 {
     class Widget : public IModule
