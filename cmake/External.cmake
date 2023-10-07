@@ -23,16 +23,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 
 # #################################################
-# vulkan headers
-# #################################################
-FetchContent_Declare(
-  vulkan_headers
-  GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
-  GIT_TAG v1.3.261
-)
-FetchContent_MakeAvailable(vulkan_headers)
-
-# #################################################
 # glfw
 # #################################################
 set(GLFW_BUILD_EXAMPLES OFF)
@@ -91,7 +81,6 @@ FetchContent_Declare(
 FetchContent_GetProperties(imgui)
 
 if(NOT imgui_POPULATED)
-  find_package(glfw3 REQUIRED)
   FetchContent_Populate(imgui)
 
   add_library(imgui STATIC
@@ -104,7 +93,7 @@ if(NOT imgui_POPULATED)
     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
   )
-  target_link_libraries(imgui PUBLIC glfw)
+  target_link_libraries(imgui PUBLIC glfw Vulkan::Headers)
   target_compile_definitions(imgui PUBLIC IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
   add_library(imgui::imgui ALIAS imgui)
   target_include_directories(imgui

@@ -9,7 +9,7 @@ function(target_runtime_resource TARGET_NAME)
     "${MULTI_VALUE_KEYWORDS}" ${ARGN})
 
   # Create output directory
-  set(RUNTIME_OUT_DIR ${CMAKE_BINARY_DIR}/runtime)
+  set(RUNTIME_OUT_DIR ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_CONFIGURATION_TYPES}/runtime)
   add_custom_command(
     OUTPUT ${RUNTIME_OUT_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${RUNTIME_OUT_DIR}

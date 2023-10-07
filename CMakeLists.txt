@@ -1,16 +1,16 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 2.8...3.27)
 project(Sample)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 ##################################################
 # Configure CMake Modules
 ##################################################
+find_package(Vulkan REQUIRED)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/External.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Shader.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/RuntimeResource.cmake)
-find_package(Vulkan REQUIRED)
 
 ##################################################
 # Configure NEGUI2 Library

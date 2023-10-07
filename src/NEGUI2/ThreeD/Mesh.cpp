@@ -27,9 +27,9 @@ namespace NEGUI2
     void Mesh::load(const std::filesystem::path& path)
     {
         Assimp::Importer importer;
-        const auto scene = importer.ReadFile(path.c_str(), aiProcess_Triangulate );
-        const auto node = scene->mRootNode;
-        const auto mesh = scene->mMeshes[0];
+        auto* scene = importer.ReadFile(reinterpret_cast<const char *>(path.c_str()), aiProcess_Triangulate );
+        auto* node = scene->mRootNode;
+        auto* mesh = scene->mMeshes[0];
 
         vertex_data_.clear();
         normal_data_.clear();

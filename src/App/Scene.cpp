@@ -4,7 +4,7 @@
 #include "NEGUI2/ThreeD/Triangle.hpp"
 #include "NEGUI2/ThreeD/Grid.hpp"
 #include "NEGUI2/ThreeD/FullShader.hpp"
-#include <imgui/backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_glfw.h>
 #include "NEGUI2/Core/Core.hpp"
 #include "NEGUI2/ThreeD/BasePickable.hpp"
 #include "NEGUI2/ThreeD/Line.hpp"

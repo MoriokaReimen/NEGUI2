@@ -1,7 +1,7 @@
 #include "NEGUI2/Core/TextureManager.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+#include <stb_image.h>
 
 #include <spdlog/spdlog.h>
 
@@ -39,7 +39,7 @@ namespace NEGUI2
         auto abs_path = std::filesystem::absolute(path);
         int width, height, channels;
         constexpr int DESIRED_CHANNELS = 4;
-        stbi_uc *img = stbi_load(abs_path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+        stbi_uc *img = stbi_load(reinterpret_cast<const char*>(abs_path.c_str()), &width, &height, &channels, STBI_rgb_alpha);
         std::size_t img_size = width * height * DESIRED_CHANNELS;
 
         Texture texture;
