@@ -113,7 +113,7 @@ namespace NEGUI2
         colorBlendAttachment[1].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
                                .setBlendEnable(vk::False);
 
-        std::array<float, 4> blend_constant{};
+        std::array<float, 4> blend_constant;
 
         vk::PipelineColorBlendStateCreateInfo color_blending;
         color_blending.setLogicOpEnable(vk::False)
