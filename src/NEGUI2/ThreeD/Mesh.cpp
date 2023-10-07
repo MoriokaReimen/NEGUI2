@@ -27,7 +27,7 @@ namespace NEGUI2
     void Mesh::load(const std::filesystem::path& path)
     {
         Assimp::Importer importer;
-        auto* scene = importer.ReadFile(reinterpret_cast<const char *>(path.c_str()), aiProcess_Triangulate );
+        auto* scene = importer.ReadFile(path.string(), aiProcess_Triangulate );
         auto* node = scene->mRootNode;
         auto* mesh = scene->mMeshes[0];
 
@@ -188,7 +188,7 @@ namespace NEGUI2
         colorBlendAttachment[0].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA).setBlendEnable(vk::False);
         colorBlendAttachment[1].setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA).setBlendEnable(vk::False);
 
-        std::array<float, 4> blend_constant;
+        std::array<float, 4> blend_constant{};
 
         vk::PipelineColorBlendStateCreateInfo color_blending;
         color_blending.setLogicOpEnable(vk::False)
