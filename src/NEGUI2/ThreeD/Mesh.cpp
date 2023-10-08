@@ -7,6 +7,44 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+namespace {
+Eigen::Vector3f min(const std::vector<Eigen::Vector3f>& vectors)
+{
+    float x = vectors[0].x();
+    float y = vectors[0].y();
+    float z = vectors[0].z();
+
+    for(const auto& vector : vectors)
+    {
+        x = std::min(vector.x(), x);
+        y = std::min(vector.y(), y);
+        z = std::min(vector.z(), z);
+    }
+    Eigen::Vector3f ret(x, y, z);
+
+    return ret;
+}
+
+Eigen::Vector3f max(const std::vector<Eigen::Vector3f>& vectors)
+{
+    float x = vectors[0].x();
+    float y = vectors[0].y();
+    float z = vectors[0].z();
+
+    for(const auto& vector : vectors)
+    {
+        x = std::max(vector.x(), x);
+        y = std::max(vector.y(), y);
+        z = std::max(vector.z(), z);
+    }
+    Eigen::Vector3f ret(x, y, z);
+
+    return ret;
+}
+
+}
+
+
 namespace NEGUI2
 {
     int32_t Mesh::instance_count_ = 0u;
@@ -57,31 +95,10 @@ namespace NEGUI2
 
     void Mesh::init()
     {
-        Eigen::Vector3f min = vertex_data_[0];
-        Eigen::Vector3f max = vertex_data_[0];
-        {
-            float min_x = vertex_data_[0].x();
-            float min_y = vertex_data_[0].y();
-            float min_z = vertex_data_[0].z();
-
-            float max_x = vertex_data_[0].x();
-            float max_y = vertex_data_[0].y();
-            float max_z = vertex_data_[0].z();
-
-            for (auto &vertex : vertex_data_)
-            {
-                min_x = std::min(min_x, vertex.x());
-                min_y = std::min(min_y, vertex.y());
-                min_z = std::min(min_z, vertex.z());
-
-                max_x = std::max(max_x, vertex.x());
-                max_y = std::max(max_y, vertex.y());
-                max_z = std::max(max_z, vertex.z());
-            }
-            min = Eigen::Vector3f(min_x, min_y, min_z);
-            max = Eigen::Vector3f(max_x, max_y, max_z);
-        }
-        Eigen::Vector3f center = (max - min) / 2.f + min;
+        Eigen::Vector3f min = ::min(vertex_data_);
+        Eigen::Vector3f max = ::max(vertex_data_);
+        Eigen::Vector3f diff = max - min;
+        Eigen::Vector3f center = (max - min) / 2.f + min - diff.z() * Eigen::Vector3f::UnitZ() / 2.f;
 
         for(auto& vertex : vertex_data_)
         {
