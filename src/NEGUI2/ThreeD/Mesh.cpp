@@ -9,14 +9,14 @@
 
 namespace NEGUI2
 {
-    uint32_t Mesh::instance_count_ = 0u;
+    int32_t Mesh::instance_count_ = 0u;
     Mesh::Mesh()
         : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr),
           vertex_data_(), normal_data_(), indices_(), color_data_()
     {
-        instance_count_++;
+        Mesh::instance_count_++;
         push_constant_.class_id = get_type_id();
-        push_constant_.instance_id = instance_count_;
+        push_constant_.instance_id = Mesh::instance_count_;
         push_constant_.model = get_transform().matrix().cast<float>();
     }
 
@@ -57,8 +57,41 @@ namespace NEGUI2
 
     void Mesh::init()
     {
-        instance_count_++;
-        instance_id_ = instance_count_;
+        Eigen::Vector3f min = vertex_data_[0];
+        Eigen::Vector3f max = vertex_data_[0];
+        {
+            float min_x = vertex_data_[0].x();
+            float min_y = vertex_data_[0].y();
+            float min_z = vertex_data_[0].z();
+
+            float max_x = vertex_data_[0].x();
+            float max_y = vertex_data_[0].y();
+            float max_z = vertex_data_[0].z();
+
+            for (auto &vertex : vertex_data_)
+            {
+                min_x = std::min(min_x, vertex.x());
+                min_y = std::min(min_y, vertex.y());
+                min_z = std::min(min_z, vertex.z());
+
+                max_x = std::max(max_x, vertex.x());
+                max_y = std::max(max_y, vertex.y());
+                max_z = std::max(max_z, vertex.z());
+            }
+            min = Eigen::Vector3f(min_x, min_y, min_z);
+            max = Eigen::Vector3f(max_x, max_y, max_z);
+        }
+        Eigen::Vector3f center = (max - min) / 2.f + min;
+
+        for(auto& vertex : vertex_data_)
+        {
+            vertex = vertex - center;
+        }
+
+        /* Init aabb */
+        min = min - center;
+        max = max - center;
+        box_ = Eigen::AlignedBox3d(min.cast<double>(), max.cast<double>());
 
         /* Init Vertex buffer */
         {
@@ -228,14 +261,32 @@ namespace NEGUI2
         pipeline_ = device.createGraphicsPipeline(pipeline_cache, pipeline_info);
     }
 
-    uint32_t Mesh::get_type_id()
+    int32_t Mesh::get_type_id()
     {
         auto &id = typeid(Mesh);
-        return static_cast<uint32_t>(id.hash_code());
+        return static_cast<int32_t>(id.hash_code());
     }
 
-    uint32_t Mesh::get_instance_id()
+    int32_t Mesh::get_instance_id()
     {
-        return instance_id_;
+        return push_constant_.instance_id;
+    }
+
+    double Mesh::pick(const Eigen::Vector3d& origin, const Eigen::Vector3d& direction)
+    {
+        auto& three_d = Core::get_instance().three_d;
+        auto pick_data = three_d.get_pick_data();
+        auto type_id = get_type_id();
+        auto instance_id = get_instance_id();
+
+        if(pick_data.type != get_type_id() || pick_data.instance != get_instance_id())
+        {
+            return -1.0;
+        }
+
+        auto index = indices_[pick_data.vertex];
+        auto vertex = vertex_data_[index].cast<double>();
+
+        return (vertex - origin).norm(); 
     }
 }

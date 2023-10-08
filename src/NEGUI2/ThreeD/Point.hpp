@@ -17,7 +17,7 @@ namespace NEGUI2
         };
 
     private:
-        static uint32_t instance_count_;
+        static int32_t instance_count_;
         vk::raii::Pipeline pipeline_;
         vk::raii::PipelineLayout pipeline_layout_;
         PushConstant push_constant_;
@@ -32,8 +32,8 @@ namespace NEGUI2
         void destroy() override;
         void update(vk::raii::CommandBuffer &command) override;
         void rebuild() override;
-        uint32_t get_type_id() override;
-        uint32_t get_instance_id() override;
+        int32_t get_type_id() override;
+        int32_t get_instance_id() override;
 
         bool add(const Eigen::Vector3f &position, const Eigen::Vector4f &color = Eigen::Vector4f::UnitW(), const float &diameter = 2);
         bool popback();

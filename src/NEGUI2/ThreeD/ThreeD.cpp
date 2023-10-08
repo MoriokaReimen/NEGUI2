@@ -3,14 +3,7 @@
 #include <limits>
 #include "NEGUI2/Core/Core.hpp"
 #include <spdlog/spdlog.h>
-namespace {
-struct PickData {
-    int32_t instance;
-    int32_t type;
-    int32_t vertex;
-    float depth;
-};
-}
+
 namespace NEGUI2
 {
 
@@ -56,7 +49,7 @@ namespace NEGUI2
         {
             auto &memory_manager = Core::get_instance().mm;
             auto pick_mem = memory_manager.get_memory("pick_data");
-            std::memset(pick_mem.alloc_info.pMappedData, 0, sizeof(::PickData));
+            std::memset(pick_mem.alloc_info.pMappedData, 0, sizeof(PickData));
         }
 
         /* Render objects */
@@ -78,12 +71,7 @@ namespace NEGUI2
 
     std::shared_ptr<BaseDisplayObject> ThreeD::pick(const Eigen::Vector2d &uv)
     {    
-        Core::get_instance().gpu.device.waitIdle();
-        auto &memory_manager = Core::get_instance().mm;
-        auto pick_mem = memory_manager.get_memory("pick_data");
-        ::PickData data{0};
-        std::memcpy(&data, pick_mem.alloc_info.pMappedData, sizeof(::PickData));  
-        spdlog::info("{} {} {} {}", data.instance, data.type, data.vertex, data.depth);      
+        update_pick_data();
         
         auto origin = camera_.uv_to_near_xyz(uv);
         auto direction = camera_.uv_to_direction(uv);
@@ -159,6 +147,20 @@ namespace NEGUI2
     const Camera &ThreeD::camera() const
     {
         return camera_;
+    }
+
+    void ThreeD::update_pick_data()
+    {
+        Core::get_instance().gpu.device.waitIdle();
+        auto &memory_manager = Core::get_instance().mm;
+        auto pick_mem = memory_manager.get_memory("pick_data");
+        std::memcpy(&pick_data_, pick_mem.alloc_info.pMappedData, sizeof(PickData));
+         spdlog::info("{} {} {} {}", pick_data_.instance, pick_data_.type, pick_data_.vertex, pick_data_.depth);
+    }
+
+    ThreeD::PickData ThreeD::get_pick_data() const
+    {
+        return pick_data_;
     }
 
 }

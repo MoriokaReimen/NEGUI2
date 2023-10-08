@@ -11,6 +11,8 @@ namespace NEGUI2
         vk::raii::Pipeline pipeline_;
         vk::raii::PipelineLayout pipeline_layout_;
         Eigen::AlignedBox3d box_;
+        PushConstant push_constant_;
+        
 
         public:
         AABB();

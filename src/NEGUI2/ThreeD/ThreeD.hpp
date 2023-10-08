@@ -13,10 +13,20 @@ namespace NEGUI2
 {
     class ThreeD
     {
+    public:
+        struct PickData
+        {
+            int32_t type;
+            int32_t instance;
+            int32_t vertex;
+            float depth;
+        };
+
+    private:
         std::vector<std::shared_ptr<BaseDisplayObject>> display_objects_;
         Camera camera_;
         AABB aabb_;
-
+        PickData pick_data_;
     public:
         ThreeD();
         ~ThreeD();
@@ -35,6 +45,8 @@ namespace NEGUI2
 
         Camera &camera();
         const Camera &camera() const;
+        void update_pick_data();
+        PickData get_pick_data() const;
     };
 }
 

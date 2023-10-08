@@ -5,7 +5,7 @@
 
 namespace NEGUI2
 {
-    uint32_t Coordinate::instance_count_ = 0u;
+    int32_t Coordinate::instance_count_ = 0u;
     Coordinate::Coordinate()
         : BaseTransform(), BasePickable(), pipeline_(nullptr), pipeline_layout_(nullptr), push_constant_()
     {
@@ -190,13 +190,13 @@ namespace NEGUI2
         pipeline_ = device.createGraphicsPipeline(pipeline_cache, pipeline_info);
     }
 
-    uint32_t Coordinate::get_type_id()
+    int32_t Coordinate::get_type_id()
     {
         auto &id = typeid(Coordinate);
-        return static_cast<uint32_t>(id.hash_code());
+        return static_cast<int32_t>(id.hash_code());
     }
 
-    uint32_t Coordinate::get_instance_id()
+    int32_t Coordinate::get_instance_id()
     {
         return push_constant_.instance_id;
     }

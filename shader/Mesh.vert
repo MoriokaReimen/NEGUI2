@@ -17,8 +17,8 @@ layout(std140, binding = 1) uniform Camera
 
 layout (push_constant) uniform PushBlock
 {
-    uint class_id;
-    uint instance_id;
+    int class_id;
+    int instance_id;
     mat4 model_mat;
 } push_constant;
 

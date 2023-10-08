@@ -7,7 +7,7 @@ namespace NEGUI2
 {
     AABB::AABB()
     : BaseTransform(), pipeline_(nullptr), pipeline_layout_(nullptr),
-      box_()
+      box_(), push_constant_()
     {
     }
 
@@ -25,10 +25,10 @@ namespace NEGUI2
         Eigen::Vector3f max = box_.max().cast<float>();
         Eigen::Vector3f min = box_.min().cast<float>();
         auto diff = max - min;
-        Eigen::Affine3f offset(Eigen::Translation3f(diff.x() / 2.f, diff.y() / 2.f, diff.z() / 2.f));
+        Eigen::Affine3f offset(Eigen::Translation3f(min.x(), min.y(), min.z()));
         Eigen::Matrix4f scale = Eigen::Scaling(Eigen::Vector4f(diff.x(), diff.y(), diff.z(), 1.f));
-        Eigen::Matrix4f mat = scale.matrix() * offset.matrix() * transform_.matrix().cast<float>();
-        command.pushConstants<Eigen::Matrix4f>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, mat);
+        push_constant_.model = transform_.matrix().cast<float>() * offset.matrix() * scale.matrix();
+        command.pushConstants<PushConstant>(*pipeline_layout_, vk::ShaderStageFlagBits::eVertex, 0, push_constant_);
         
         command.draw(24, 1, 0, 0);
     }
@@ -68,7 +68,7 @@ namespace NEGUI2
         depth_stencil.setDepthBoundsTestEnable(vk::True)
                      .setDepthCompareOp(vk::CompareOp::eLess)
                      .setDepthTestEnable(vk::True)
-                     .setDepthWriteEnable(vk::False)
+                     .setDepthWriteEnable(vk::True)
                      .setMaxDepthBounds(1.f)
                      .setMinDepthBounds(0.f);
 
@@ -88,7 +88,7 @@ namespace NEGUI2
             .setRasterizerDiscardEnable(vk::False)
             .setPolygonMode(vk::PolygonMode::eFill)
             .setLineWidth(1.f)
-            .setCullMode(vk::CullModeFlagBits::eBack)
+            .setCullMode(vk::CullModeFlagBits::eNone)
             .setFrontFace(vk::FrontFace::eCounterClockwise)
             .setDepthBiasEnable(vk::False);
 
@@ -118,7 +118,7 @@ namespace NEGUI2
 
         vk::PushConstantRange push_constant;
         push_constant.setStageFlags(vk::ShaderStageFlagBits::eVertex)
-                     .setSize(sizeof(Eigen::Matrix4f))
+                     .setSize(sizeof(PushConstant))
                      .setOffset(0);
 
         vk::PipelineLayoutCreateInfo pipeline_layout;
