@@ -135,23 +135,22 @@ namespace App
 
         // TODO Cameraのsetポジションのバグ
 
-#if 0
+
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))
-            z += 1.0;
+            position += front;
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_J)))
-            z -= 1.0;
+            position -= front;
 
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_W)))
-            y += 1.0;
+            position += up;
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_S)))
-            y -= 1.0;
+            position -= up;
 
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_A)))
-            x += 1.0;
+            position += right;
         if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_D)))
-            x -= 1.0;
+            position -= right;
 
-#endif
         auto diff = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 1.0);
         position += diff.x * 0.1 * right;
         position += diff.y * 0.1 * up;
